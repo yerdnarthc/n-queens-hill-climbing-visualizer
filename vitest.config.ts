@@ -10,8 +10,6 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     globals: true,
     css: false,
-    // Remove once Phase 1 lands the first engine unit tests
-    passWithNoTests: true,
   },
   resolve: {
     alias: {
