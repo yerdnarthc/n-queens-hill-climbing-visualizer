@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎯 N-Queens Hill Climbing Visualizer
 
-## Getting Started
+An interactive educational visualizer for the N-Queens problem solved with **hill climbing** — featuring a real-time optimization landscape, convergence analytics, time-travel playback, and six algorithm variants.
 
-First, run the development server:
+Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Zustand · ECharts · shadcn/ui · Framer Motion**.
+
+## ✨ Features
+
+- **Interactive chessboard** (N = 4–16) with animated queen moves and conflict highlighting
+- **Six hill-climbing variants**: Steepest-Ascent, First-Choice, Stochastic (Random), Min-Conflicts, Simulated Annealing, plus Sideways-move & Random-Restart policies
+- **Optimization landscape** (hill-up view) — see improving steps, plateaus (shoulders), local maxima, and the global maximum
+- **Real-time analytics** — conflicts-over-iterations convergence chart
+- **Time-travel scrubber** — replay any step of the run, with restart/event markers
+- **Reproducible runs** — seeded RNG, shareable URL state, CSV export
+- **Keyboard shortcuts** — Space = play/pause, ←/→ = step back/forward, R = reset
+- **Dark-first "Midnight Lab" theme** with light-mode toggle
+
+## 🚀 Getting Started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📜 Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command             | Description                  |
+| ------------------- | ---------------------------- |
+| `npm run dev`       | Start dev server (Turbopack) |
+| `npm run build`     | Production build             |
+| `npm run start`     | Serve the production build   |
+| `npm run lint`      | ESLint                       |
+| `npm run format`    | Prettier (write)             |
+| `npm run typecheck` | TypeScript check             |
+| `npm run test`      | Vitest (watch)               |
+| `npm run test:run`  | Vitest (CI mode)             |
+| `npm run test:e2e`  | Playwright E2E               |
 
-## Learn More
+## 🧠 How It Works
 
-To learn more about Next.js, take a look at the following resources:
+See the `/how-it-works` page — algorithm theory, the six variants explained, and landscape features.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/               # Next.js App Router (visualizer + how-it-works)
+├── components/        # UI components (board, charts, controls, stats)
+├── lib/engine/        # ★ Pure algorithm core (zero React deps)
+├── store/             # Zustand simulation store
+└── hooks/             # useSimulationDriver, useKeyboardShortcuts
+```
 
-## Deploy on Vercel
+The engine is a pure, deterministic TypeScript library — the only non-determinism enters via an injected seeded RNG (mulberry32). Same seed + same config ⇒ identical run.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🗂 Legacy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The original single-file prototype lives in [`legacy/index.html`](./legacy/index.html) for reference.
+
+## 🧪 Testing
+
+- **Engine** (Vitest): conflict counting, incremental evaluator oracle tests, strategy behavior, restart/sideways logic, determinism
+- **Components** (RTL): board rendering, controls, scrubber wiring
+- **E2E** (Playwright): start → solved flow, theme toggle, navigation
+
+## ☁️ Deployment
+
+Optimized for **Vercel** — zero config, just import the repo.

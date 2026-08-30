@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N-Queens Hill Climbing Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .panel {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 0.95em;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #5568d3;
+            transform: scale(1.2);
+        }
+
+        .value-display {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        #chessboard {
+            width: 100%;
+            aspect-ratio: 1;
+            display: grid;
+            gap: 2px;
+            background: #2d3748;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .square.light {
+            background: #f0d9b5;
+        }
+
+        .square.dark {
+            background: #b58863;
+        }
+
+        .square.conflict {
+            background: #fc8181 !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #718096;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        #landscape-graph {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .algorithm-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #4a5568;
+        }
+
+        .status-bar {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #48bb78;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .status-indicator.running {
+            background: #4299e1;
+        }
+
+        .status-indicator.stuck {
+            background: #ed8936;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 N-Queens Hill Climbing Visualization</h1>
+            <p>Real-time optimization landscape with local maxima, global maximum, and convergence analytics</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Left Panel: Board and Controls -->
+            <div class="panel">
+                <h2>♛ Chessboard Simulation</h2>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Board Size (N)</label>
+                        <div class="control-row">
+                            <input type="range" id="boardSize" min="4" max="12" value="8" step="1">
+                            <span class="value-display" id="boardSizeValue">8</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Animation Speed (ms)</label>
+                        <div class="control-row">
+                            <input type="range" id="speed" min="50" max="1000" value="300" step="50">
+                            <span class="value-display" id="speedValue">300</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Max Iterations</label>
+                        <div class="control-row">
+                            <input type="range" id="maxIterations" min="50" max="1000" value="200" step="50">
+                            <span class="value-display" id="maxIterValue">200</span>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="startBtn" onclick="startHillClimbing()">▶ Start</button>
+                        <button id="pauseBtn" onclick="pauseSimulation()" disabled>⏸ Pause</button>
+                        <button id="resetBtn" onclick="resetSimulation()">↻ Reset</button>
+                    </div>
+                </div>
+
+                <div id="chessboard"></div>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Conflicts</div>
+                        <div class="stat-value" id="conflicts">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Iterations</div>
+                        <div class="stat-value" id="iterations">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Restarts</div>
+                        <div class="stat-value" id="restarts">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Best Score</div>
+                        <div class="stat-value" id="bestScore">0</div>
+                    </div>
+                </div>
+
+                <div class="status-bar">
+                    <div class="status-indicator" id="statusIndicator"></div>
+                    <span id="statusText">Ready to start</span>
+                </div>
+            </div>
+
+            <!-- Right Panel: Landscape Graph -->
+            <div class="panel">
+                <h2>📊 Optimization Landscape</h2>
+                <canvas id="landscape-graph"></canvas>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4299e1;"></div>
+                        <span>Current Path</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #48bb78;"></div>
+                        <span>Global Maximum (Solution)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ed8936;"></div>
+                        <span>Local Maximum</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f6ad55;"></div>
+                        <span>Shoulder (Plateau)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fc8181;"></div>
+                        <span>Local Minimum</span>
+                    </div>
+                </div>
+
+                <div class="algorithm-info">
+                    <strong>Hill Climbing Algorithm:</strong> A local search algorithm that continuously moves toward higher values (fewer conflicts).
+                    It can get stuck at local maxima (suboptimal solutions) or plateaus (shoulders). Random restarts help escape these traps
+                    to find the global maximum (zero conflicts = solved).
+                </div>
+            </div>
+
+            <!-- Full Width: Analytics -->
+            <div class="panel full-width">
+                <h2>📈 Real-Time Analytics</h2>
+                <canvas id="analytics-graph" style="width: 100%; height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let boardSize = 8;
+        let queens = [];
+        let running = false;
+        let paused = false;
+        let speed = 300;
+        let maxIterations = 200;
+        let currentIteration = 0;
+        let restarts = 0;
+        let bestScore = 0;
+        let landscapeData = [];
+        let analyticsData = [];
+        let landscapeCtx, analyticsCtx;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            landscapeCtx = document.getElementById('landscape-graph').getContext('2d');
+            analyticsCtx = document.getElementById('analytics-graph').getContext('2d');
+
+            setupEventListeners();
+            initializeBoard();
+            drawLandscape();
+            drawAnalytics();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('boardSize').addEventListener('input', (e) => {
+                boardSize = parseInt(e.target.value);
+                document.getElementById('boardSizeValue').textContent = boardSize;
+                if (!running) resetSimulation();
+            });
+
+            document.getElementById('speed').addEventListener('input', (e) => {
+                speed = parseInt(e.target.value);
+                document.getElementById('speedValue').textContent = speed;
+            });
+
+            document.getElementById('maxIterations').addEventListener('input', (e) => {
+                maxIterations = parseInt(e.target.value);
+                document.getElementById('maxIterValue').textContent = maxIterations;
+            });
+        }
+
+        function initializeBoard() {
+            queens = Array.from({length: boardSize}, () => Math.floor(Math.random() * boardSize));
+            drawBoard();
+            updateStats();
+        }
+
+        function drawBoard() {
+            const board = document.getElementById('chessboard');
+            board.innerHTML = '';
+            board.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+
+            const conflicts = getConflicts();
+
+            for (let row = 0; row < boardSize; row++) {
+                for (let col = 0; col < boardSize; col++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+
+                    if (queens[col] === row) {
+                        square.textContent = '♛';
+                        if (conflicts.has(`${row},${col}`)) {
+                            square.classList.add('conflict');
+                        }
+                    }
+
+                    board.appendChild(square);
+                }
+            }
+        }
+
+        function getConflicts() {
+            const conflicts = new Set();
+            let count = 0;
+
+            for (let i = 0; i < boardSize; i++) {
+                for (let j = i + 1; j < boardSize; j++) {
+                    // Same row
+                    if (queens[i] === queens[j]) {
+                        conflicts.add(`${queens[i]},${i}`);
+                        conflicts.add(`${queens[j]},${j}`);
+                        count++;
+                    }
+                    // Diagonal
+                    if (Math.abs(queens[i] - queens[j]) === Math.abs(i - j)) {
+                        conflicts.add(`${queens[i]},${i}`);
+                        conflicts.add(`${queens[j]},${j}`);
+                        count++;
+                    }
+                }
+            }
+
+            conflicts.count = count;
+            return conflicts;
+        }
+
+        function getHeuristic() {
+            return getConflicts().count;
+        }
+
+        async function hillClimbingStep() {
+            const currentH = getHeuristic();
+            let bestH = currentH;
+            let bestMove = null;
+
+            // Try moving each queen
+            for (let col = 0; col < boardSize; col++) {
+                const originalRow = queens[col];
+
+                for (let row = 0; row < boardSize; row++) {
+                    if (row === originalRow) continue;
+
+                    queens[col] = row;
+                    const h = getHeuristic();
+
+                    if (h < bestH) {
+                        bestH = h;
+                        bestMove = {col, row};
+                    }
+
+                    queens[col] = originalRow;
+                }
+            }
+
+            // Determine landscape features
+            let feature = 'shoulder';
+            if (bestMove) {
+                queens[bestMove.col] = bestMove.row;
+                feature = 'improving';
+            } else if (currentH === 0) {
+                feature = 'global-max';
+            } else {
+                feature = 'local-max';
+            }
+
+            landscapeData.push({iteration: currentIteration, heuristic: currentH, feature});
+            analyticsData.push({iteration: currentIteration, heuristic: currentH});
+
+            return {improved: bestMove !== null, heuristic: currentH, feature};
+        }
+
+        async function startHillClimbing() {
+            if (running) return;
+
+            running = true;
+            paused = false;
+            currentIteration = 0;
+            landscapeData = [];
+            analyticsData = [];
+
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('statusIndicator').className = 'status-indicator running';
+
+            while (running && currentIteration < maxIterations) {
+                if (paused) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    continue;
+                }
+
+                const result = await hillClimbingStep();
+                currentIteration++;
+
+                drawBoard();
+                updateStats();
+                drawLandscape();
+                drawAnalytics();
+
+                document.getElementById('statusText').textContent = getStatusText(result);
+
+                if (result.heuristic === 0) {
+                    document.getElementById('statusIndicator').className = 'status-indicator';
+                    document.getElementById('statusText').textContent = '✓ Solution found!';
+                    running = false;
+                    break;
+                }
+
+                if (!result.improved) {
+                    document.getElementById('statusIndicator').className = 'status-indicator stuck';
+                    document.getElementById('statusText').textContent = '⚠ Stuck at local maximum, restarting...';
+                    await new Promise(resolve => setTimeout(resolve, speed * 2));
+
+                    restarts++;
+                    initializeBoard();
+                    continue;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, speed));
+            }
+
+            if (currentIteration >= maxIterations) {
+                document.getElementById('statusText').textContent = '⏱ Max iterations reached';
+            }
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            running = false;
+        }
+
+        function pauseSimulation() {
+            paused = !paused;
+            document.getElementById('pauseBtn').textContent = paused ? '▶ Resume' : '⏸ Pause';
+            document.getElementById('statusText').textContent = paused ? 'Paused' : 'Running...';
+        }
+
+        function resetSimulation() {
+            running = false;
+            paused = false;
+            currentIteration = 0;
+            restarts = 0;
+            landscapeData = [];
+            analyticsData = [];
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('statusIndicator').className = 'status-indicator';
+            document.getElementById('statusText').textContent = 'Ready to start';
+
+            initializeBoard();
+            drawLandscape();
+            drawAnalytics();
+        }
+
+        function updateStats() {
+            const conflicts = getHeuristic();
+            document.getElementById('conflicts').textContent = conflicts;
+            document.getElementById('iterations').textContent = currentIteration;
+            document.getElementById('restarts').textContent = restarts;
+
+            if (conflicts === 0 || bestScore === 0) {
+                bestScore = 0;
+            } else {
+                bestScore = Math.max(bestScore, conflicts);
+            }
+            document.getElementById('bestScore').textContent = conflicts === 0 ? '✓ Solved' : conflicts;
+        }
+
+        function getStatusText(result) {
+            if (result.heuristic === 0) return '✓ Solution found!';
+            if (!result.improved) return '⚠ Local maximum detected';
+            if (result.feature === 'shoulder') return '→ Moving through plateau...';
+            return `↑ Improving... (${result.heuristic} conflicts)`;
+        }
+
+        function drawLandscape() {
+            const canvas = document.getElementById('landscape-graph');
+            const ctx = landscapeCtx;
+            const width = canvas.width = canvas.offsetWidth;
+            const height = canvas.height = canvas.offsetHeight;
+
+            ctx.clearRect(0, 0, width, height);
+
+            if (landscapeData.length < 2) return;
+
+            const maxH = Math.max(...landscapeData.map(d => d.heuristic), 1);
+            const xScale = width / Math.max(landscapeData.length - 1, 1);
+            const yScale = (height - 40) / maxH;
+
+            // Draw grid
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = 20 + (height - 40) * i / 5;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+
+            // Draw path with colors based on features
+            for (let i = 1; i < landscapeData.length; i++) {
+                const prev = landscapeData[i - 1];
+                const curr = landscapeData[i];
+
+                const x1 = (i - 1) * xScale;
+                const y1 = height - 20 - prev.heuristic * yScale;
+                const x2 = i * xScale;
+                const y2 = height - 20 - curr.heuristic * yScale;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineWidth = 3;
+
+                if (curr.heuristic === 0) {
+                    ctx.strokeStyle = '#48bb78'; // Global max
+                } else if (curr.feature === 'local-max') {
+                    ctx.strokeStyle = '#ed8936'; // Local max
+                } else if (curr.feature === 'shoulder') {
+                    ctx.strokeStyle = '#f6ad55'; // Shoulder
+                } else {
+                    ctx.strokeStyle = '#4299e1'; // Improving
+                }
+
+                ctx.stroke();
+
+                // Draw point
+                ctx.fillStyle = ctx.strokeStyle;
+                ctx.beginPath();
+                ctx.arc(x2, y2, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw axis labels
+            ctx.fillStyle = '#4a5568';
+            ctx.font = '12px sans-serif';
+            ctx.fillText('Conflicts', 10, 15);
+            ctx.fillText('Iteration', width - 60, height - 5);
+        }
+
+        function drawAnalytics() {
+            const canvas = document.getElementById('analytics-graph');
+            const ctx = analyticsCtx;
+            const width = canvas.width = canvas.offsetWidth;
+            const height = canvas.height = canvas.offsetHeight;
+
+            ctx.clearRect(0, 0, width, height);
+
+            if (analyticsData.length < 2) return;
+
+            const maxH = Math.max(...analyticsData.map(d => d.heuristic), 1);
+            const xScale = width / Math.max(analyticsData.length - 1, 1);
+            const yScale = (height - 40) / maxH;
+
+            // Draw filled area
+            ctx.beginPath();
+            ctx.moveTo(0, height - 20);
+
+            analyticsData.forEach((d, i) => {
+                const x = i * xScale;
+                const y = height - 20 - d.heuristic * yScale;
+                ctx.lineTo(x, y);
+            });
+
+            ctx.lineTo(width, height - 20);
+            ctx.closePath();
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)');
+            gradient.addColorStop(1, 'rgba(102, 126, 234, 0.05)');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Draw line
+            ctx.beginPath();
+            analyticsData.forEach((d, i) => {
+                const x = i * xScale;
+                const y = height - 20 - d.heuristic * yScale;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>
