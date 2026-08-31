@@ -1,10 +1,10 @@
-# 🎯 N-Queens Hill Climbing Visualizer
+# N-Queens Hill Climbing Visualizer
 
 An interactive educational visualizer for the N-Queens problem solved with **hill climbing** — featuring a real-time optimization landscape, convergence analytics, time-travel playback, and six algorithm variants.
 
 Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Zustand · ECharts · shadcn/ui · Framer Motion**.
 
-## ✨ Features
+## Features
 
 - **Interactive chessboard** (N = 4–16) with animated queen moves and conflict highlighting
 - **Six hill-climbing variants**: Steepest-Ascent, First-Choice, Stochastic (Random), Min-Conflicts, Simulated Annealing, plus Sideways-move & Random-Restart policies
@@ -15,7 +15,7 @@ Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Zustand
 - **Keyboard shortcuts** — Space = play/pause, ←/→ = step back/forward, R = reset
 - **Dark-first "Midnight Lab" theme** with light-mode toggle
 
-## 🚀 Getting Started
+## Getting Started
 
 ```bash
 npm install
@@ -24,7 +24,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## 📜 Scripts
+## Scripts
 
 | Command             | Description                  |
 | ------------------- | ---------------------------- |
@@ -38,11 +38,11 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run test:run`  | Vitest (CI mode)             |
 | `npm run test:e2e`  | Playwright E2E               |
 
-## 🧠 How It Works
+## How It Works
 
 See the `/how-it-works` page — algorithm theory, the six variants explained, and landscape features.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
@@ -55,16 +55,16 @@ src/
 
 The engine is a pure, deterministic TypeScript library — the only non-determinism enters via an injected seeded RNG (mulberry32). Same seed + same config ⇒ identical run.
 
-## 🗂 Legacy
+## Legacy
 
 The original single-file prototype lives in [`legacy/index.html`](./legacy/index.html) for reference.
 
-## 🧪 Testing
+## Testing
 
 - **Engine** (Vitest): conflict counting, incremental evaluator oracle tests, strategy behavior, restart/sideways logic, determinism
 - **Components** (RTL): board rendering, controls, scrubber wiring
 - **E2E** (Playwright): start → solved flow, theme toggle, navigation
 
-## ☁️ Deployment
+## Deployment
 
 Optimized for **Vercel** — zero config, just import the repo.
