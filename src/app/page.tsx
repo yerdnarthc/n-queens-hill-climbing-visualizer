@@ -6,6 +6,7 @@ import { StatsHeader } from '@/components/visualizer/stats-header';
 import { PlaybackControls } from '@/components/visualizer/playback-controls';
 import { ConfigPanel } from '@/components/visualizer/config-panel';
 import { Chessboard } from '@/components/visualizer/chessboard';
+import { AnalyticsPanel } from '@/components/visualizer/analytics-panel';
 import { BookOpen, ShieldCheck } from 'lucide-react';
 
 export default function Home() {
@@ -81,6 +82,11 @@ export default function Home() {
                 <span>100% Deterministic · Seeded mulberry32 RNG</span>
               </div>
             </div>
+          </div>
+
+          {/* Bottom Full-Width Section: Analytics & Optimization Charts (12 cols on lg) */}
+          <div className="lg:col-span-12">
+            <AnalyticsPanel />
           </div>
         </div>
       </main>
