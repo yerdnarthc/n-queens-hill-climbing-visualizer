@@ -90,8 +90,8 @@ export function Chessboard() {
                 className={cn(
                   'relative flex items-center justify-center transition-colors duration-150',
                   isLightSquare
-                    ? 'bg-[#f0d9b5] text-[#b58863] dark:bg-[#d9c3a3] dark:text-[#8a6549]'
-                    : 'bg-[#b58863] text-[#f0d9b5] dark:bg-[#8f6848] dark:text-[#d9c3a3]',
+                    ? 'bg-[#f0d9b5] text-[#b58863] dark:bg-[#f0d9b5] dark:text-[#8a6549]'
+                    : 'bg-[#b88f6e] text-[#f0d9b5] dark:bg-[#b88f6e] dark:text-[#d9c3a3]',
                   isMovedCol && !isDestinationSquare && 'ring-1 ring-sky-500/30 ring-inset',
                   isDestinationSquare && 'ring-2 ring-sky-500/70 ring-inset',
                 )}
