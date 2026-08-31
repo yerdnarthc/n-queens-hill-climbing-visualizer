@@ -25,7 +25,6 @@ import type {
   SimulationResult,
   Snapshot,
   SnapshotPhase,
-  StrategyContext,
 } from './types';
 
 /** Snapshot bookkeeping shared by move/restart emission. */
