@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -51,7 +52,7 @@ export const metadata: Metadata = {
     template: '%s | N-Queens Visualizer',
   },
   description:
-    'An interactive educational visualizer for the N-Queens problem solved with hill climbing — real-time optimization landscape, convergence analytics, and six algorithm variants.',
+    'An interactive educational visualizer for the N-Queens problem solved with hill climbing — real-time optimization landscape, convergence analytics, and five hill-climbing strategies plus sideways-move & random-restart policies.',
   keywords: [
     'N-Queens',
     'hill climbing',
@@ -63,7 +64,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'N-Queens Hill Climbing Visualizer',
     description:
-      'Watch hill climbing solve the N-Queens puzzle in real time — with optimization landscape, analytics, and six algorithm variants.',
+      'Watch hill climbing solve the N-Queens puzzle in real time — with optimization landscape, analytics, and five hill-climbing strategies plus two policies.',
     type: 'website',
   },
 };
@@ -83,8 +84,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TooltipProvider>
-            <SiteNav />
-            {children}
+            <NuqsAdapter>
+              <SiteNav />
+              {children}
+            </NuqsAdapter>
           </TooltipProvider>
         </ThemeProvider>
       </body>

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import * as React from 'react';
 import { ConfigPanel } from '../config-panel';
 import { simulationStore } from '@/store';
@@ -35,5 +35,20 @@ describe('ConfigPanel', () => {
     // New seed generated and is a number
     expect(typeof simulationStore.getState().config.seed).toBe('number');
     expect(initialSeed).toBe(27);
+  });
+
+  it('copies the share link via the header button', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    render(<ConfigPanel />);
+    fireEvent.click(screen.getByRole('button', { name: /copy share link/i }));
+    await act(async () => {});
+
+    expect(writeText).toHaveBeenCalledWith(window.location.href);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 });

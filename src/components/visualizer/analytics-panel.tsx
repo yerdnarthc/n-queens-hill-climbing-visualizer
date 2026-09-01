@@ -4,10 +4,12 @@ import * as React from 'react';
 import { useSimulationStore } from '@/store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ConvergenceChart } from './convergence-chart';
 import { LandscapeChart } from './landscape-chart';
 import { useChartThemeColors } from './chart-wrapper';
 import { computeRunAnalytics, getPhaseColor, getPhaseLabel } from './chart-helpers';
+import { downloadRunCsv } from '@/lib/csv-export';
 import {
   Activity,
   LineChart,
@@ -16,6 +18,7 @@ import {
   Zap,
   MousePointerClick,
   Info,
+  Download,
 } from 'lucide-react';
 
 export function AnalyticsPanel() {
@@ -79,6 +82,18 @@ export function AnalyticsPanel() {
             <Badge variant="secondary" className="px-2 py-1 text-xs">
               h(s) = <strong className="ml-1 text-foreground">{currentSnapshot.conflicts}</strong>
             </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => result && downloadRunCsv(result)}
+              disabled={!result}
+              aria-label="Export run as CSV"
+              title="Download the full snapshot history as CSV"
+              className="h-7 gap-1.5 rounded-lg px-2.5 text-xs"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Export CSV</span>
+            </Button>
           </div>
         )}
       </div>

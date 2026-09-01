@@ -124,7 +124,7 @@ export function Chessboard() {
                 {isOriginSquare && (
                   <div
                     title={`Moved from row ${n - row}`}
-                    className="absolute inset-1.5 flex animate-pulse items-center justify-center rounded-full border-2 border-dashed border-sky-600/70 bg-sky-500/20"
+                    className="absolute inset-1.5 flex items-center justify-center rounded-full border-2 border-dashed border-sky-600/70 bg-sky-500/20 motion-safe:animate-pulse"
                   >
                     <div className="h-1.5 w-1.5 rounded-full bg-sky-600" />
                   </div>

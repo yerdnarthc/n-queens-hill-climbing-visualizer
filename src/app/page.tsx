@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useSimulationDriver } from '@/hooks/useSimulationDriver';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useUrlConfigSync } from '@/hooks/useUrlConfigSync';
 import { StatsHeader } from '@/components/visualizer/stats-header';
 import { PlaybackControls } from '@/components/visualizer/playback-controls';
 import { ConfigPanel } from '@/components/visualizer/config-panel';
@@ -10,8 +11,37 @@ import { Chessboard } from '@/components/visualizer/chessboard';
 import { AnalyticsPanel } from '@/components/visualizer/analytics-panel';
 import { BookOpen, ShieldCheck } from 'lucide-react';
 
+/**
+ * Home is wrapped in a Suspense boundary because the URL sync bridge uses
+ * `useSearchParams()` (via nuqs) — Next.js requires it for static prerendering.
+ * During prerender the fallback is emitted; the client hydrates into the full
+ * visualizer. Hook order inside `HomeContent` matters: the URL ⇆ store bridge
+ * runs before the playback driver so the bootstrap run uses the hydrated config.
+ */
 export default function Home() {
-  // Mount the single playback driver heartbeat + keyboard shortcuts for the page
+  return (
+    <React.Suspense fallback={<HomeFallback />}>
+      <HomeContent />
+    </React.Suspense>
+  );
+}
+
+function HomeFallback() {
+  return (
+    <div
+      role="status"
+      aria-label="Loading visualizer"
+      className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground"
+    >
+      Loading visualizer…
+    </div>
+  );
+}
+
+function HomeContent() {
+  // URL ⇆ store bridge FIRST so the driver's bootstrap run uses the hydrated config.
+  useUrlConfigSync();
+  // Then the single playback driver heartbeat + keyboard shortcuts for the page.
   useSimulationDriver();
   useKeyboardShortcuts();
 
@@ -94,11 +124,19 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-border/60 bg-card/30 px-6 py-4 text-center text-xs text-muted-foreground">
-        <span>
-          N-Queens Hill Climbing Visualizer · Built with Next.js 15, React 19, Tailwind CSS v4 &
-          Zustand
-        </span>
+      <footer className="mt-auto border-t border-border/60 bg-card/30 px-6 py-4">
+        <div className="flex flex-col items-center justify-between gap-2 text-xs text-muted-foreground sm:flex-row">
+          <span>
+            N-Queens Hill Climbing Visualizer · Built with Next.js 15, React 19, Tailwind CSS v4 &
+            Zustand
+          </span>
+          <a
+            href="/how-it-works"
+            className="font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            How it works →
+          </a>
+        </div>
       </footer>
     </div>
   );

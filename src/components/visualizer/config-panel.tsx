@@ -1,7 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { Dices, Settings2, SlidersHorizontal, ChevronDown, Info, Sparkles } from 'lucide-react';
+import {
+  Dices,
+  Settings2,
+  SlidersHorizontal,
+  ChevronDown,
+  Info,
+  Sparkles,
+  Link2,
+  Check,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +27,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useSimulationStore } from '@/store';
 import { BOARD_SIZE_LIMITS, STRATEGY_IDS, type StrategyId } from '@/lib/engine';
 import { STRATEGY_INFO } from '@/lib/strategy-info';
+import { copyTextToClipboard } from '@/lib/clipboard';
 
 export function ConfigPanel() {
   const config = useSimulationStore((s) => s.config);
@@ -26,10 +36,27 @@ export function ConfigPanel() {
 
   const [isOpenAdvanced, setIsOpenAdvanced] = React.useState(false);
   const [seedText, setSeedText] = React.useState(String(config.seed));
+  const [copiedLink, setCopiedLink] = React.useState(false);
+  const copiedTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
     setSeedText(String(config.seed));
   }, [config.seed]);
+
+  // Clear any pending "copied" reset timer on unmount.
+  React.useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    };
+  }, []);
+
+  const handleCopyLink = async () => {
+    const ok = await copyTextToClipboard(window.location.href);
+    if (!ok) return;
+    setCopiedLink(true);
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    copiedTimerRef.current = setTimeout(() => setCopiedLink(false), 2000);
+  };
 
   const handleSeedBlur = () => {
     const parsed = parseInt(seedText, 10);
@@ -56,9 +83,24 @@ export function ConfigPanel() {
           <SlidersHorizontal className="h-4 w-4 text-primary" />
           <h2 className="text-sm font-semibold tracking-tight">Configuration</h2>
         </div>
-        <span className="rounded bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
-          N = {config.boardSize} Queens
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+            N = {config.boardSize} Queens
+          </span>
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            aria-label="Copy share link"
+            title="Copy share link — the URL reproduces this exact run"
+            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {copiedLink ? (
+              <Check className="h-3.5 w-3.5 text-emerald-500" />
+            ) : (
+              <Link2 className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4">

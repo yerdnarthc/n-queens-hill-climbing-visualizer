@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,22 +24,27 @@ export function QueenPiece({
 }: QueenPieceProps) {
   const hasConflict = conflictsCount > 0;
   const isDense = boardSize >= 12;
+  const reduceMotion = useReducedMotion();
 
   return (
     <motion.div
-      layout
-      transition={{
-        type: 'spring',
-        stiffness: 450,
-        damping: 32,
-      }}
+      layout={!reduceMotion}
+      transition={
+        reduceMotion
+          ? { duration: 0 }
+          : {
+              type: 'spring',
+              stiffness: 450,
+              damping: 32,
+            }
+      }
       className="relative flex h-full w-full items-center justify-center select-none"
       data-testid={`queen-${column}-${row}`}
     >
       {/* Halo / Glow for conflicted queens or moved queens */}
       {hasConflict ? (
         <div
-          className="absolute inset-0.5 animate-pulse rounded-full bg-rose-500/25 blur-[2px]"
+          className="absolute inset-0.5 rounded-full bg-rose-500/25 blur-[2px] motion-safe:animate-pulse"
           aria-hidden="true"
         />
       ) : isMoved ? (
