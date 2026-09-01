@@ -124,5 +124,19 @@ export function sameUrlConfig(a: SimulationConfig, b: SimulationConfig): boolean
   );
 }
 
+/** True when two URL value records hold identical primitive fields. */
+export function sameUrlValues(a: UrlConfigValues, b: UrlConfigValues): boolean {
+  return (
+    a.n === b.n &&
+    a.seed === b.seed &&
+    a.strategy === b.strategy &&
+    a.sideways === b.sideways &&
+    a.streak === b.streak &&
+    a.restarts === b.restarts &&
+    a.maxRestarts === b.maxRestarts &&
+    a.cooling === b.cooling
+  );
+}
+
 /** `BOARD_SIZE_LIMITS` re-exported for the hook/tests (keeps the import list tidy). */
 export { BOARD_SIZE_LIMITS };

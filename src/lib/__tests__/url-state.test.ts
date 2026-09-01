@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   clampCooling,
+  configToUrlValues,
   parseConfigFromSearch,
   sameUrlConfig,
+  sameUrlValues,
   serializeConfigToSearch,
 } from '../url-state';
 import { DEFAULT_CONFIG } from '@/store/simulation-store';
@@ -100,5 +102,13 @@ describe('url-state — helpers', () => {
         { ...DEFAULT_CONFIG, allowSideways: false },
       ),
     ).toBe(false);
+  });
+
+  it('sameUrlValues compares raw URL value records field-by-field', () => {
+    const values = configToUrlValues(FULL_CONFIG);
+    expect(sameUrlValues(values, { ...values })).toBe(true);
+    expect(sameUrlValues(values, { ...values, n: 16 })).toBe(false);
+    expect(sameUrlValues(values, { ...values, cooling: 0.951 })).toBe(false);
+    expect(sameUrlValues(values, { ...values, strategy: 'steepest-ascent' })).toBe(false);
   });
 });

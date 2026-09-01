@@ -87,4 +87,59 @@ describe('useUrlConfigSync', () => {
     });
     expect(onUrlUpdate).not.toHaveBeenCalled();
   });
+
+  it('heals a hostile URL to the canonical clamped form on mount (single write)', async () => {
+    const onUrlUpdate = vi.fn();
+    const store = createSimulationStore();
+    render(<Harness store={store} />, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?n=99&seed=-5&cooling=5',
+        onUrlUpdate,
+        hasMemory: true,
+      }),
+    });
+    // The clamped config wins in the store…
+    const s = store.getState();
+    expect(s.config.boardSize).toBe(16);
+    expect(s.config.seed).toBe(0);
+    expect(s.config.saCoolingRate).toBe(0.999);
+    // …and the URL is rewritten to the canonical form in one converging write.
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalledTimes(1));
+    const params = onUrlUpdate.mock.calls.at(-1)![0].searchParams as URLSearchParams;
+    expect(params.get('n')).toBe('16');
+    expect(params.get('seed')).toBe('0');
+    expect(params.get('cooling')).toBe('0.999');
+    // No echo: the healing write settles (a loop would keep calling the spy).
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(onUrlUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays convergent across rapid successive config changes (scrubbing)', async () => {
+    const onUrlUpdate = vi.fn();
+    const store = createSimulationStore();
+    render(<Harness store={store} />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: '', onUrlUpdate, hasMemory: true }),
+    });
+    // Simulate a slider scrub: a burst of setConfig calls, one per pointer move.
+    for (const streak of [50, 100, 150, 200, 120, 80]) {
+      await act(async () => {
+        store.getState().setConfig({ maxConsecutiveSideways: streak });
+      });
+    }
+    expect(store.getState().config.maxConsecutiveSideways).toBe(80);
+    await waitFor(() => {
+      const params = onUrlUpdate.mock.calls.at(-1)?.[0].searchParams as URLSearchParams;
+      expect(params?.get('streak')).toBe('80');
+    });
+    // The bridge converges — after the final write, no echo updates follow.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    const params = onUrlUpdate.mock.calls.at(-1)![0].searchParams as URLSearchParams;
+    expect(params.get('streak')).toBe('80');
+    // One write per scrubbed value, bounded — never an unbounded echo loop.
+    expect(onUrlUpdate.mock.calls.length).toBeLessThanOrEqual(8);
+  });
 });
