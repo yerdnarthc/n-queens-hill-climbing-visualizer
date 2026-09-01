@@ -1,18 +1,48 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SiteNav } from '@/components/site-nav';
 
-const geistSans = Geist({
+/**
+ * Self-hosted Geist / Geist Mono (offline-safe) — no Google Fonts request at
+ * build or runtime. Variable TTFs live in `src/assets/fonts/`; the CSS variable
+ * names match the previous `next/font/google` setup so `globals.css` (and the
+ * `--font-*` token consumers) are unchanged.
+ */
+const geistSans = localFont({
+  src: [
+    {
+      path: '../assets/fonts/Geist-VariableFont_wght.ttf',
+      weight: '100 900',
+      style: 'normal',
+    },
+    {
+      path: '../assets/fonts/Geist-Italic-VariableFont_wght.ttf',
+      weight: '100 900',
+      style: 'italic',
+    },
+  ],
   variable: '--font-geist-sans',
-  subsets: ['latin'],
+  display: 'swap',
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: [
+    {
+      path: '../assets/fonts/GeistMono-VariableFont_wght.ttf',
+      weight: '100 900',
+      style: 'normal',
+    },
+    {
+      path: '../assets/fonts/GeistMono-Italic-VariableFont_wght.ttf',
+      weight: '100 900',
+      style: 'italic',
+    },
+  ],
   variable: '--font-geist-mono',
-  subsets: ['latin'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
