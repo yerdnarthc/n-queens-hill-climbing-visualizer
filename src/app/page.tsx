@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useSimulationDriver } from '@/hooks/useSimulationDriver';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { StatsHeader } from '@/components/visualizer/stats-header';
 import { PlaybackControls } from '@/components/visualizer/playback-controls';
 import { ConfigPanel } from '@/components/visualizer/config-panel';
@@ -10,8 +11,9 @@ import { AnalyticsPanel } from '@/components/visualizer/analytics-panel';
 import { BookOpen, ShieldCheck } from 'lucide-react';
 
 export default function Home() {
-  // Mount the single playback driver heartbeat for the page
+  // Mount the single playback driver heartbeat + keyboard shortcuts for the page
   useSimulationDriver();
+  useKeyboardShortcuts();
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">

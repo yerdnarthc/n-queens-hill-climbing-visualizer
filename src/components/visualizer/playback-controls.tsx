@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Gauge,
   RotateCcw,
+  Award,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -27,6 +28,7 @@ export function PlaybackControls() {
   const isPlaying = useSimulationStore((s) => s.isPlaying);
   const currentStep = useSimulationStore((s) => s.currentStep);
   const speed = useSimulationStore((s) => s.speed);
+  const result = useSimulationStore((s) => s.result);
   const totalSteps = useSimulationStore(selectTotalSteps);
   const isAtStart = useSimulationStore(selectIsAtStart);
   const isAtEnd = useSimulationStore(selectIsAtEnd);
@@ -36,9 +38,20 @@ export function PlaybackControls() {
   const stepBack = useSimulationStore((s) => s.stepBack);
   const jumpToStart = useSimulationStore((s) => s.jumpToStart);
   const jumpToEnd = useSimulationStore((s) => s.jumpToEnd);
+  const jumpToBest = useSimulationStore((s) => s.jumpToBest);
   const jumpTo = useSimulationStore((s) => s.jumpTo);
   const setSpeed = useSimulationStore((s) => s.setSpeed);
   const run = useSimulationStore((s) => s.run);
+
+  // Restart-event markers: every snapshot after a `restart` phase (the README's
+  // "time-travel scrubber with restart/event markers", landed in Phase 5).
+  const restartSteps = React.useMemo(() => {
+    if (!result) return [];
+    return result.snapshots.filter((snap) => snap.phase === 'restart').map((snap) => snap.step);
+  }, [result]);
+
+  const bestStep = result?.bestStep ?? null;
+  const isAtBest = bestStep !== null && currentStep === bestStep;
 
   const handleSliderChange = React.useCallback(
     (values: number[]) => {
@@ -50,6 +63,8 @@ export function PlaybackControls() {
   );
 
   const progressPercent = totalSteps > 0 ? Math.round((currentStep / totalSteps) * 100) : 0;
+
+  const markerPercent = (step: number) => (totalSteps > 0 ? (step / totalSteps) * 100 : 0);
 
   return (
     <div className="flex flex-col gap-3.5 rounded-xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm">
@@ -75,6 +90,27 @@ export function PlaybackControls() {
           aria-label="Timeline step scrubber"
           className="cursor-pointer py-1"
         />
+
+        {/* Restart & best-event markers on the timeline (aligned to the track) */}
+        {(restartSteps.length > 0 || bestStep !== null) && (
+          <div className="relative h-1.5 w-full select-none" aria-hidden="true">
+            {restartSteps.map((step) => (
+              <span
+                key={`restart-${step}`}
+                title={`Restart at step ${step}`}
+                className="absolute top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-amber-500 ring-2 ring-background/80"
+                style={{ left: `${markerPercent(step)}%` }}
+              />
+            ))}
+            {bestStep !== null && (
+              <span
+                title={`Best (${result?.bestConflicts} conflicts) at step ${bestStep}`}
+                className="absolute top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-emerald-500 ring-2 ring-background/80"
+                style={{ left: `${markerPercent(bestStep)}%` }}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Main Playback Bar */}
@@ -146,6 +182,18 @@ export function PlaybackControls() {
           </Button>
 
           <Button
+            variant="outline"
+            size="icon"
+            onClick={jumpToBest}
+            disabled={!result || isAtBest}
+            aria-label="Jump to best"
+            title={`Jump to best (${result?.bestConflicts ?? 0} conflicts at step ${bestStep ?? 0})`}
+            className="h-9 w-9 rounded-lg"
+          >
+            <Award className="h-4 w-4" />
+          </Button>
+
+          <Button
             variant="ghost"
             size="icon"
             onClick={run}
@@ -194,6 +242,49 @@ export function PlaybackControls() {
               aria-label="Fine speed adjustment"
               className="cursor-pointer"
             />
+          </div>
+        </div>
+
+        {/* Timeline event legend + keyboard shortcuts */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3">
+            {restartSteps.length > 0 && (
+              <span className="flex items-center gap-1 font-medium">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                Restart
+              </span>
+            )}
+            {bestStep !== null && (
+              <span className="flex items-center gap-1 font-medium">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Best (step {bestStep})
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="hidden sm:inline">Shortcuts:</span>
+            <span className="flex items-center gap-1">
+              <kbd className="rounded border border-border/70 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+                Space
+              </kbd>
+              Play / Pause
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="rounded border border-border/70 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+                ←
+              </kbd>
+              <kbd className="rounded border border-border/70 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+                →
+              </kbd>
+              Step
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="rounded border border-border/70 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+                R
+              </kbd>
+              Reset
+            </span>
           </div>
         </div>
       </div>

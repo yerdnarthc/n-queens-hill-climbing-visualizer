@@ -17,39 +17,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useSimulationStore } from '@/store';
 import { BOARD_SIZE_LIMITS, STRATEGY_IDS, type StrategyId } from '@/lib/engine';
-
-const STRATEGY_INFO: Record<StrategyId, { name: string; tag: string; description: string }> = {
-  'steepest-ascent': {
-    name: 'Steepest-Ascent',
-    tag: 'Greedy Best',
-    description:
-      'Evaluates all N·(N-1) neighbor moves and picks the one yielding the greatest conflict reduction.',
-  },
-  'first-choice': {
-    name: 'First-Choice',
-    tag: 'Random Walk to Next Better',
-    description:
-      'Generates random neighbor moves one by one and accepts the first move that improves conflicts.',
-  },
-  stochastic: {
-    name: 'Stochastic',
-    tag: 'Weighted Probability',
-    description:
-      'Identifies all improving moves and chooses among them with probability proportional to the improvement steepness.',
-  },
-  'min-conflicts': {
-    name: 'Min-Conflicts',
-    tag: 'CSP Heuristic',
-    description:
-      'Selects a queen involved in a conflict at random, then moves it to the row with the fewest attacking queens.',
-  },
-  'simulated-annealing': {
-    name: 'Simulated Annealing',
-    tag: 'Metropolis Cooling',
-    description:
-      'Always accepts improving moves, and accepts worsening moves with probability e^(-Δ/T) while cooling temperature geometrically.',
-  },
-};
+import { STRATEGY_INFO } from '@/lib/strategy-info';
 
 export function ConfigPanel() {
   const config = useSimulationStore((s) => s.config);

@@ -116,6 +116,8 @@ export interface SimulationState {
   jumpTo: (step: number) => void;
   jumpToStart: () => void;
   jumpToEnd: () => void;
+  /** Jump to the step where the fewest conflicts were first seen (the global best). */
+  jumpToBest: () => void;
   setSpeed: (stepsPerSecond: number) => void;
 }
 
@@ -198,6 +200,12 @@ export function createSimulationStore() {
         const { result } = get();
         if (result === null) return;
         set({ currentStep: result.totalSteps });
+      },
+
+      jumpToBest: () => {
+        const { result } = get();
+        if (result === null) return;
+        set({ currentStep: result.bestStep });
       },
 
       setSpeed: (stepsPerSecond) => set({ speed: clampSpeed(stepsPerSecond) }),

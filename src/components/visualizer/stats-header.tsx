@@ -1,15 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { useTheme } from 'next-themes';
 import {
   CheckCircle2,
   AlertTriangle,
   Flame,
   Snowflake,
   RotateCcw,
-  Sun,
-  Moon,
   TrendingDown,
   Minus,
   TrendingUp,
@@ -17,7 +14,6 @@ import {
   Zap,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useSimulationStore, selectResult, selectSnapshot, selectTotalSteps } from '@/store';
 import type { RunStatus, SnapshotPhase } from '@/lib/engine';
 
@@ -94,12 +90,6 @@ export function StatsHeader() {
   const snapshot = useSimulationStore(selectSnapshot);
   const totalSteps = useSimulationStore(selectTotalSteps);
   const currentStep = useSimulationStore((s) => s.currentStep);
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const status = result?.status ?? 'stagnated';
   const statusMeta = STATUS_CONFIG[status];
@@ -137,17 +127,9 @@ export function StatsHeader() {
 
         {/* Global actions & theme */}
         <div className="flex items-center gap-2">
-          {mounted && (
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Toggle theme"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="h-9 w-9 rounded-lg"
-            >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-          )}
+          <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+            AIMA Ch. 4 & 6
+          </span>
         </div>
       </div>
 

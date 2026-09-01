@@ -1,13 +1,13 @@
 # N-Queens Hill Climbing Visualizer
 
-An interactive educational visualizer for the N-Queens problem solved with **hill climbing** — featuring a real-time optimization landscape, convergence analytics, time-travel playback, and six algorithm variants.
+An interactive educational visualizer for the N-Queens problem solved with **hill climbing** — featuring a real-time optimization landscape, convergence analytics, time-travel playback, and five hill-climbing strategies plus sideways-move & random-restart policies.
 
 Built with **Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · Zustand · ECharts · shadcn/ui · Framer Motion**.
 
 ## Features
 
 - **Interactive chessboard** (N = 4–16) with animated queen moves and conflict highlighting
-- **Six hill-climbing variants**: Steepest-Ascent, First-Choice, Stochastic (Random), Min-Conflicts, Simulated Annealing, plus Sideways-move & Random-Restart policies
+- **Five hill-climbing strategies + two policies**: Steepest-Ascent, First-Choice, Stochastic (Random), Min-Conflicts, Simulated Annealing, plus Sideways-move & Random-Restart policies
 - **Optimization landscape** (hill-up view) — see improving steps, plateaus (shoulders), local maxima, and the global maximum
 - **Real-time analytics** — conflicts-over-iterations convergence chart
 - **Time-travel scrubber** — replay any step of the run, with restart/event markers

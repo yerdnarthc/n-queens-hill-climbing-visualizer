@@ -226,6 +226,24 @@ describe('createSimulationStore — playback', () => {
     expect(store.getState().currentStep).toBe(5);
   });
 
+  it('jumpToBest lands on the step where the fewest conflicts were first seen', () => {
+    const store = createSimulationStore();
+    store.getState().run(); // seed 27 → conflicts [6,3,2,1,1,0], best (0) first at step 5
+    store.getState().jumpTo(1);
+    store.getState().jumpToBest();
+    const s = store.getState();
+    expect(s.currentStep).toBe(s.result!.bestStep);
+    expect(s.currentStep).toBe(5);
+    expect(selectSnapshot(s)!.conflicts).toBe(0);
+  });
+
+  it('jumpToBest is a safe no-op before any run exists', () => {
+    const store = createSimulationStore();
+    store.getState().jumpToBest();
+    expect(store.getState().result).toBeNull();
+    expect(store.getState().currentStep).toBe(0);
+  });
+
   it('pause() stops playback without moving the cursor', () => {
     const store = createSimulationStore();
     store.getState().play();
@@ -300,6 +318,7 @@ describe('createSimulationStore — edge runs', () => {
     store.getState().jumpTo(3);
     store.getState().jumpToStart();
     store.getState().jumpToEnd();
+    store.getState().jumpToBest();
     expect(store.getState().result).toBeNull();
     expect(store.getState().currentStep).toBe(0);
   });
