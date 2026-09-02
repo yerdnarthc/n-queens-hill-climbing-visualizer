@@ -680,6 +680,100 @@ describe('chart-helpers', () => {
     });
   });
 
+  describe('chart animation profile (responsive playback UX)', () => {
+    // Regression guards for the animation config that determines how
+    // the analytics charts animate on initial load and on every
+    // setOption (currentStep change, scrub, marker move).
+    //
+    // ECharts' defaults (animationDuration: 1000, animationDurationUpdate:
+    // 300 with cubicOut easing) are tuned for "presentation" charts and
+    // cause a perceptible lag in interactive playback: the state is
+    // correct but the visual trails behind by ~300ms. Our custom profile
+    // trades some of the default polish for a snappier feel that
+    // matches the user's playback expectations:
+    //
+    //   - animationDuration: 200          — short initial draw, so the
+    //     chart still feels alive on first paint without delaying the
+    //     user with a long entrance animation.
+    //   - animationDurationUpdate: 100    — short easing on updates
+    //     (still well under one frame at 10+ steps/sec), gives a tiny
+    //     bit of motion that visually connects consecutive steps
+    //     during playback without the 300ms lag of the default.
+    //   - animationEasingUpdate: cubicOut — the ECharts default
+    //     easing curve; with our short 100ms duration, the cubicOut
+    //     ramp reads as "smooth glide" rather than "lag" the way it
+    //     does at 300ms.
+    //   - animationThreshold: 200         — ECharts auto-disables
+    //     animation when the element count exceeds this. We pin it
+    //     to a realistic run-length ceiling so the animation profile
+    //     is consistent across short and long runs.
+    //
+    // If these values feel wrong, the right place to change them is
+    // the corresponding keys on the option object in
+    // `buildConvergenceChartOption` / `buildLandscapeChartOption` in
+    // chart-helpers.ts — these tests will then fail and prompt the
+    // tuning pass.
+
+    it('Convergence: uses the playback-friendly animation profile', () => {
+      const option = buildConvergenceChartOption(
+        sampleSnapshots,
+        2,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      // Initial draw — short, so the chart feels polished on first
+      // load without delaying the user.
+      expect(option.animationDuration).toBe(200);
+      // Update animation — 100ms with cubicOut, snappier than
+      // ECharts' 300ms default but with enough motion to visually
+      // link consecutive steps during playback.
+      expect(option.animationDurationUpdate).toBe(100);
+      // cubicOut is the ECharts default; we use it explicitly so
+      // a future change is a deliberate decision, not a regression.
+      expect(option.animationEasingUpdate).toBe('cubicOut');
+      // Element-count ceiling for auto-disabling animation. Pinned
+      // to a realistic run-length ceiling.
+      expect(option.animationThreshold).toBe(200);
+    });
+
+    it('Convergence: pins the markLine to a short 50ms animation (snappy cursor)', () => {
+      // The mark line is the current-step cursor. The per-series
+      // override (`animation: { duration: 50 }`) keeps the cursor
+      // from feeling laggy on click-to-scrub while still giving it
+      // a brief visual confirmation of movement. Faster than the
+      // top-level 100ms because the mark line is a single
+      // point-position change, not a multi-element update.
+      const option = buildConvergenceChartOption(
+        sampleSnapshots,
+        2,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const markLine = (option.series[0] as { markLine: { animation: { duration: number } } })
+        .markLine;
+      expect(markLine.animation).toEqual({ duration: 50 });
+    });
+
+    it('Landscape: uses the playback-friendly animation profile', () => {
+      const option = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      expect(option.animationDuration).toBe(200);
+      expect(option.animationDurationUpdate).toBe(100);
+      expect(option.animationEasingUpdate).toBe('cubicOut');
+      expect(option.animationThreshold).toBe(200);
+    });
+
+    it('Landscape: pins the markLine to a short 50ms animation (snappy cursor)', () => {
+      // The Landscape chart's mark line (drawn on the trajectory
+      // line series) is the current-step cursor — same role as the
+      // Convergence chart's mark line. Match the per-series
+      // override for visual consistency.
+      const option = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      const markLine = (option.series[0] as { markLine: { animation: { duration: number } } })
+        .markLine;
+      expect(markLine.animation).toEqual({ duration: 50 });
+    });
+  });
+
   describe('withAlpha', () => {
     it('appends a two-digit hex alpha to a 6-digit hex color', () => {
       // 0.5 → 128 → '80'

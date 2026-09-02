@@ -495,6 +495,13 @@ describe('ChartWrapper', () => {
       dataZoomIndex: 1,
       start: 38,
       end: 98,
+      // `animation: { duration: 50 }` overrides ECharts' internal
+      // dataZoom slider animation so the handle snaps (with a brief
+      // 50ms confirmation) to the new range, matching the markLine's
+      // snappy cursor mode set in `chart-helpers.ts`. Without this,
+      // the slider handle would slide for ~300ms after every
+      // auto-scroll, reading as perceptible lag.
+      animation: { duration: 50 },
     });
   });
 
@@ -518,6 +525,9 @@ describe('ChartWrapper', () => {
       dataZoomIndex: 1,
       start: 5,
       end: 55,
+      // See the scroll-right test for the rationale on
+      // `animation: { duration: 50 }`.
+      animation: { duration: 50 },
     });
   });
 
@@ -540,6 +550,9 @@ describe('ChartWrapper', () => {
       dataZoomIndex: 1,
       start: 50,
       end: 100,
+      // See the scroll-right test for the rationale on
+      // `animation: { duration: 50 }`.
+      animation: { duration: 50 },
     });
   });
 

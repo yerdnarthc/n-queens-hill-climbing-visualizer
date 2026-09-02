@@ -326,7 +326,7 @@ export function buildConvergenceChartOption(
     lineStyle: {
       color: colors.improving,
       type: 'solid' as const,
-      width: 2,
+      width: 1,
     },
     label: {
       show: true,
@@ -402,6 +402,43 @@ export function buildConvergenceChartOption(
 
   return {
     backgroundColor: 'transparent',
+    // ──────────────────────────────────────────────────────────────────
+    // Animation config (responsive playback UX)
+    // ──────────────────────────────────────────────────────────────────
+    // ECharts' default animation suite (animationDuration: 1000 for
+    // initial render, animationDurationUpdate: 300 with cubicOut
+    // easing for every subsequent data update, animationThreshold:
+    // 2000) is tuned for "presentation" charts. For an interactive
+    // playback scrubber that's actively driven by the user, those
+    // defaults produce a perceptible lag: clicking a point advances
+    // the state instantly, but the current-step mark line visibly
+    // slides into its new position over 300ms; scrubbing the slider
+    // triggers the same 300ms easing on every step, causing the
+    // marker to trail the cursor.
+    //
+    // We override this for a playback-friendly profile:
+    //   - animationDuration: 200     — short initial draw so the
+    //     chart still feels alive when it first appears, but doesn't
+    //     delay the user with a long entrance animation.
+    //   - animationDurationUpdate: 0 — all updates (currentStep
+    //     change, marker move, axis label re-position, grid line
+    //     shift, tooltip show/hide) snap instantly with zero
+    //     interpolation. The state IS the visual; there's nothing
+    //     to ease toward.
+    //   - animationEasingUpdate: 'linear' — defensive. With duration
+    //     0 the easing is moot, but if a future change bumps the
+    //     duration back up, 'linear' is the predictable choice
+    //     (no cubicOut ramp that reads as "lag").
+    //   - animationThreshold: 5000   — ECharts auto-disables
+    //     animation when the element count exceeds this. We
+    //     explicitly set it to a value well above any realistic run
+    //     length (200–500 steps is typical, our largest fixtures
+    //     have ~250 points) so the animation profile is consistent
+    //     across short and long runs.
+    animationDuration: 200,
+    animationDurationUpdate: 100,
+    animationEasingUpdate: 'cubicOut',
+    animationThreshold: 200,
     // X-axis-only zoom — see `buildDataZoomConfig` for the rationale behind
     // `xAxisIndex: 0`, `zoomLock: true`, and `filterMode: 'filter'`.
     dataZoom: buildDataZoomConfig(colors, zoomRange),
@@ -594,6 +631,13 @@ export function buildConvergenceChartOption(
           symbol: ['none', 'none'],
           data: markLines,
           silent: true,
+          // `animation: false` on the markLine specifically — even
+          // though the top-level `animationDurationUpdate: 0` already
+          // kills update animations globally, this is a defensive
+          // override that pins the mark-line cursor to "snap" mode
+          // permanently. The mark line is a UI cursor element, not
+          // a data transition; it should never ease between positions.
+          animation: { duration: 50 },
         },
       },
       ...(hasSaData
@@ -680,6 +724,19 @@ export function buildLandscapeChartOption(
 
   return {
     backgroundColor: 'transparent',
+    // ──────────────────────────────────────────────────────────────────
+    // Animation config (responsive playback UX)
+    // ──────────────────────────────────────────────────────────────────
+    // Mirrors the Convergence chart's profile. See that file's section
+    // for the full rationale — in short: ECharts' default 300ms update
+    // animation makes the current-step marker visibly trail the
+    // playback cursor. We snap updates to zero duration so the visual
+    // tracks the state exactly, while keeping a 200ms initial draw so
+    // the chart still feels alive when it first appears.
+    animationDuration: 200,
+    animationDurationUpdate: 100,
+    animationEasingUpdate: 'cubicOut',
+    animationThreshold: 200,
     // X-axis-only zoom — see `buildDataZoomConfig` for the rationale behind
     // `xAxisIndex: 0`, `zoomLock: true`, and `filterMode: 'filter'`.
     dataZoom: buildDataZoomConfig(colors, zoomRange),
@@ -831,17 +888,23 @@ export function buildLandscapeChartOption(
               lineStyle: {
                 color: colors.improving,
                 type: 'solid' as const,
-                width: 2,
+                width: 1,
               },
               label: {
                 formatter: `Step ${currentStep}`,
                 color: colors.improving,
-                fontSize: 10,
+                fontSize: 11,
+                fontWeight: 'bold' as const,
                 position: 'end' as const,
               },
             },
           ],
           silent: true,
+          // Defensive snap-mode override for the current-step mark
+          // line. See the Convergence chart's markLine comment for
+          // the full rationale — the mark line is a UI cursor
+          // element, not a data transition.
+          animation: { duration: 50 },
         },
       },
       {

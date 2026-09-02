@@ -329,6 +329,24 @@ export function ChartWrapper({
       // and `computeFollowRange` already returns percent values.
       start: next.start,
       end: next.end,
+      // Animation: zero-duration on the dispatchAction. ECharts
+      // internally has a `dataZoom`-specific animation (the slider
+      // handle slides from the old start/end to the new) that is
+      // NOT covered by the top-level `animationDurationUpdate`
+      // set in `chart-helpers.ts` — that one governs setOption-
+      // driven updates, but dispatchAction carries its own
+      // animation field on the payload. Without this, the slider
+      // handle visibly slides for ~300ms after every auto-scroll,
+      // which is the same perceptible lag as the marker had: the
+      // state is correct, the visual trails behind.
+      //
+      // We use `{ duration: 0 }` (the type-safe form) rather than
+      // `false` because ECharts' TypeScript types declare
+      // `animation?: PayloadAnimationPart` which is
+      // `{ duration?, easing?, delay? }`. At runtime both are
+      // equivalent — duration 0 means no animation — but the
+      // object form is what the type signature accepts.
+      animation: { duration: 50 },
     });
   }, [followStep?.currentStep, followStep?.firstStep, followStep?.lastStep]);
 
