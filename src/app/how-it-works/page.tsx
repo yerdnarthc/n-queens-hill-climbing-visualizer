@@ -206,9 +206,7 @@ export default function HowItWorksPage() {
                       {index + 1}
                     </span>
                     <span className="text-sm font-semibold">{strat.name}</span>
-                    <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                      {strat.tag}
-                    </span>
+                    <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"></span>
                   </div>
                   <p className="pl-8 text-xs leading-relaxed text-muted-foreground">
                     {strat.description}

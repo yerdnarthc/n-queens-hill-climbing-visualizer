@@ -348,6 +348,11 @@ export function ChartWrapper({
       // object form is what the type signature accepts.
       animation: { duration: 50 },
     });
+    // See the block comment above the effect: depending on the
+    // `followStep` object itself would re-fire this effect on every
+    // parent re-render because the parent builds a fresh object on
+    // each render. The field-level deps are the correct granularity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [followStep?.currentStep, followStep?.firstStep, followStep?.lastStep]);
 
   // Handle auto-resizing with ResizeObserver

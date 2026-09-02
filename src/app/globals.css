@@ -9,8 +9,8 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #d3d5d8;
+  --foreground: #0e121b;
 
   --card: #ffffff;
   --card-foreground: #0f172a;
@@ -18,24 +18,24 @@
   --popover: #ffffff;
   --popover-foreground: #0f172a;
 
-  --primary: #7c3aed;
+  --primary: #6e50db;
   --primary-foreground: #ffffff;
 
-  --secondary: #e2e8f0;
+  --secondary: #e2e2e6;
   --secondary-foreground: #0f172a;
 
   --muted: #f1f5f9;
   --muted-foreground: #475569;
 
-  --accent: #f1f5f9;
+  --accent: #d6d5e2;
   --accent-foreground: #0f172a;
 
   --destructive: #e11d48;
   --destructive-foreground: #ffffff;
 
-  --border: #e2e8f0;
+  --border: #c5c7c9;
   --input: #cbd5e1;
-  --ring: #7c3aed;
+  --ring: #8482eb;
 
   /* Semantic landscape-feature colors (one accent per concept,
      shared across board, charts, legend, and status badges) */
@@ -51,54 +51,54 @@
   --board-queen: #1e293b;
 
   /* ECharts theme alignment */
-  --chart-grid: #e2e8f0;
-  --chart-axis: #64748b;
+  --chart-grid: #c0c7cf;
+  --chart-axis: #1d2125;
 }
 
 /* ─────────────────────────────────────────────────────────────
    Midnight Lab — dark theme (site default)
    ───────────────────────────────────────────────────────────── */
 .dark {
-  --background: #0b0f1a;
+  --background: #101116;
   --foreground: #e2e8f0;
 
-  --card: #111827;
-  --card-foreground: #e2e8f0;
+  --card: #21212c;
+  --card-foreground: #9bafc9;
 
-  --popover: #111827;
+  --popover: #22242c;
   --popover-foreground: #e2e8f0;
 
-  --primary: #8b5cf6;
+  --primary: #6e50db;
   --primary-foreground: #ffffff;
 
   --secondary: #1e293b;
   --secondary-foreground: #e2e8f0;
 
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
+  --muted: #292d33;
+  --muted-foreground: #899ebb;
 
-  --accent: #1e293b;
-  --accent-foreground: #e2e8f0;
+  --accent: #713fcf;
+  --accent-foreground: #ffffff;
 
   --destructive: #f43f5e;
   --destructive-foreground: #ffffff;
 
-  --border: #1e293b;
-  --input: #334155;
-  --ring: #8b5cf6;
+  --border: #23242b;
+  --input: #454e5a;
+  --ring: #8482eb;
 
-  --feature-improving: #38bdf8; /* sky-400   */
+  --feature-improving: #57bce7; /* sky-400   */
   --feature-shoulder: #fdba74; /* orange-300 */
   --feature-local-max: #fbbf24; /* amber-400  */
   --feature-global-max: #34d399; /* emerald-400 */
-  --feature-conflict: #fb7185; /* rose-400   */
+  --feature-conflict: #ee6579; /* rose-400   */
 
   --board-light: #f0d9b5;
   --board-dark: #b58863;
   --board-queen: #0f172a;
 
-  --chart-grid: #1e293b;
-  --chart-axis: #94a3b8;
+  --chart-grid: #313049;
+  --chart-axis: #c8cbe2;
 }
 
 @theme inline {

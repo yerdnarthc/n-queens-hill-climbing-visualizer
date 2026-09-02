@@ -10,8 +10,6 @@ import type { StrategyId } from '@/lib/engine';
 
 export interface StrategyInfo {
   name: string;
-  /** One-line tagline shown next to the strategy name. */
-  tag: string;
   /** Plain-language description of how the strategy picks a move. */
   description: string;
 }
@@ -20,31 +18,26 @@ export interface StrategyInfo {
 export const STRATEGY_INFO: Record<StrategyId, StrategyInfo> = {
   'steepest-ascent': {
     name: 'Steepest-Ascent',
-    tag: 'Greedy Best',
     description:
       'Evaluates all N·(N-1) neighbor moves and picks the one yielding the greatest conflict reduction.',
   },
   'first-choice': {
     name: 'First-Choice',
-    tag: 'Random Walk to Next Better',
     description:
       'Generates random neighbor moves one by one and accepts the first move that improves conflicts.',
   },
   stochastic: {
     name: 'Stochastic',
-    tag: 'Weighted Probability',
     description:
       'Identifies all improving moves and chooses among them with probability proportional to the improvement steepness.',
   },
   'min-conflicts': {
     name: 'Min-Conflicts',
-    tag: 'CSP Heuristic',
     description:
       'Selects a queen involved in a conflict at random, then moves it to the row with the fewest attacking queens.',
   },
   'simulated-annealing': {
     name: 'Simulated Annealing',
-    tag: 'Metropolis Cooling',
     description:
       'Always accepts improving moves, and accepts worsening moves with probability e^(-Δ/T) while cooling temperature geometrically.',
   },

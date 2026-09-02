@@ -150,9 +150,7 @@ export function ConfigPanel() {
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2 font-semibold">
                         <span>{strat.name}</span>
-                        <span className="py-0.2 rounded bg-primary/10 px-1.5 text-[10px] text-primary">
-                          {strat.tag}
-                        </span>
+                        <span className="py-0.2 rounded bg-primary/10 px-1.5 text-[10px] text-primary"></span>
                       </div>
                     </div>
                   </SelectItem>

@@ -1,45 +1,13 @@
-
-> n-queens-visualizer@0.1.0 test:run
-> vitest run
-
 (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
   - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 [1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mC:/Users/Arth Andrey/Documents/N-Queens Visualizer/n-queens-visualizer[39m
 
- [32mΓ£ô[39m src/components/visualizer/__tests__/chart-helpers.test.ts [2m([22m[2m41 tests[22m[2m)[22m[32m 41[2mms[22m[39m
- [32mΓ£ô[39m src/lib/engine/__tests__/conflicts.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 57[2mms[22m[39m
- [32mΓ£ô[39m src/components/visualizer/__tests__/chart-wrapper.test.tsx [2m([22m[2m17 tests[22m[2m)[22m[32m 108[2mms[22m[39m
- [32mΓ£ô[39m src/store/__tests__/simulation-store.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 35[2mms[22m[39m
- [32mΓ£ô[39m src/lib/engine/__tests__/rng.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 848[2mms[22m[39m
-     [33m[2mΓ£ô[22m[39m emits floats strictly within [0, 1) [33m 324[2mms[22m[39m
-     [33m[2mΓ£ô[22m[39m int() stays within [0, maxExclusive) across many draws [33m 439[2mms[22m[39m
- [32mΓ£ô[39m src/lib/engine/__tests__/strategies.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 57[2mms[22m[39m
- [32mΓ£ô[39m src/lib/engine/__tests__/simulation.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 83[2mms[22m[39m
- [32mΓ£ô[39m src/hooks/__tests__/useKeyboardShortcuts.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 111[2mms[22m[39m
- [32mΓ£ô[39m src/hooks/__tests__/useSimulationDriver.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 135[2mms[22m[39m
- [32mΓ£ô[39m src/hooks/__tests__/useUrlConfigSync.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 497[2mms[22m[39m
-(node:37708) Warning: `--localstorage-file` was provided without a valid path
-(Use `node --trace-warnings ...` to show where the warning was created)
- [32mΓ£ô[39m src/components/__tests__/site-nav.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 437[2mms[22m[39m
-     [33m[2mΓ£ô[22m[39m renders both nav links with the expected routes [33m 343[2mms[22m[39m
- [32mΓ£ô[39m src/components/visualizer/__tests__/stats-header.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 127[2mms[22m[39m
- [32mΓ£ô[39m src/components/visualizer/__tests__/playback-controls.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 728[2mms[22m[39m
-     [33m[2mΓ£ô[22m[39m renders playback action buttons [33m 307[2mms[22m[39m
- [32mΓ£ô[39m src/components/visualizer/__tests__/chessboard.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 126[2mms[22m[39m
- [32mΓ£ô[39m src/components/visualizer/__tests__/config-panel.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 789[2mms[22m[39m
-     [33m[2mΓ£ô[22m[39m renders board size title and strategy selector [33m 407[2mms[22m[39m
- [32mΓ£ô[39m src/components/visualizer/__tests__/analytics-panel.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 741[2mms[22m[39m
-     [33m[2mΓ£ô[22m[39m renders analytics panel header, tabs, and current state badge [33m 392[2mms[22m[39m
- [32mΓ£ô[39m src/components/visualizer/__tests__/use-chart-theme-colors.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 154[2mms[22m[39m
- [32mΓ£ô[39m src/lib/__tests__/csv-export.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 14[2mms[22m[39m
- [32mΓ£ô[39m src/lib/__tests__/url-state.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 10[2mms[22m[39m
- [32mΓ£ô[39m src/lib/engine/__tests__/config.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
- [32mΓ£ô[39m src/lib/__tests__/strategy-info.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/components/visualizer/__tests__/analytics-panel.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 392[2mms[22m[39m
 
-[2m Test Files [22m [1m[32m21 passed[39m[22m[90m (21)[39m
-[2m      Tests [22m [1m[32m249 passed[39m[22m[90m (249)[39m
-[2m   Start at [22m 23:27:42
-[2m   Duration [22m 9.59s[2m (transform 3.08s, setup 19.04s, import 13.04s, tests 5.11s, environment 81.83s)[22m
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 03:10:45
+[2m   Duration [22m 2.70s[2m (transform 193ms, setup 299ms, import 587ms, tests 392ms, environment 1.16s)[22m
 
