@@ -1,0 +1,4 @@
+
+> n-queens-visualizer@0.1.0 typecheck
+> tsc --noEmit
+

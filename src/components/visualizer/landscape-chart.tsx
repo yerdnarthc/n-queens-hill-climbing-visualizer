@@ -16,12 +16,26 @@ export function LandscapeChart({ height = '260px', className = '' }: LandscapeCh
   const jumpTo = useSimulationStore((s) => s.jumpTo);
   const colors = useChartThemeColors();
 
+  // X-axis zoom preservation — see ConvergenceChart for the full rationale.
+  // Each chart owns its own zoom state because Radix Tabs unmounts the
+  // inactive tab's chart instance, so the ranges are tab-local by design.
+  const [zoomRange, setZoomRange] = React.useState<{
+    start: number;
+    end: number;
+    runKey: number;
+  } | null>(null);
+  const effectiveZoomRange = React.useMemo(() => {
+    if (!zoomRange || !result) return null;
+    if (zoomRange.runKey !== result.totalSteps) return null;
+    return { start: zoomRange.start, end: zoomRange.end };
+  }, [zoomRange, result]);
+
   const option = React.useMemo(() => {
     if (!result || result.snapshots.length === 0) {
       return {};
     }
-    return buildLandscapeChartOption(result.snapshots, currentStep, colors);
-  }, [result, currentStep, colors]);
+    return buildLandscapeChartOption(result.snapshots, currentStep, colors, effectiveZoomRange);
+  }, [result, currentStep, colors, effectiveZoomRange]);
 
   if (!result || result.snapshots.length === 0) {
     return (
@@ -43,6 +57,9 @@ export function LandscapeChart({ height = '260px', className = '' }: LandscapeCh
           if (step >= 0 && step <= result.totalSteps) {
             jumpTo(step);
           }
+        }}
+        onZoomChange={(range) => {
+          setZoomRange({ ...range, runKey: result.totalSteps });
         }}
         data-testid="landscape-echarts"
       />

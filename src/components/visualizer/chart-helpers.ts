@@ -94,6 +94,78 @@ export function getPhaseLabel(phase: SnapshotPhase, conflicts: number): string {
   }
 }
 
+/**
+ * Builds the ECharts `dataZoom` configuration block used by every analytics
+ * chart. We provide two zoom interactions stacked into a single config entry:
+ *
+ * 1. `type: 'inside'`  — wheel-zoom and pinch-zoom on the plot area itself,
+ *    no extra UI. `zoomLock: true` constrains the interaction to the X axis,
+ *    so trackpad gestures can't accidentally rescale the Y (conflict) domain.
+ *
+ * 2. `type: 'slider'`  — a small drag-handle bar rendered inside the chart at
+ *    the bottom (`bottom: 4`, `height: 18`). This is the most discoverable
+ *    affordance for users who don't realize they can scroll-wheel-zoom.
+ *
+ * Both entries use `xAxisIndex: 0` (X axis only) and `filterMode: 'filter'`,
+ * which samples the series along X without rescaling the Y axis — i.e. the
+ * Y range always remains `[0, maxConflicts]` regardless of zoom state.
+ *
+ * `zoomRange` is an optional `{ start, end }` from the parent (preserved
+ * across re-renders). When null, the slider starts at the full 0–100 range.
+ */
+export function buildDataZoomConfig(
+  colors: PhaseColors,
+  zoomRange: { start: number; end: number } | null = null,
+) {
+  const start = zoomRange?.start ?? 0;
+  const end = zoomRange?.end ?? 100;
+  return [
+    {
+      type: 'inside',
+      xAxisIndex: 0,
+      zoomLock: true, // X-axis only — prevent accidental Y rescale on pinch
+      moveOnMouseMove: true,
+      zoomOnMouseWheel: true,
+      filterMode: 'filter',
+    },
+    {
+      type: 'slider',
+      xAxisIndex: 0,
+      bottom: 4,
+      height: 18,
+      start,
+      end,
+      filterMode: 'filter',
+      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+      // The "filler" is the band between the two handles — the user's
+      // currently-visible window. A faint primary tint reads as "this is
+      // what you're looking at" without overpowering the chart.
+      fillerColor: withAlpha(colors.primary, 0.18),
+      handleStyle: {
+        color: colors.primary,
+        borderColor: colors.primary,
+      },
+      moveHandleStyle: {
+        color: colors.primary,
+        opacity: 0.6,
+      },
+      // Visual ghost of the underlying series inside the slider rail —
+      // gives the user a sense of where the data is dense.
+      selectedDataBackground: {
+        lineStyle: { color: colors.primary, opacity: 0.5, width: 1 },
+        areaStyle: { color: withAlpha(colors.primary, 0.18) },
+      },
+      dataBackground: {
+        lineStyle: { color: colors.axis, opacity: 0.45 },
+        areaStyle: { color: withAlpha(colors.axis, 0.12) },
+      },
+      textStyle: { color: colors.axis, fontSize: 10 },
+      showDetail: false,
+    },
+  ];
+}
+
 export interface PhaseDistribution {
   improving: number;
   shoulder: number;
@@ -109,6 +181,24 @@ export interface PhaseDistribution {
 /**
  * Computes breakdown of search steps across phases.
  */
+/**
+ * Applies an alpha (0-1) to a hex color string (#RRGGBB or #RRGGBBAA) and
+ * returns the resulting hex color. Used by the dataZoom slider styling so
+ * the handles and filler can pick up theme colors with custom transparency
+ * without committing to a fixed opacity in CSS variables.
+ */
+export function withAlpha(hex: string, alpha: number): string {
+  const clamp = Math.max(0, Math.min(1, alpha));
+  // Expand 3-digit shorthand (#abc) to 6-digit form (#aabbcc)
+  const normalized = hex.replace(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i, '#$1$1$2$2$3$3');
+  const m = /^#[0-9a-f]{6}$/i.exec(normalized);
+  if (!m) return hex;
+  const a = Math.round(clamp * 255)
+    .toString(16)
+    .padStart(2, '0');
+  return `${normalized}${a}`;
+}
+
 export function computePhaseDistribution(snapshots: readonly Snapshot[]): PhaseDistribution {
   let improving = 0;
   let shoulder = 0;
@@ -183,12 +273,31 @@ export function buildConvergenceChartOption(
   currentStep: number,
   strategy: StrategyId,
   colors: PhaseColors = DEFAULT_DARK_COLORS,
+  zoomRange: { start: number; end: number } | null = null,
 ) {
   const steps = snapshots.map((s) => s.step);
   const conflictData = snapshots.map((s) => s.conflicts);
   const isSa = strategy === 'simulated-annealing';
   const hasSaData = isSa && snapshots.some((s) => s.temperature !== null);
   const temperatureData = hasSaData ? snapshots.map((s) => s.temperature ?? 0) : [];
+
+  // Pin both Y-axis ranges to the full-run domain so they stay steady
+  // regardless of the dataZoom X-window. Without explicit `max`, ECharts
+  // re-computes a "nice" upper bound from the *filtered* (post-dataZoom)
+  // series, which causes the Y-axis to rescale as the user scrubs — making
+  // relative trajectory shape hard to compare across windows. See the
+  // ECharts `AxisProxy._filterData` source: `selectRange` physically
+  // removes out-of-window points, and the Y-axis extent is then derived
+  // from whatever's left. Setting `max` explicitly (and `scale: false`
+  // for clarity) opts the axis out of the auto-nice rescale.
+  // We use `Math.max(0, ...)` to guard against the all-solved run edge
+  // case (conflictData === [0, 0, 0, ...]) where `Math.max(...arr)` returns
+  // -Infinity, and add a small headroom (+1) so the highest marker isn't
+  // flush against the top edge of the plot.
+  const maxConflictsRaw = conflictData.length > 0 ? Math.max(...conflictData) : 0;
+  const yAxisMaxConflicts = Math.max(1, maxConflictsRaw + 1);
+  const maxTempRaw = temperatureData.length > 0 ? Math.max(...temperatureData) : 0;
+  const yAxisMaxTemp = Math.max(0.1, Math.round((maxTempRaw + 0.1) * 100) / 100);
 
   // Restart step mark lines
   const restartMarkLines = snapshots
@@ -230,6 +339,9 @@ export function buildConvergenceChartOption(
 
   return {
     backgroundColor: 'transparent',
+    // X-axis-only zoom — see `buildDataZoomConfig` for the rationale behind
+    // `xAxisIndex: 0`, `zoomLock: true`, and `filterMode: 'filter'`.
+    dataZoom: buildDataZoomConfig(colors, zoomRange),
     tooltip: {
       trigger: 'axis',
       backgroundColor: colors.card,
@@ -303,7 +415,12 @@ export function buildConvergenceChartOption(
         axisLine: { lineStyle: { color: colors.grid } },
         axisLabel: { color: colors.axis, fontSize: 11 },
         splitLine: { lineStyle: { color: colors.grid } },
+        // Pinned: see the yAxisMaxConflicts computation above. Together
+        // with `scale: false` (the default) this keeps the Y-axis
+        // visually steady as the user scrubs and zooms the X window.
         min: 0,
+        max: yAxisMaxConflicts,
+        scale: false,
       },
       ...(hasSaData
         ? [
@@ -319,7 +436,11 @@ export function buildConvergenceChartOption(
               },
               splitLine: { show: false },
               position: 'right' as const,
+              // Pinned (mirrors the primary conflicts axis): the user must
+              // see the temperature drop on a fixed scale across the run.
               min: 0,
+              max: yAxisMaxTemp,
+              scale: false,
             },
           ]
         : []),
@@ -333,7 +454,12 @@ export function buildConvergenceChartOption(
         smooth: false,
         symbol: 'circle',
         symbolSize: (value: number, params: { dataIndex: number }) => {
-          return params.dataIndex === currentStep ? 8 : snapshots.length > 50 ? 0 : 4;
+          // Current step: most prominent. Otherwise: modest bump from the
+          // pre-zoom sizes (4 → 6, and never hidden for dense runs) so the
+          // points stay readable now that the dataZoom slider is available
+          // for further inspection.
+          if (params.dataIndex === currentStep) return 9;
+          return snapshots.length > 50 ? 4 : 6;
         },
         itemStyle: {
           color: (params: { dataIndex: number }) => {
@@ -392,8 +518,17 @@ export function buildLandscapeChartOption(
   snapshots: readonly Snapshot[],
   currentStep: number,
   colors: PhaseColors = DEFAULT_DARK_COLORS,
+  zoomRange: { start: number; end: number } | null = null,
 ) {
   const steps = snapshots.map((s) => s.step);
+
+  // Pin the Y-axis to the full-run conflicts max. See the matching comment
+  // in `buildConvergenceChartOption` for the full rationale: without an
+  // explicit `max`, ECharts derives the upper bound from the post-dataZoom
+  // filtered series, which makes the Y-axis rescale as the user scrubs.
+  // +1 headroom so the highest marker isn't flush against the top edge.
+  const maxConflictsRaw = snapshots.length > 0 ? Math.max(...snapshots.map((s) => s.conflicts)) : 0;
+  const yAxisMaxConflicts = Math.max(1, maxConflictsRaw + 1);
 
   const scatterData = snapshots.map((s) => {
     const isCurrent = s.step === currentStep;
@@ -401,17 +536,19 @@ export function buildLandscapeChartOption(
     const color = getPhaseColor(s.phase, s.conflicts, colors);
 
     let symbol = 'circle';
-    let size = snapshots.length > 60 ? 5 : 7;
+    // Bumped from `>60 ? 5 : 7` to `>60 ? 6 : 8` so dense runs stay readable
+    // now that the dataZoom slider lets the user inspect any range in detail.
+    let size = snapshots.length > 60 ? 6 : 8;
 
     if (isSolved) {
       symbol = 'star';
-      size = 12;
+      size = 13;
     } else if (s.phase === 'restart') {
       symbol = 'triangle';
-      size = 9;
+      size = 10;
     } else if (s.phase === 'shoulder') {
       symbol = 'diamond';
-      size = 7;
+      size = 8;
     }
 
     if (isCurrent) {
@@ -435,6 +572,9 @@ export function buildLandscapeChartOption(
 
   return {
     backgroundColor: 'transparent',
+    // X-axis-only zoom — see `buildDataZoomConfig` for the rationale behind
+    // `xAxisIndex: 0`, `zoomLock: true`, and `filterMode: 'filter'`.
+    dataZoom: buildDataZoomConfig(colors, zoomRange),
     tooltip: {
       trigger: 'item',
       backgroundColor: colors.card,
@@ -497,7 +637,12 @@ export function buildLandscapeChartOption(
       axisLine: { lineStyle: { color: colors.grid } },
       axisLabel: { color: colors.axis, fontSize: 11 },
       splitLine: { lineStyle: { color: colors.grid } },
+      // Pinned to the full-run max (see yAxisMaxConflicts above). The
+      // `scale: false` makes the intent explicit — we never want the
+      // Y-axis to "auto-fit" the visible X window.
       min: 0,
+      max: yAxisMaxConflicts,
+      scale: false,
     },
     series: [
       {

@@ -10,6 +10,15 @@ export interface ChartWrapperProps {
   height?: string | number;
   className?: string;
   onPointClick?: (stepIndex: number) => void;
+  /**
+   * Called when the user changes the X-axis zoom range via the dataZoom
+   * slider or the inside-mousewheel interaction. The parent typically stores
+   * this `{ start, end }` pair and feeds it back into the next option build
+   * so the zoom is preserved across re-renders (e.g. animation frames).
+   *
+   * Not called on programmatic zoom changes or on the chart's initial state.
+   */
+  onZoomChange?: (range: { start: number; end: number }) => void;
   'data-testid'?: string;
 }
 
@@ -95,6 +104,7 @@ export function ChartWrapper({
   height: propsHeight = '280px',
   className = '',
   onPointClick,
+  onZoomChange,
   'data-testid': testId = 'chart-wrapper',
 }: ChartWrapperProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -106,6 +116,13 @@ export function ChartWrapper({
   // notMerge:true on every render — when only the callback reference changes.
   const onPointClickRef = React.useRef(onPointClick);
   onPointClickRef.current = onPointClick;
+
+  // Same stale-closure guard for the dataZoom handler. We register the
+  // 'datazoom' event exactly once at init, and read the latest callback from
+  // a ref at fire time so a re-render that only swaps `onZoomChange` doesn't
+  // tear down + re-init the chart instance.
+  const onZoomChangeRef = React.useRef(onZoomChange);
+  onZoomChangeRef.current = onZoomChange;
 
   // Initialize and update ECharts instance
   React.useEffect(() => {
@@ -135,6 +152,32 @@ export function ChartWrapper({
           } else if (Array.isArray(p.value) && typeof p.value[0] === 'number') {
             handler(p.value[0]);
           }
+        });
+
+        // Bind dataZoom event for X-axis zoom preservation — registered once.
+        // The 'datazoom' event fires on both the slider drag and the
+        // inside-mousewheel/pinch interactions. The payload's `batch` array
+        // contains `{ start, end, startValue, endValue }` for the active
+        // dataZoom components. We forward the first entry's percentage range
+        // to the parent so it can be baked into the next option build.
+        chartInstanceRef.current.on('datazoom', () => {
+          const handler = onZoomChangeRef.current;
+          if (!handler) return;
+          const chart = chartInstanceRef.current;
+          if (!chart) return;
+          const currentOption = chart.getOption();
+          // ECharts getOption() returns a plain object where dataZoom is the
+          // first-class option key (or an array, depending on usage).
+          const dataZoom = (currentOption as { dataZoom?: unknown }).dataZoom;
+          if (!Array.isArray(dataZoom) || dataZoom.length === 0) return;
+          // We use the slider entry (index 1) for the visible range since
+          // it's the user-facing one; fall back to the first entry if needed.
+          const sliderEntry = (dataZoom[1] ?? dataZoom[0]) as
+            { start?: number; end?: number } | undefined;
+          if (!sliderEntry) return;
+          const start = typeof sliderEntry.start === 'number' ? sliderEntry.start : 0;
+          const end = typeof sliderEntry.end === 'number' ? sliderEntry.end : 100;
+          handler({ start, end });
         });
       }
 
