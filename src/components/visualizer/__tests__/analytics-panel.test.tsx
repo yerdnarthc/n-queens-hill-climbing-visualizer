@@ -9,9 +9,16 @@ import { simulationStore } from '@/store';
 // setOption call. This is the only way to verify that the lifted-up
 // zoom state in AnalyticsPanel actually flows through to both chart
 // components — and survives a tab switch.
-const { mockInit, mockSetOption, mockOn, mockGetOption } = vi.hoisted(() => {
+//
+// `dispatchAction` is mocked because the ChartWrapper's
+// "follow current step" auto-scroll effect calls it to programmatically
+// shift the dataZoom window when the marker scrolls out of view. The
+// default mock return value (0–100) means the marker always starts in
+// view, so dispatchAction is not called by default.
+const { mockInit, mockSetOption, mockOn, mockGetOption, mockDispatchAction } = vi.hoisted(() => {
   const mockSetOption = vi.fn();
   const mockOn = vi.fn();
+  const mockDispatchAction = vi.fn();
   const mockGetOption = vi.fn(() => ({
     dataZoom: [
       { start: 0, end: 100 },
@@ -25,9 +32,16 @@ const { mockInit, mockSetOption, mockOn, mockGetOption } = vi.hoisted(() => {
     dispose: vi.fn(),
     resize: vi.fn(),
     getOption: mockGetOption,
+    dispatchAction: mockDispatchAction,
     getZr: vi.fn(() => ({ on: vi.fn(), off: vi.fn() })),
   }));
-  return { mockInit, mockSetOption, mockOn, mockGetOption };
+  return {
+    mockInit,
+    mockSetOption,
+    mockOn,
+    mockGetOption,
+    mockDispatchAction,
+  };
 });
 
 vi.mock('echarts', () => ({

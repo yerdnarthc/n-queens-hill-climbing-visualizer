@@ -8,28 +8,40 @@ import type { EChartsOption } from 'echarts';
 // Hoisted mock factory so variables are available in the vi.mock call.
 // The mock instance must support `getOption()` because the dataZoom event
 // handler reads back the current zoom range from the chart after a user
-// interaction.
-const { mockInit, mockSetOption, mockOn, mockDispose, mockGetOption } = vi.hoisted(() => {
-  const mockSetOption = vi.fn();
-  const mockOn = vi.fn();
-  const mockDispose = vi.fn();
-  const mockGetOption = vi.fn(() => ({
-    dataZoom: [
-      { start: 0, end: 100 },
-      { type: 'slider', start: 0, end: 100 },
-    ],
-  }));
-  const mockInit = vi.fn(() => ({
-    setOption: mockSetOption,
-    on: mockOn,
-    off: vi.fn(),
-    dispose: mockDispose,
-    resize: vi.fn(),
-    getOption: mockGetOption,
-    getZr: vi.fn(() => ({ on: vi.fn(), off: vi.fn() })),
-  }));
-  return { mockInit, mockSetOption, mockOn, mockDispose, mockGetOption };
-});
+// interaction. It also needs `dispatchAction()` because the
+// "follow current step" auto-scroll effect calls it to programmatically
+// shift the dataZoom window.
+const { mockInit, mockSetOption, mockOn, mockDispose, mockGetOption, mockDispatchAction } =
+  vi.hoisted(() => {
+    const mockSetOption = vi.fn();
+    const mockOn = vi.fn();
+    const mockDispose = vi.fn();
+    const mockDispatchAction = vi.fn();
+    const mockGetOption = vi.fn(() => ({
+      dataZoom: [
+        { start: 0, end: 100 },
+        { type: 'slider', start: 0, end: 100 },
+      ],
+    }));
+    const mockInit = vi.fn(() => ({
+      setOption: mockSetOption,
+      on: mockOn,
+      off: vi.fn(),
+      dispose: mockDispose,
+      resize: vi.fn(),
+      getOption: mockGetOption,
+      dispatchAction: mockDispatchAction,
+      getZr: vi.fn(() => ({ on: vi.fn(), off: vi.fn() })),
+    }));
+    return {
+      mockInit,
+      mockSetOption,
+      mockOn,
+      mockDispose,
+      mockGetOption,
+      mockDispatchAction,
+    };
+  });
 
 vi.mock('echarts', () => ({
   init: mockInit,
@@ -438,5 +450,116 @@ describe('ChartWrapper', () => {
     });
 
     expect(callback).toHaveBeenCalledWith(4);
+  });
+
+  // ──────────────────────────────────────────────────────────────────
+  // followStep — auto-scroll the dataZoom window to keep the
+  // current-step marker visible.
+  // ──────────────────────────────────────────────────────────────────
+
+  it('does not call dispatchAction when followStep is not provided', () => {
+    // Baseline: no followStep prop → the wrapper must not touch the
+    // dataZoom window. This is the "feature off" path.
+    renderChartWrapper();
+    expect(mockDispatchAction).not.toHaveBeenCalled();
+  });
+
+  it('does not call dispatchAction when the marker is already inside the window', () => {
+    // Default mock window is 0–100. Marker at step 50 → in view → no
+    // dispatch. This pins the most important invariant of the feature:
+    // if the marker is visible, do nothing.
+    renderChartWrapper({
+      followStep: { currentStep: 50, firstStep: 0, lastStep: 100 },
+    });
+    expect(mockDispatchAction).not.toHaveBeenCalled();
+  });
+
+  it('dispatches a dataZoom action when the marker scrolls past the right edge', () => {
+    // Window 0–60, marker at step 80 of 0–100 (pct=80 > 60).
+    // width=60. newEnd = min(100, 80 + 60*0.3) = 98.
+    // newStart = max(0, 98 - 60) = 38.
+    mockGetOption.mockReturnValue({
+      dataZoom: [
+        { start: 0, end: 60 },
+        { type: 'slider', start: 0, end: 60 },
+      ],
+    });
+
+    renderChartWrapper({
+      followStep: { currentStep: 80, firstStep: 0, lastStep: 100 },
+    });
+
+    expect(mockDispatchAction).toHaveBeenCalledTimes(1);
+    expect(mockDispatchAction).toHaveBeenCalledWith({
+      type: 'dataZoom',
+      dataZoomIndex: 1,
+      start: 38,
+      end: 98,
+    });
+  });
+
+  it('dispatches a dataZoom action when the marker scrolls past the left edge', () => {
+    // Window 30–80, marker at step 20 of 0–100 (pct=20 < 30).
+    // newStart = max(0, 20 - 50*0.3) = 5. newEnd = 55.
+    mockGetOption.mockReturnValue({
+      dataZoom: [
+        { start: 30, end: 80 },
+        { type: 'slider', start: 30, end: 80 },
+      ],
+    });
+
+    renderChartWrapper({
+      followStep: { currentStep: 20, firstStep: 0, lastStep: 100 },
+    });
+
+    expect(mockDispatchAction).toHaveBeenCalledTimes(1);
+    expect(mockDispatchAction).toHaveBeenCalledWith({
+      type: 'dataZoom',
+      dataZoomIndex: 1,
+      start: 5,
+      end: 55,
+    });
+  });
+
+  it('falls back to the first dataZoom entry if the slider entry is missing', () => {
+    // Defensive: if ECharts ever returns a single-entry dataZoom, the
+    // effect should still find a start/end to use. Same fallback chain
+    // as the `datazoom` event handler.
+    mockGetOption.mockReturnValue({
+      dataZoom: [{ start: 20, end: 70 }],
+    });
+
+    // Marker at 90 of 0–100, past the right edge of 20–70.
+    // width=50. newEnd = min(100, 90 + 50*0.3) = 100. newStart = 50.
+    renderChartWrapper({
+      followStep: { currentStep: 90, firstStep: 0, lastStep: 100 },
+    });
+
+    expect(mockDispatchAction).toHaveBeenCalledWith({
+      type: 'dataZoom',
+      dataZoomIndex: 1,
+      start: 50,
+      end: 100,
+    });
+  });
+
+  it('does not call dispatchAction when currentStep is out of data range (defensive guard)', () => {
+    // Engine should clamp currentStep, but if it ever leaks an
+    // out-of-range value, the wrapper should no-op rather than fight
+    // the engine. The pure function returns null in this case.
+    renderChartWrapper({
+      followStep: { currentStep: 999, firstStep: 0, lastStep: 100 },
+    });
+    expect(mockDispatchAction).not.toHaveBeenCalled();
+  });
+
+  it('does not call dispatchAction when the dataZoom entry is missing entirely', () => {
+    // If ECharts returns no dataZoom (e.g. before init completes), the
+    // effect should bail rather than crash.
+    mockGetOption.mockReturnValue({ dataZoom: undefined } as never);
+    renderChartWrapper({
+      followStep: { currentStep: 80, firstStep: 0, lastStep: 100 },
+    });
+    expect(mockDispatchAction).not.toHaveBeenCalled();
   });
 });

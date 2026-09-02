@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as echarts from 'echarts';
 import { useTheme } from 'next-themes';
 import { DEFAULT_DARK_COLORS, DEFAULT_LIGHT_COLORS, type PhaseColors } from './chart-helpers';
+import { computeFollowRange } from './use-follow-current-step';
 
 export interface ChartWrapperProps {
   option: echarts.EChartsOption;
@@ -19,6 +20,26 @@ export interface ChartWrapperProps {
    * Not called on programmatic zoom changes or on the chart's initial state.
    */
   onZoomChange?: (range: { start: number; end: number }) => void;
+  /**
+   * Optional: when provided, the chart will auto-scroll the dataZoom
+   * window horizontally to keep the marker at `currentStep` visible.
+   *
+   * The window is only **shifted** when the marker has scrolled past
+   * either edge — the window width (and therefore the user's chosen
+   * zoom level) is preserved across the scroll. The auto-scroll is
+   * always-on: even if the user has zoomed in or panned to a custom
+   * range, the chart will follow the marker. This matches the
+   * "always follow" decision documented in the feature plan.
+   *
+   * When omitted (or when `followStep.currentStep` is out of range), the
+   * wrapper does nothing and the chart's window is controlled only by
+   * the user and the `option.dataZoom` config.
+   */
+  followStep?: {
+    currentStep: number;
+    firstStep: number;
+    lastStep: number;
+  };
   'data-testid'?: string;
 }
 
@@ -105,6 +126,7 @@ export function ChartWrapper({
   className = '',
   onPointClick,
   onZoomChange,
+  followStep,
   'data-testid': testId = 'chart-wrapper',
 }: ChartWrapperProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -242,6 +264,73 @@ export function ChartWrapper({
       console.warn('ECharts initialization notice:', err);
     }
   }, [option, propsHeight]);
+
+  // Auto-scroll the dataZoom window to keep the current-step marker
+  // visible. This is the "follow the cursor" feature: as playback
+  // advances and the marker would scroll off the right edge of the
+  // visible plot area, we shift the dataZoom window to bring the
+  // marker back into view.
+  //
+  // We use `dispatchAction` (not `setOption`) for two reasons:
+  //   1. dispatchAction is the ECharts-blessed API for programmatic
+  //      dataZoom updates. It updates the slider entry in place and
+  //      does NOT rebuild the chart's option tree, so the rest of
+  //      the chart (markers, axes, tooltip) is untouched.
+  //   2. It avoids re-running the setOption effect above (which
+  //      merges the full option) — a setOption call would also
+  //      trigger an unnecessary chart re-render.
+  //
+  // The `dataZoomIndex: 1` selector targets the slider entry, which
+  // is the same one the `datazoom` event handler reports to the
+  // parent. The `inside` dataZoom (index 0) is left untouched.
+  //
+  // We depend on the followStep fields individually rather than the
+  // object reference to avoid re-firing the effect on every parent
+  // re-render — the parent (ConvergenceChart, LandscapeChart) builds
+  // a new object on every render, but its fields only change when
+  // the underlying data actually changes.
+  React.useEffect(() => {
+    if (!followStep) return;
+    const chart = chartInstanceRef.current;
+    if (!chart) return;
+
+    // Read the current slider entry. This is the same fallback chain
+    // the `datazoom` event handler uses (slider at index 1, or fall
+    // back to the first entry if ECharts ever returns a single-entry
+    // dataZoom).
+    const opt = chart.getOption() as { dataZoom?: Array<{ start?: number; end?: number }> };
+    const dz = opt.dataZoom?.[1] ?? opt.dataZoom?.[0];
+    if (!dz) return;
+    const currentStart = typeof dz.start === 'number' ? dz.start : 0;
+    const currentEnd = typeof dz.end === 'number' ? dz.end : 100;
+
+    const next = computeFollowRange({
+      currentStep: followStep.currentStep,
+      firstStep: followStep.firstStep,
+      lastStep: followStep.lastStep,
+      currentStart,
+      currentEnd,
+    });
+
+    // `next === null` means the marker is already in view (or the
+    // inputs are degenerate) — short-circuit to avoid a no-op
+    // dispatchAction. This is the critical infinite-loop guard: the
+    // dispatchAction does fire `datazoom` and propagate up to the
+    // parent, but since the new range equals the current range, the
+    // parent won't re-render with new data, and we won't re-fire
+    // this effect.
+    if (next === null) return;
+
+    chart.dispatchAction({
+      type: 'dataZoom',
+      dataZoomIndex: 1,
+      // Use `start`/`end` (percent) rather than `startValue`/`endValue`
+      // (data values). The slider entry is on a 0–100 percent scale,
+      // and `computeFollowRange` already returns percent values.
+      start: next.start,
+      end: next.end,
+    });
+  }, [followStep?.currentStep, followStep?.firstStep, followStep?.lastStep]);
 
   // Handle auto-resizing with ResizeObserver
   React.useEffect(() => {

@@ -71,6 +71,17 @@ export function ConvergenceChart({
     );
   }
 
+  // Compute the X-axis bounds for the "follow the current step"
+  // auto-scroll effect. snapshots are 1:1 with step numbers for this
+  // engine, so firstStep/lastStep are simply the first and last step
+  // values in the array.
+  //
+  // These values are used by ChartWrapper to know when the marker
+  // (drawn at xAxis: currentStep) has scrolled off the visible plot
+  // area so it can dispatch a dataZoom action to bring it back.
+  const firstStep = result.snapshots[0]?.step ?? 0;
+  const lastStep = result.snapshots[result.snapshots.length - 1]?.step ?? 0;
+
   return (
     <div className={`relative flex flex-col ${className}`} data-testid="convergence-chart">
       <ChartWrapper
@@ -82,6 +93,7 @@ export function ConvergenceChart({
           }
         }}
         onZoomChange={onZoomChange}
+        followStep={{ currentStep, firstStep, lastStep }}
         data-testid="convergence-echarts"
       />
     </div>

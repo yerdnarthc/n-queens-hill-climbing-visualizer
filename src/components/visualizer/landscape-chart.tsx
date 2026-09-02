@@ -63,6 +63,15 @@ export function LandscapeChart({
     );
   }
 
+  // Compute the X-axis bounds for the "follow the current step"
+  // auto-scroll effect. The Landscape chart draws a `markLine` at
+  // xAxis: currentStep, identical to the Convergence chart, so the
+  // same auto-scroll logic applies. snapshots are 1:1 with step
+  // numbers in this engine, so firstStep/lastStep are simply the
+  // first and last step values in the array.
+  const firstStep = result.snapshots[0]?.step ?? 0;
+  const lastStep = result.snapshots[result.snapshots.length - 1]?.step ?? 0;
+
   return (
     <div className={`relative flex flex-col ${className}`} data-testid="landscape-chart">
       <ChartWrapper
@@ -74,6 +83,7 @@ export function LandscapeChart({
           }
         }}
         onZoomChange={onZoomChange}
+        followStep={{ currentStep, firstStep, lastStep }}
         data-testid="landscape-echarts"
       />
     </div>
