@@ -302,4 +302,141 @@ describe('ChartWrapper', () => {
 
     expect(callback).toHaveBeenCalledWith({ start: 40, end: 60 });
   });
+
+  // ──────────────────────────────────────────────────────────────────
+  // updateAxisPointer + click-fallback (empty-space click-to-scrub)
+  // ──────────────────────────────────────────────────────────────────
+
+  it('registers an updateAxisPointer event handler exactly once on init', () => {
+    // ECharts dispatches the 'updateAxisPointer' action on every
+    // mousemove that updates the axisPointer. We listen for it to track
+    // the snapped step number so a click in empty space can still
+    // resolve to a step (the "click in the gaps" UX fix).
+    renderChartWrapper();
+
+    const updateAxisPointerRegs = mockOn.mock.calls.filter(
+      (call: unknown[]) => call[0] === 'updateAxisPointer',
+    );
+    expect(updateAxisPointerRegs).toHaveLength(1);
+    expect(mockInit).toHaveBeenCalledTimes(1);
+  });
+
+  it("click handler falls back to the axisPointer's last known value on empty-space clicks", () => {
+    // The Landscape chart is a scatter series — clicking in the empty
+    // space between markers does not produce a `dataIndex` in the click
+    // event. The fallback path uses the last `updateAxisPointer` value
+    // so clicks anywhere on the plot still resolve to a step.
+    const callback = vi.fn();
+    renderChartWrapper({ onPointClick: callback });
+
+    // Step 1: the user hovers over the chart. ECharts dispatches
+    // 'updateAxisPointer' with axesInfo[0].value = 3 (the snapped step).
+    const updateAxisPointerHandler = mockOn.mock.calls.find(
+      (call: unknown[]) => call[0] === 'updateAxisPointer',
+    )?.[1] as (params: unknown) => void;
+
+    act(() => {
+      updateAxisPointerHandler({ axesInfo: [{ value: 3 }] });
+    });
+
+    // Step 2: the user clicks on empty space — params has no dataIndex
+    // and no value[0], so the original handler can't resolve a step.
+    const clickHandler = mockOn.mock.calls.find((call: unknown[]) => call[0] === 'click')?.[1] as (
+      params: unknown,
+    ) => void;
+
+    act(() => {
+      // Simulate a click on the grid background (no series element hit).
+      clickHandler({});
+    });
+
+    // The fallback should have resolved to step 3 from the axisPointer.
+    expect(callback).toHaveBeenCalledWith(3);
+  });
+
+  it('click handler prefers dataIndex when the click hits a series element', () => {
+    // The dataIndex path is still the primary way clicks resolve. The
+    // axisPointer fallback should only kick in when dataIndex is
+    // absent. This test pins the priority: direct hit > value[0] > fallback.
+    const callback = vi.fn();
+    renderChartWrapper({ onPointClick: callback });
+
+    // Pretend the axisPointer is hovering over step 7.
+    const updateAxisPointerHandler = mockOn.mock.calls.find(
+      (call: unknown[]) => call[0] === 'updateAxisPointer',
+    )?.[1] as (params: unknown) => void;
+    act(() => {
+      updateAxisPointerHandler({ axesInfo: [{ value: 7 }] });
+    });
+
+    // Now the user clicks directly on a marker with dataIndex: 2.
+    const clickHandler = mockOn.mock.calls.find((call: unknown[]) => call[0] === 'click')?.[1] as (
+      params: unknown,
+    ) => void;
+    act(() => {
+      clickHandler({ dataIndex: 2 });
+    });
+
+    // dataIndex wins (2), not the axisPointer value (7).
+    expect(callback).toHaveBeenCalledWith(2);
+    expect(callback).not.toHaveBeenCalledWith(7);
+  });
+
+  it('click handler does nothing if no onPointClick callback is provided', () => {
+    // Defensive — the axisPointer tracking itself should not crash
+    // when there is no consumer.
+    renderChartWrapper();
+
+    const updateAxisPointerHandler = mockOn.mock.calls.find(
+      (call: unknown[]) => call[0] === 'updateAxisPointer',
+    )?.[1] as (params: unknown) => void;
+    const clickHandler = mockOn.mock.calls.find((call: unknown[]) => call[0] === 'click')?.[1] as (
+      params: unknown,
+    ) => void;
+
+    expect(() => {
+      act(() => {
+        updateAxisPointerHandler({ axesInfo: [{ value: 5 }] });
+      });
+      act(() => {
+        clickHandler({});
+      });
+    }).not.toThrow();
+  });
+
+  it('updateAxisPointer handler ignores payloads with no numeric axesInfo value', () => {
+    // Defensive: ECharts can dispatch updateAxisPointer with the pointer
+    // having no value (e.g. when the cursor leaves the plot). The ref
+    // should remain at its previous value, and the click fallback should
+    // still use that previous value rather than blowing up.
+    const callback = vi.fn();
+    renderChartWrapper({ onPointClick: callback });
+
+    const updateAxisPointerHandler = mockOn.mock.calls.find(
+      (call: unknown[]) => call[0] === 'updateAxisPointer',
+    )?.[1] as (params: unknown) => void;
+
+    // First, set a known good value.
+    act(() => {
+      updateAxisPointerHandler({ axesInfo: [{ value: 4 }] });
+    });
+
+    // Then a no-value dispatch (e.g. cursor left the plot).
+    act(() => {
+      updateAxisPointerHandler({ axesInfo: [{}] });
+    });
+    act(() => {
+      updateAxisPointerHandler({ axesInfo: [] });
+    });
+
+    // The click fallback should still resolve to the last good value (4).
+    const clickHandler = mockOn.mock.calls.find((call: unknown[]) => call[0] === 'click')?.[1] as (
+      params: unknown,
+    ) => void;
+    act(() => {
+      clickHandler({});
+    });
+
+    expect(callback).toHaveBeenCalledWith(4);
+  });
 });

@@ -124,6 +124,15 @@ export function ChartWrapper({
   const onZoomChangeRef = React.useRef(onZoomChange);
   onZoomChangeRef.current = onZoomChange;
 
+  // Track the most recent axisPointer value. ECharts dispatches
+  // 'updateAxisPointer' every time the user moves the cursor over the
+  // chart and the axisPointer is shown (i.e. tooltip.trigger is 'axis').
+  // The payload includes `axesInfo[].value` — the snapped step number
+  // for the X axis. We store it so the click handler can fall back to it
+  // when the click misses a marker (the Landscape chart's scatter series
+  // doesn't emit `dataIndex` for clicks on empty space).
+  const lastAxisPointerValueRef = React.useRef<number | null>(null);
+
   // Initialize and update ECharts instance
   React.useEffect(() => {
     if (!containerRef.current) return;
@@ -142,15 +151,53 @@ export function ChartWrapper({
           height,
         });
 
+        // Track the axisPointer's snapped value as the user moves the
+        // cursor. Registered once at init; reads no React state, so no
+        // stale-closure concerns. ECharts emits this action via
+        // `dispatchAction({ type: 'updateAxisPointer', ... })` from its
+        // internal axisPointer handler on every mousemove that lands on
+        // the plot area, and `chart.on('updateAxisPointer', ...)` is the
+        // public API for subscribing to those dispatches.
+        chartInstanceRef.current.on('updateAxisPointer', (params: unknown) => {
+          const p = params as { axesInfo?: Array<{ value?: number | string }> };
+          if (!Array.isArray(p.axesInfo) || p.axesInfo.length === 0) return;
+          // We only care about the X axis value. The X axis is the one
+          // that holds the step number; the Y axis holds the conflict
+          // count and is irrelevant to click-to-scrub. axesInfo[0] is
+          // conventionally the X axis when the chart has a single xAxis
+          // (which is true for both of our analytics charts).
+          for (const info of p.axesInfo) {
+            if (typeof info.value === 'number') {
+              lastAxisPointerValueRef.current = info.value;
+              break;
+            }
+          }
+        });
+
         // Bind click event for time travel — registered once, reads latest callback from ref
         chartInstanceRef.current.on('click', (params: unknown) => {
           const p = params as { dataIndex?: number; value?: unknown };
           const handler = onPointClickRef.current;
           if (!handler) return;
+          // Path 1: the click hit a series element directly. For the
+          // Convergence line series this always succeeds; for the
+          // Landscape scatter series this only succeeds when the click
+          // lands on a marker.
           if (typeof p.dataIndex === 'number') {
             handler(p.dataIndex);
-          } else if (Array.isArray(p.value) && typeof p.value[0] === 'number') {
+            return;
+          }
+          if (Array.isArray(p.value) && typeof p.value[0] === 'number') {
             handler(p.value[0]);
+            return;
+          }
+          // Path 2: the click landed in the empty space between markers
+          // (or on the axisPointer line itself). Fall back to the last
+          // known axisPointer value — the snapped step the user was
+          // hovering over. This is the fix for the "click in the gaps
+          // doesn't register" UX issue on the Landscape chart.
+          if (lastAxisPointerValueRef.current !== null) {
+            handler(lastAxisPointerValueRef.current);
           }
         });
 

@@ -337,6 +337,66 @@ export function buildConvergenceChartOption(
 
   const markLines = [...restartMarkLines, currentStepMarkLine];
 
+  // Per-point data with phase-specific shape, size, and glow styling.
+  // Mirrors the Landscape chart's `scatterData` so the two charts feel
+  // like a coherent pair. The series below is still a `type: 'line'`
+  // (Approach A from the earlier plan): the line is drawn between
+  // consecutive points, and the per-point symbol/itemStyle give each
+  // point its own shape, size, and glow — the same way the Landscape
+  // chart's scatter series does. ECharts supports per-point styling
+  // in line series data items natively.
+  const seriesData = snapshots.map((s) => {
+    const isSolved = s.conflicts === 0;
+    const isCurrent = s.step === currentStep;
+    const color = getPhaseColor(s.phase, s.conflicts, colors);
+
+    // Phase-specific shape. Solved → star (the global optimum), restart
+    // → triangle, shoulder → diamond, everything else → circle. This
+    // is identical to the Landscape chart's per-phase symbol logic.
+    let symbol: 'star' | 'triangle' | 'diamond' | 'circle' = 'circle';
+    // Baseline size: 8 for sparse runs (markers stay prominent and easy
+    // to read), 6 for dense runs (>50 points — the smaller size prevents
+    // the chart from becoming a blobby mass of overlapping circles).
+    let size = snapshots.length > 60 ? 6 : 8;
+
+    if (isSolved) {
+      symbol = 'star';
+      size = 13;
+    } else if (s.phase === 'restart') {
+      symbol = 'triangle';
+      size = 10;
+    } else if (s.phase === 'shoulder') {
+      symbol = 'diamond';
+      size = 8;
+    }
+    // +5 headroom for the current step. This is the same logic the
+    // Landscape chart uses, so the "selected marker is bigger" affordance
+    // is consistent across both analytics views.
+    if (isCurrent) size += 5;
+
+    return {
+      name: `Step ${s.step}`,
+      // The `as const` here is essential: without it, TypeScript widens
+      // `[number, number]` to `number[]` (a generic array), which causes
+      // the per-point `data` to be inferred as `{ value: number[]; ... }[]`.
+      // Consumers (click handler, tooltip formatter, tests) need the
+      // narrow 2-tuple so they can read `value[0]` as the step number.
+      value: [s.step, s.conflicts] as [number, number],
+      symbol,
+      symbolSize: size,
+      itemStyle: {
+        color,
+        // Glow effect on the current step. Identical to the Landscape
+        // chart: 2px border in the foreground color, 8px shadow blur
+        // in the marker color (so the glow tints with the phase).
+        borderColor: isCurrent ? colors.foreground : 'transparent',
+        borderWidth: isCurrent ? 2 : 0,
+        shadowBlur: isCurrent ? 8 : 0,
+        shadowColor: isCurrent ? color : 'transparent',
+      },
+    };
+  });
+
   return {
     backgroundColor: 'transparent',
     // X-axis-only zoom — see `buildDataZoomConfig` for the rationale behind
@@ -450,26 +510,24 @@ export function buildConvergenceChartOption(
         name: 'Conflicts',
         type: 'line',
         yAxisIndex: 0,
-        data: conflictData,
+        // Per-point data (see seriesData above). Each data item carries
+        // its own `symbol`, `symbolSize`, and `itemStyle` (including the
+        // glow effect for the current step). ECharts draws the line
+        // between consecutive points and renders each marker per its
+        // per-point styling. The series no longer needs top-level
+        // `symbol`, `symbolSize`, or `itemStyle.color` because the
+        // per-point data items carry all of that information.
+        data: seriesData,
         smooth: false,
-        symbol: 'circle',
-        symbolSize: (value: number, params: { dataIndex: number }) => {
-          // Current step: most prominent. Otherwise: modest bump from the
-          // pre-zoom sizes (4 → 6, and never hidden for dense runs) so the
-          // points stay readable now that the dataZoom slider is available
-          // for further inspection.
-          if (params.dataIndex === currentStep) return 9;
-          return snapshots.length > 50 ? 4 : 6;
-        },
-        itemStyle: {
-          color: (params: { dataIndex: number }) => {
-            const snap = snapshots[params.dataIndex];
-            return snap ? getPhaseColor(snap.phase, snap.conflicts, colors) : colors.primary;
-          },
-        },
         lineStyle: {
+          // Mirrors the Landscape chart's "Trajectory Path" line so the two
+          // analytics charts feel like a coherent pair. The thinner
+          // semi-transparent line lets the per-step markers read as the
+          // primary visual element rather than getting visually overpowered
+          // by a thick fully-opaque line.
           color: colors.primary,
-          width: 2.5,
+          width: 2,
+          opacity: 0.6,
         },
         areaStyle: {
           color: {
@@ -536,8 +594,10 @@ export function buildLandscapeChartOption(
     const color = getPhaseColor(s.phase, s.conflicts, colors);
 
     let symbol = 'circle';
-    // Bumped from `>60 ? 5 : 7` to `>60 ? 6 : 8` so dense runs stay readable
-    // now that the dataZoom slider lets the user inspect any range in detail.
+    // Baseline size: 8 for sparse runs (markers stay prominent and easy to
+    // read), 6 for dense runs (>60 points — the smaller size prevents the
+    // chart from becoming a blobby mass of overlapping circles). The +5
+    // headroom below further emphasizes the current-step marker.
     let size = snapshots.length > 60 ? 6 : 8;
 
     if (isSolved) {
@@ -576,12 +636,37 @@ export function buildLandscapeChartOption(
     // `xAxisIndex: 0`, `zoomLock: true`, and `filterMode: 'filter'`.
     dataZoom: buildDataZoomConfig(colors, zoomRange),
     tooltip: {
-      trigger: 'item',
+      // Mirror the Convergence chart's interaction model: 'axis' trigger
+      // + axisPointer.snap: true gives users a vertical dashed line that
+      // "sticks" to the nearest data point as the cursor moves, and shows
+      // the tooltip anywhere on the plot (not only on direct marker hits).
+      // With our category xAxis, snap is a no-op for the line position
+      // itself — the line already snaps to category boundaries — but the
+      // explicit `snap: true` documents the intent and is future-proof
+      // if the xAxis type ever changes.
+      //
+      // The previous 'item' trigger made the chart feel "dead" between
+      // markers: the tooltip only appeared when the cursor was directly
+      // over an 8–13px marker, and click-to-scrub in the empty space
+      // did nothing. This is exactly the UX inconsistency the user
+      // flagged against the smoother Convergence chart.
+      trigger: 'axis',
       backgroundColor: colors.card,
       borderColor: colors.grid,
       textStyle: { color: colors.foreground, fontSize: 12 },
+      axisPointer: {
+        type: 'line',
+        snap: true,
+        lineStyle: { color: colors.primary, width: 1.5, type: 'dashed' },
+      },
       formatter: (params: unknown) => {
-        const item = params as { dataIndex: number };
+        // With `trigger: 'axis'`, ECharts passes an array (one entry per
+        // series). The landscape chart has a single scatter series, so
+        // the first element is the relevant hit. This matches the pattern
+        // already used by the Convergence chart's tooltip formatter.
+        const arr = params as Array<{ dataIndex: number }>;
+        const item = Array.isArray(arr) ? arr[0] : (params as { dataIndex: number });
+        if (!item || typeof item.dataIndex !== 'number') return '';
         const snap = snapshots[item.dataIndex];
         if (!snap) return '';
 
@@ -619,13 +704,27 @@ export function buildLandscapeChartOption(
       containLabel: true,
     },
     xAxis: {
-      type: 'value',
+      // Use a category axis (mirroring the Convergence chart) instead of a
+      // value axis so the trajectory line touches the left and right edges
+      // of the plot area. With `type: 'value'`, ECharts draws the line
+      // only between actual data points and pads the visible window with
+      // "nice" tick rounding — which leaves a visible gap on both sides
+      // when the user zooms in. A category axis with `boundaryGap: false`
+      // treats each step as an evenly-spaced band with no padding, so the
+      // first data point sits at the leftmost edge and the last at the
+      // rightmost. Tick labels become clean integers (0, 1, 2, ...).
+      //
+      // DataZoom still works identically: dataZoom operates on the
+      // category index in the same way it operated on the value range.
+      // The markLine for the current step and the tooltip's value[0] for
+      // click-to-scrub are also unchanged.
+      type: 'category',
+      data: steps,
+      boundaryGap: false,
       name: 'Step Iteration',
       nameLocation: 'middle',
       nameGap: 24,
       nameTextStyle: { color: colors.axis, fontSize: 11 },
-      min: 0,
-      max: Math.max(1, steps.length - 1),
       axisLine: { lineStyle: { color: colors.grid } },
       axisLabel: { color: colors.axis, fontSize: 11 },
       splitLine: { show: true, lineStyle: { color: colors.grid, type: 'dotted' } },

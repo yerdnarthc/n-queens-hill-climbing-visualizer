@@ -155,7 +155,16 @@ describe('chart-helpers', () => {
         DEFAULT_DARK_COLORS,
       );
       expect(option.xAxis.data).toEqual([0, 1, 2, 3, 4]);
-      expect(option.series[0].data).toEqual([6, 4, 4, 5, 0]);
+      // The data is now per-point objects (mirrors the Landscape chart's
+      // per-point styling). We assert the value tuples are still correct.
+      const data = option.series[0].data as Array<{ value: [number, number] }>;
+      expect(data.map((d) => d.value)).toEqual([
+        [0, 6],
+        [1, 4],
+        [2, 4],
+        [3, 5],
+        [4, 0],
+      ]);
       expect(option.series).toHaveLength(1);
       expect(option.yAxis).toHaveLength(1);
     });
@@ -210,6 +219,81 @@ describe('chart-helpers', () => {
       // update won't visually reset the user's zoom position.
       expect(dz[1].start).toBe(30);
       expect(dz[1].end).toBe(70);
+    });
+
+    it('uses the same per-phase symbols as the Landscape chart (solved=star, restart=triangle, shoulder=diamond, else=circle)', () => {
+      // sampleSnapshots:
+      //   index 0: phase=initial,  conflicts=6, not solved → circle
+      //   index 1: phase=improving, conflicts=4 → circle
+      //   index 2: phase=shoulder,  conflicts=4 → diamond
+      //   index 3: phase=restart,  conflicts=5 → triangle
+      //   index 4: phase=improving, conflicts=0 (solved) → star
+      const option = buildConvergenceChartOption(
+        sampleSnapshots,
+        2,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const data = option.series[0].data as Array<{ symbol: string }>;
+      expect(data[0].symbol).toBe('circle');
+      expect(data[1].symbol).toBe('circle');
+      expect(data[2].symbol).toBe('diamond');
+      expect(data[3].symbol).toBe('triangle');
+      expect(data[4].symbol).toBe('star');
+    });
+
+    it('uses the same per-phase symbolSize baseline as the Landscape chart (8 sparse, +5 current, +3 restart, +5 solved)', () => {
+      // For 5 snapshots (sparse), baseline is 8. With currentStep=1:
+      //   index 0 (initial, not current): circle, size 8
+      //   index 1 (improving, current):    circle, size 8 + 5 = 13
+      //   index 2 (shoulder, not current): diamond, size 8
+      //   index 3 (restart, not current):  triangle, size 10
+      //   index 4 (improving→solved, not current): star, size 13
+      const option = buildConvergenceChartOption(
+        sampleSnapshots,
+        1,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const data = option.series[0].data as Array<{ symbolSize: number }>;
+      expect(data[0].symbolSize).toBe(8);
+      expect(data[1].symbolSize).toBe(13); // current step headroom
+      expect(data[2].symbolSize).toBe(8);
+      expect(data[3].symbolSize).toBe(10);
+      expect(data[4].symbolSize).toBe(13);
+    });
+
+    it('glows the current-step marker (border + shadow) just like the Landscape chart', () => {
+      // The current step's marker must have a 2px foreground border and
+      // an 8px shadow blur tinted with the phase color. All other markers
+      // should have borderWidth 0, shadowBlur 0, and transparent colors.
+      const option = buildConvergenceChartOption(
+        sampleSnapshots,
+        1, // current step = index 1
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const data = option.series[0].data as Array<{
+        itemStyle: {
+          color: string;
+          borderColor: string;
+          borderWidth: number;
+          shadowBlur: number;
+          shadowColor: string;
+        };
+      }>;
+      // The current step (index 1) glows.
+      expect(data[1].itemStyle.borderWidth).toBe(2);
+      expect(data[1].itemStyle.shadowBlur).toBe(8);
+      expect(data[1].itemStyle.borderColor).toBe(DEFAULT_DARK_COLORS.foreground);
+      expect(data[1].itemStyle.shadowColor).not.toBe('transparent');
+      // Non-current steps don't glow.
+      for (const i of [0, 2, 3, 4]) {
+        expect(data[i].itemStyle.borderWidth).toBe(0);
+        expect(data[i].itemStyle.shadowBlur).toBe(0);
+        expect(data[i].itemStyle.borderColor).toBe('transparent');
+        expect(data[i].itemStyle.shadowColor).toBe('transparent');
+      }
     });
 
     it('pins the primary (conflicts) y-axis to the full-run max', () => {
@@ -267,6 +351,29 @@ describe('chart-helpers', () => {
       expect(yAxis[1].min).toBe(0);
       expect(yAxis[1].max).toBe(4.1);
     });
+
+    it('renders the trajectory line with the same width + opacity as the Landscape chart', () => {
+      // The two analytics charts should look like a coherent pair: same
+      // primary-color line, same width, same opacity. A regression here
+      // would make the markers visually overpower the convergence line OR
+      // make the convergence line look heavier than the landscape one.
+      const convergence = buildConvergenceChartOption(
+        sampleSnapshots,
+        2,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const landscape = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      const convergenceLineStyle = (
+        convergence.series[0] as { lineStyle: { color: string; width: number; opacity?: number } }
+      ).lineStyle;
+      const landscapeLineStyle = (
+        landscape.series[0] as { lineStyle: { color: string; width: number; opacity?: number } }
+      ).lineStyle;
+      expect(convergenceLineStyle.color).toBe(landscapeLineStyle.color);
+      expect(convergenceLineStyle.width).toBe(landscapeLineStyle.width);
+      expect(convergenceLineStyle.opacity).toBe(landscapeLineStyle.opacity);
+    });
   });
 
   describe('buildLandscapeChartOption', () => {
@@ -295,6 +402,58 @@ describe('chart-helpers', () => {
       // it constrains trackpad-pinch gestures to horizontal zoom, never
       // letting the Y (conflict) domain get accidentally rescaled.
       expect(dz[0].zoomLock).toBe(true);
+    });
+
+    it('uses axis-trigger tooltip with snap-enabled axisPointer (matches Convergence UX)', () => {
+      // The Landscape chart used `trigger: 'item'`, which only showed the
+      // tooltip when the cursor was directly over a marker. That made the
+      // chart feel "dead" between markers and made click-to-scrub miss in
+      // the gaps. Switching to `trigger: 'axis'` + `axisPointer.snap: true`
+      // mirrors the Convergence chart's behavior: a vertical dashed line
+      // follows the cursor and snaps to the nearest data point, and the
+      // tooltip is shown anywhere on the plot.
+      const option = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      const tooltip = option.tooltip as {
+        trigger: string;
+        axisPointer: { type: string; snap: boolean; lineStyle: { type: string } };
+      };
+      expect(tooltip.trigger).toBe('axis');
+      expect(tooltip.axisPointer).toBeDefined();
+      expect(tooltip.axisPointer.type).toBe('line');
+      expect(tooltip.axisPointer.snap).toBe(true);
+      // The line should be themed to match the convergence chart's style
+      // (dashed, in the primary color).
+      expect(tooltip.axisPointer.lineStyle.type).toBe('dashed');
+    });
+
+    it('formatter handles the trigger:axis array shape (one entry per series)', () => {
+      // ECharts passes `params` as an Array<{dataIndex}> for axis-trigger
+      // tooltips. The landscape formatter must read the first entry's
+      // dataIndex to look up the snapshot — it must NOT crash on the
+      // old `params.dataIndex` access (which would be undefined on an
+      // array).
+      const option = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      const tooltip = option.tooltip as {
+        formatter: (params: unknown) => string;
+      };
+      // Simulate the array shape ECharts would pass.
+      const arr = [{ dataIndex: 2 }];
+      const html = tooltip.formatter(arr);
+      // The formatter builds HTML containing the step number and the
+      // conflict count. Step 2 (sampleSnapshots[2]) has conflicts: 4.
+      expect(html).toContain('Landscape Step 2');
+      expect(html).toContain('4 conflicts');
+    });
+
+    it('formatter returns an empty string when given an empty/unknown payload', () => {
+      // Defensive: a malformed payload should not throw. The formatter
+      // handles both `params` (single object) and `params` (array) shapes
+      // gracefully and returns '' when no dataIndex can be resolved.
+      const option = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      const tooltip = option.tooltip as { formatter: (params: unknown) => string };
+      expect(tooltip.formatter([])).toBe('');
+      expect(tooltip.formatter([{}])).toBe('');
+      expect(tooltip.formatter({})).toBe('');
     });
 
     it('pins the y-axis to the full-run conflicts max', () => {
@@ -328,6 +487,49 @@ describe('chart-helpers', () => {
       const yAxis = option.yAxis as { min: number; max: number };
       expect(Number.isFinite(yAxis.max)).toBe(true);
       expect(yAxis.max).toBeGreaterThan(0);
+    });
+
+    it('uses a category xAxis with boundaryGap: false so the line touches the plot edges', () => {
+      // The landscape chart used `type: 'value'` with `min: 0, max: N`,
+      // which left visible gaps at the left/right edges when the user
+      // zoomed in (because ECharts pads the visible window with "nice"
+      // tick rounding). Mirroring the Convergence chart's `type:
+      // 'category'` with `boundaryGap: false` makes the trajectory line
+      // stretch edge-to-edge regardless of zoom state.
+      const option = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      const xAxis = option.xAxis as {
+        type: string;
+        data: number[];
+        boundaryGap: boolean;
+      };
+      expect(xAxis.type).toBe('category');
+      expect(xAxis.data).toEqual([0, 1, 2, 3, 4]);
+      expect(xAxis.boundaryGap).toBe(false);
+    });
+
+    it('uses the 8 baseline + 5 current-step headroom for sparse runs', () => {
+      // Regression guard for the subtle marker-size bump. The landscape
+      // chart computes the symbol size in a `snapshots.map(...)` callback
+      // because each point's shape/size depends on its phase. The baseline
+      // is `snapshots.length > 60 ? 6 : 8` (smaller for dense runs to avoid
+      // visual overload, larger for sparse runs to keep markers prominent).
+      // For our 5-snapshot fixture, baseline = 8.
+      const option = buildLandscapeChartOption(sampleSnapshots, 1, DEFAULT_DARK_COLORS);
+      const scatterData = option.series[1].data as Array<{
+        symbolSize: number;
+        symbol: string;
+      }>;
+      // currentStep=1 → the snapshot at index 1 (step=1) is "current".
+      // Its phase=improving → symbol=circle, baseline=8, +5 headroom=13.
+      const current = scatterData[1];
+      expect(current.symbol).toBe('circle');
+      expect(current.symbolSize).toBe(13);
+
+      // And a non-current point at the same index range (improving, not solved)
+      // should get the plain baseline of 8.
+      const nonCurrentImproving = scatterData[0];
+      expect(nonCurrentImproving.symbol).toBe('circle');
+      expect(nonCurrentImproving.symbolSize).toBe(8);
     });
   });
 
