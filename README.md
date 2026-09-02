@@ -63,7 +63,8 @@ The original single-file prototype lives in [`legacy/index.html`](./legacy/index
 
 - **Engine** (Vitest): conflict counting, incremental evaluator oracle tests, strategy behavior, restart/sideways logic, determinism
 - **Components** (RTL): board rendering, controls, scrubber wiring
-- **E2E** (Playwright): start → solved flow, theme toggle, navigation
+- **E2E** (Playwright, chromium): 7 specs in [`e2e/`](./e2e) — smoke, solve-flow, playback, theme, navigation, url-state, seo. See [`e2e/README.md`](./e2e/README.md) for the workflow (`npm run build && npm run test:e2e`).
+- Full suite: `npm run test:run` (207 unit) + `npm run test:e2e` (~30 E2E).
 
 ## Deployment
 
