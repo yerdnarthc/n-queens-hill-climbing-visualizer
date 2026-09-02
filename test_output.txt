@@ -1,0 +1,43 @@
+
+> n-queens-visualizer@0.1.0 test
+> vitest --run
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mC:/Users/Arth Andrey/Documents/N-Queens Visualizer/n-queens-visualizer[39m
+
+ [32mΓ£ô[39m src/lib/engine/__tests__/conflicts.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/engine/__tests__/strategies.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32mΓ£ô[39m src/components/visualizer/__tests__/chart-wrapper.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 79[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/__tests__/url-state.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/engine/__tests__/simulation.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32mΓ£ô[39m src/store/__tests__/simulation-store.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useSimulationDriver.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 88[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useKeyboardShortcuts.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 107[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/engine/__tests__/rng.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 805[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m int() stays within [0, maxExclusive) across many draws [33m 452[2mms[22m[39m
+ [32mΓ£ô[39m src/hooks/__tests__/useUrlConfigSync.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 399[2mms[22m[39m
+(node:36444) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32mΓ£ô[39m src/components/__tests__/site-nav.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 419[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders both nav links with the expected routes [33m 337[2mms[22m[39m
+ [32mΓ£ô[39m src/components/visualizer/__tests__/stats-header.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 148[2mms[22m[39m
+ [32mΓ£ô[39m src/components/visualizer/__tests__/config-panel.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 849[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders board size title and strategy selector [33m 380[2mms[22m[39m
+ [32mΓ£ô[39m src/components/visualizer/__tests__/chessboard.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 136[2mms[22m[39m
+ [32mΓ£ô[39m src/components/visualizer/__tests__/playback-controls.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 687[2mms[22m[39m
+     [33m[2mΓ£ô[22m[39m renders playback action buttons [33m 325[2mms[22m[39m
+ [32mΓ£ô[39m src/components/visualizer/__tests__/use-chart-theme-colors.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 197[2mms[22m[39m
+ [32mΓ£ô[39m src/components/visualizer/__tests__/analytics-panel.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 603[2mms[22m[39m
+ [32mΓ£ô[39m src/components/visualizer/__tests__/chart-helpers.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/__tests__/strategy-info.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/engine/__tests__/config.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mΓ£ô[39m src/lib/__tests__/csv-export.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m21 passed[39m[22m[90m (21)[39m
+[2m      Tests [22m [1m[32m207 passed[39m[22m[90m (207)[39m
+[2m   Start at [22m 15:03:23
+[2m   Duration [22m 9.00s[2m (transform 2.83s, setup 17.13s, import 13.37s, tests 4.71s, environment 74.55s)[22m
+

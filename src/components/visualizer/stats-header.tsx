@@ -104,7 +104,7 @@ export function StatsHeader() {
   const isSolved = conflicts === 0;
 
   return (
-    <header className="flex flex-col gap-4 border-b border-border/80 bg-card/40 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-8">
+    <header className="flex flex-col gap-4 border-b border-border/80 bg-card/40 px-4 py-4 backdrop-blur-md sm:min-h-[17rem] sm:px-6 lg:min-h-[13rem] lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/90 to-primary/40 text-primary-foreground shadow-inner shadow-white/20">
