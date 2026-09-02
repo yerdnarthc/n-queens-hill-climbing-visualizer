@@ -586,6 +586,98 @@ describe('chart-helpers', () => {
       expect(lightSlider.handleStyle.color).toBe(DEFAULT_LIGHT_COLORS.primary);
       expect(lightSlider.textStyle.color).toBe(DEFAULT_LIGHT_COLORS.axis);
     });
+
+    it('positions the slider 8px from the bottom of the chart (breathing room)', () => {
+      // Regression guard for the spacing fix: the slider was at `bottom: 4`
+      // which felt cramped against the bottom edge of the chart. The
+      // current value (8) gives more visual breathing room and balances
+      // against the 14% top padding.
+      const config = buildDataZoomConfig(DEFAULT_DARK_COLORS);
+      const slider = config[1] as { bottom: number; height: number };
+      expect(slider.bottom).toBe(8);
+      expect(slider.height).toBe(18);
+    });
+  });
+
+  describe('chart grid padding (Analytics section spacing)', () => {
+    // Regression guards for the spacing fix in the Analytics section.
+    // Both charts use `top: 20%, bottom: 20%` — generous padding on
+    // both ends of the chart so that:
+    //   - the yAxis name (at the top, by ECharts default) and the
+    //     axisPointer label (which appears at the top when hovering)
+    //     have ~54px to themselves and never collide;
+    //   - the xAxis name "Step" and the dataZoom slider (18px tall,
+    //     bottom: 8) have their own non-overlapping ~54px region at
+    //     the bottom.
+    //
+    // Earlier iterations tried moving the yAxis names to the bottom
+    // via `nameLocation: 'start'`, but that crowded the xAxis name
+    // + dataZoom slider region — the yAxis names belong at the top
+    // by convention, and a roomy top region is the right fix.
+
+    it('Convergence: grid is padded with 20% top and 20% bottom', () => {
+      const option = buildConvergenceChartOption(
+        sampleSnapshots,
+        2,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const grid = option.grid as { top: string; bottom: string };
+      expect(grid.top).toBe('20%');
+      expect(grid.bottom).toBe('20%');
+    });
+
+    it('Convergence: yAxis names use the ECharts default (top of axis, no nameLocation set)', () => {
+      // We don't set nameLocation explicitly, so the option object
+      // should not have a nameLocation property on the yAxis entries.
+      // (ECharts' default is 'end', which places the name at the
+      // top of a value axis.)
+      const option = buildConvergenceChartOption(
+        sampleSnapshots,
+        2,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const yAxis = option.yAxis as Array<{ name: string; nameLocation?: string }>;
+      // Primary axis: "Conflicts h(s)".
+      expect(yAxis[0].name).toBe('Conflicts h(s)');
+      expect(yAxis[0].nameLocation).toBeUndefined();
+    });
+
+    it('Convergence (SA): temperature yAxis name is also at the top (no nameLocation set)', () => {
+      // The secondary (right) yAxis for SA only appears when temperature
+      // data is present. We synthesize a snapshot set with temperature
+      // data to assert on it. The name should also be at the top via
+      // ECharts' default 'end' nameLocation (no nameLocation set).
+      const saSnapshots: Snapshot[] = sampleSnapshots.map((s, idx) => ({
+        ...s,
+        temperature: 4 - idx * 0.8,
+      }));
+      const option = buildConvergenceChartOption(
+        saSnapshots,
+        2,
+        'simulated-annealing',
+        DEFAULT_DARK_COLORS,
+      );
+      const yAxis = option.yAxis as Array<{ name: string; nameLocation?: string }>;
+      expect(yAxis).toHaveLength(2);
+      expect(yAxis[1].name).toBe('Temperature T');
+      expect(yAxis[1].nameLocation).toBeUndefined();
+    });
+
+    it('Landscape: grid is padded with 20% top and 20% bottom', () => {
+      const option = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      const grid = option.grid as { top: string; bottom: string };
+      expect(grid.top).toBe('20%');
+      expect(grid.bottom).toBe('20%');
+    });
+
+    it('Landscape: yAxis name uses the ECharts default (top of axis, no nameLocation set)', () => {
+      const option = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      const yAxis = option.yAxis as { name: string; nameLocation?: string };
+      expect(yAxis.name).toBe('Conflicts (Attacking Pairs)');
+      expect(yAxis.nameLocation).toBeUndefined();
+    });
   });
 
   describe('withAlpha', () => {

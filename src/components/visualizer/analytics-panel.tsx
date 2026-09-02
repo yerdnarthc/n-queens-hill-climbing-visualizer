@@ -47,6 +47,33 @@ export function AnalyticsPanel() {
     ? getPhaseLabel(currentSnapshot.phase, currentSnapshot.conflicts)
     : 'Ready';
 
+  // Shared zoom range for the analytics charts. Lifted up from the chart
+  // components so the zoom level survives tab switches — Radix Tabs
+  // unmounts the inactive tab's chart by default, which would otherwise
+  // destroy the chart's local useState and reset the dataZoom to the
+  // full 0–100 range whenever the user toggled between Convergence and
+  // Landscape. Owning the state here (where it never unmounts) preserves
+  // it across tab switches.
+  //
+  // The `runKey` tagging is preserved from the chart components' original
+  // implementation: when a new run produces a different total step
+  // count, the saved range's meaning is invalidated and the chart resets
+  // to the full range. When the user re-runs the same seed, the range
+  // is preserved.
+  const [sharedZoomRange, setSharedZoomRange] = React.useState<{
+    start: number;
+    end: number;
+    runKey: number;
+  } | null>(null);
+
+  const handleZoomChange = React.useCallback(
+    (range: { start: number; end: number }) => {
+      const totalSteps = result?.totalSteps ?? 0;
+      setSharedZoomRange({ ...range, runKey: totalSteps });
+    },
+    [result?.totalSteps],
+  );
+
   return (
     <div
       data-testid="analytics-panel"
@@ -125,7 +152,11 @@ export function AnalyticsPanel() {
         {/* 1. Convergence Chart Content */}
         <TabsContent value="convergence" className="mt-3 flex flex-col gap-2">
           <div className="rounded-xl border border-border/40 bg-background/30 p-2">
-            <ConvergenceChart height={270} />
+            <ConvergenceChart
+              height={320}
+              zoomRange={sharedZoomRange}
+              onZoomChange={handleZoomChange}
+            />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
             <div className="flex items-center gap-3">
@@ -150,7 +181,11 @@ export function AnalyticsPanel() {
         {/* 2. Optimization Landscape Content */}
         <TabsContent value="landscape" className="mt-3 flex flex-col gap-2">
           <div className="rounded-xl border border-border/40 bg-background/30 p-2">
-            <LandscapeChart height={270} />
+            <LandscapeChart
+              height={320}
+              zoomRange={sharedZoomRange}
+              onZoomChange={handleZoomChange}
+            />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
             <div className="flex flex-wrap items-center gap-3">

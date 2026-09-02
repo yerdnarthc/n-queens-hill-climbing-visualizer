@@ -131,7 +131,10 @@ export function buildDataZoomConfig(
     {
       type: 'slider',
       xAxisIndex: 0,
-      bottom: 4,
+      // 8px from the bottom edge of the chart (was 4) — gives the
+      // slider a bit more breathing room from the bottom border and
+      // reads as visually balanced against the 14% top padding.
+      bottom: 8,
       height: 18,
       start,
       end,
@@ -451,8 +454,20 @@ export function buildConvergenceChartOption(
     grid: {
       left: '3%',
       right: hasSaData ? '6%' : '4%',
-      top: '12%',
-      bottom: '12%',
+      // `top: 20%` (was 14%, originally 12%) gives the yAxis name
+      // ("Conflicts h(s)" or "Temperature T") and the axisPointer
+      // label plenty of room to breathe at the top of the chart. At
+      // 270px chart height, 20% = ~54px, which comfortably holds the
+      // axis name (12px) + the axisPointer label with its padding
+      // (~25px) + breathing room.
+      // `bottom: 20%` (was 12%) makes room for the xAxis name
+      // ("Step") and the dataZoom slider (18px) without them
+      // colliding. The yAxis names stay at the top (their natural
+      // position via ECharts' default 'end' nameLocation), so the
+      // bottom region only has the xAxis name and the slider — the
+      // 20% bottom padding is enough.
+      top: '20%',
+      bottom: '20%',
       containLabel: true,
     },
     xAxis: {
@@ -464,13 +479,32 @@ export function buildConvergenceChartOption(
       splitLine: { show: true, lineStyle: { color: colors.grid, type: 'dotted' } },
       name: 'Step',
       nameLocation: 'middle',
-      nameGap: 24,
+      nameGap: 35,
       nameTextStyle: { color: colors.axis, fontSize: 11 },
     },
     yAxis: [
       {
         type: 'value',
         name: 'Conflicts h(s)',
+        // `nameGap: 30` (vs ECharts' default of 15) adds a little extra
+        // vertical breathing room between this yAxis name and the top
+        // of the plot area. The name sits at the top of the axis via
+        // ECharts' default `nameLocation: 'end'`, so increasing
+        // `nameGap` pushes the visible text label further up — exactly
+        // the spacing we want between the "Conflicts h(s)" label and
+        // the chart contents below it. We don't bump it higher (e.g.
+        // 30+) because the yAxis name is short and the chart already
+        // reserves 15% top padding via `grid.top: '15%'`.
+        nameGap: 30,
+        // No `nameLocation` set — we use ECharts' default ('end'), which
+        // for a value axis places the name at the TOP of the axis
+        // (where the high values are). This is the conventional
+        // position for yAxis names. The previous attempt to move
+        // yAxis names to the bottom (nameLocation: 'start') crowded
+        // the xAxis name and the dataZoom slider region, so the
+        // names are back at the top — and we make the top region
+        // roomy enough (grid.top: '15%') to prevent collision with
+        // the axisPointer label.
         nameTextStyle: { color: colors.axis, fontSize: 11, align: 'left' },
         axisLine: { lineStyle: { color: colors.grid } },
         axisLabel: { color: colors.axis, fontSize: 11 },
@@ -487,6 +521,20 @@ export function buildConvergenceChartOption(
             {
               type: 'value',
               name: 'Temperature T',
+              // `nameGap: 30` (vs ECharts' default of 15) matches the
+              // primary "Conflicts h(s)" yAxis so both axis names sit
+              // at a consistent vertical distance from the top of the
+              // plot area. This is the gap between the visible name
+              // text and the top axis line; increasing it pushes the
+              // "Temperature T" label further up away from the
+              // chart contents below it.
+              nameGap: 30,
+              // Same reasoning as the primary yAxis: no `nameLocation`
+              // set so the name uses ECharts' default ('end' = top of
+              // axis). The top region has been padded (grid.top: '15%')
+              // to give the yAxis name and the axisPointer label plenty
+              // of room to breathe. `align: 'right'` keeps the text
+              // right-anchored to the right side of the chart.
               nameTextStyle: { color: colors.worsening, fontSize: 11, align: 'right' },
               axisLine: { lineStyle: { color: colors.worsening } },
               axisLabel: {
@@ -699,8 +747,14 @@ export function buildLandscapeChartOption(
     grid: {
       left: '3%',
       right: '4%',
-      top: '12%',
-      bottom: '12%',
+      // Mirrors the Convergence chart's spacing: `top: 20%` gives the
+      // yAxis name ("Conflicts (Attacking Pairs)") and the
+      // axisPointer label room to breathe. `bottom: 20%` makes
+      // room for the xAxis name and the dataZoom slider. The
+      // yAxis name stays at the top via ECharts' default 'end'
+      // nameLocation.
+      top: '20%',
+      bottom: '20%',
       containLabel: true,
     },
     xAxis: {
@@ -723,7 +777,7 @@ export function buildLandscapeChartOption(
       boundaryGap: false,
       name: 'Step Iteration',
       nameLocation: 'middle',
-      nameGap: 24,
+      nameGap: 35,
       nameTextStyle: { color: colors.axis, fontSize: 11 },
       axisLine: { lineStyle: { color: colors.grid } },
       axisLabel: { color: colors.axis, fontSize: 11 },
@@ -732,6 +786,20 @@ export function buildLandscapeChartOption(
     yAxis: {
       type: 'value',
       name: 'Conflicts (Attacking Pairs)',
+      // `nameGap: 30` (vs ECharts' default of 15) adds a little extra
+      // vertical breathing room between this yAxis name and the top
+      // of the plot area. The name sits at the top of the axis via
+      // ECharts' default `nameLocation: 'end'`, so increasing
+      // `nameGap` pushes the visible text label further up — exactly
+      // the spacing we want between the "Conflicts (Attacking
+      // Pairs)" label and the chart contents below it. Matches the
+      // value used by the Convergence chart's yAxes for visual
+      // consistency across both analytics views.
+      nameGap: 30,
+      // No `nameLocation` set — we use ECharts' default ('end'), which
+      // places the name at the TOP of the axis. The top region is
+      // padded with grid.top: '15%' to give the name and the
+      // axisPointer label room to breathe without collision.
       nameTextStyle: { color: colors.axis, fontSize: 11, align: 'left' },
       axisLine: { lineStyle: { color: colors.grid } },
       axisLabel: { color: colors.axis, fontSize: 11 },

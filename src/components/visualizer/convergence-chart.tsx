@@ -8,30 +8,41 @@ import { buildConvergenceChartOption } from './chart-helpers';
 export interface ConvergenceChartProps {
   height?: string | number;
   className?: string;
+  /**
+   * Saved X-axis zoom range from the parent (AnalyticsPanel). Lifted up
+   * so the zoom level survives tab switches — see AnalyticsPanel for
+   * the full rationale. When `null`, the chart starts at the full 0–100
+   * range.
+   */
+  zoomRange: { start: number; end: number; runKey: number } | null;
+  /**
+   * Called when the user changes the X-axis zoom. The parent tags the
+   * range with the current run's totalSteps and feeds it back as the
+   * `zoomRange` prop, so the run-key check can decide whether to preserve
+   * or reset on the next option build.
+   */
+  onZoomChange: (range: { start: number; end: number }) => void;
 }
 
-export function ConvergenceChart({ height = '260px', className = '' }: ConvergenceChartProps) {
+export function ConvergenceChart({
+  height = '260px',
+  className = '',
+  zoomRange,
+  onZoomChange,
+}: ConvergenceChartProps) {
   const result = useSimulationStore((s) => s.result);
   const currentStep = useSimulationStore((s) => s.currentStep);
   const strategy = useSimulationStore((s) => s.config.strategy);
   const jumpTo = useSimulationStore((s) => s.jumpTo);
   const colors = useChartThemeColors();
 
-  // X-axis zoom preservation. We keep the slider/inside-zoom range across
-  // re-renders (which happen on every animation frame) by feeding it back
-  // into the next option build. Per design decision: when a new run starts
-  // and `result.totalSteps` differs from the previously-saved range's run
-  // key, we reset the range to the full 0–100 default. When the step count
-  // matches (e.g. user re-runs the same seed), we keep their zoom window.
-  const [zoomRange, setZoomRange] = React.useState<{
-    start: number;
-    end: number;
-    runKey: number;
-  } | null>(null);
+  // Run-key invalidation: the parent tags the saved range with the run's
+  // totalSteps. If the user starts a new run with a different step count,
+  // the range's meaning is invalidated — reset to the full 0–100 default
+  // by returning null. When the user re-runs the same seed, the step
+  // count matches and the range is preserved across tab switches.
   const effectiveZoomRange = React.useMemo(() => {
     if (!zoomRange || !result) return null;
-    // Run-key mismatch: a new run with a different total step count has
-    // invalidated the saved range's meaning — reset.
     if (zoomRange.runKey !== result.totalSteps) return null;
     return { start: zoomRange.start, end: zoomRange.end };
   }, [zoomRange, result]);
@@ -70,12 +81,7 @@ export function ConvergenceChart({ height = '260px', className = '' }: Convergen
             jumpTo(step);
           }
         }}
-        onZoomChange={(range) => {
-          // Tag the saved range with the current run's totalSteps so the
-          // run-key check above can decide whether to preserve or reset on
-          // the next option build.
-          setZoomRange({ ...range, runKey: result.totalSteps });
-        }}
+        onZoomChange={onZoomChange}
         data-testid="convergence-echarts"
       />
     </div>

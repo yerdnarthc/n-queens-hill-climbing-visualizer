@@ -8,22 +8,37 @@ import { buildLandscapeChartOption } from './chart-helpers';
 export interface LandscapeChartProps {
   height?: string | number;
   className?: string;
+  /**
+   * Saved X-axis zoom range from the parent (AnalyticsPanel). Lifted up
+   * so the zoom level survives tab switches — see AnalyticsPanel for
+   * the full rationale. When `null`, the chart starts at the full 0–100
+   * range.
+   */
+  zoomRange: { start: number; end: number; runKey: number } | null;
+  /**
+   * Called when the user changes the X-axis zoom. The parent tags the
+   * range with the current run's totalSteps and feeds it back as the
+   * `zoomRange` prop, so the run-key check can decide whether to preserve
+   * or reset on the next option build.
+   */
+  onZoomChange: (range: { start: number; end: number }) => void;
 }
 
-export function LandscapeChart({ height = '260px', className = '' }: LandscapeChartProps) {
+export function LandscapeChart({
+  height = '260px',
+  className = '',
+  zoomRange,
+  onZoomChange,
+}: LandscapeChartProps) {
   const result = useSimulationStore((s) => s.result);
   const currentStep = useSimulationStore((s) => s.currentStep);
   const jumpTo = useSimulationStore((s) => s.jumpTo);
   const colors = useChartThemeColors();
 
-  // X-axis zoom preservation — see ConvergenceChart for the full rationale.
-  // Each chart owns its own zoom state because Radix Tabs unmounts the
-  // inactive tab's chart instance, so the ranges are tab-local by design.
-  const [zoomRange, setZoomRange] = React.useState<{
-    start: number;
-    end: number;
-    runKey: number;
-  } | null>(null);
+  // Run-key invalidation — see ConvergenceChart for the full rationale.
+  // The parent owns the zoom state and tags it with the run's totalSteps;
+  // we only return a non-null effective range when the saved runKey still
+  // matches the current run.
   const effectiveZoomRange = React.useMemo(() => {
     if (!zoomRange || !result) return null;
     if (zoomRange.runKey !== result.totalSteps) return null;
@@ -58,9 +73,7 @@ export function LandscapeChart({ height = '260px', className = '' }: LandscapeCh
             jumpTo(step);
           }
         }}
-        onZoomChange={(range) => {
-          setZoomRange({ ...range, runKey: result.totalSteps });
-        }}
+        onZoomChange={onZoomChange}
         data-testid="landscape-echarts"
       />
     </div>
