@@ -16,22 +16,19 @@ describe('StatsHeader', () => {
     expect(screen.getByText(/Local Search Visualizer/i)).toBeInTheDocument();
   });
 
-  it('displays timeline step cursor and total steps', () => {
-    render(<StatsHeader />);
-    const totalSteps = simulationStore.getState().result?.totalSteps ?? 0;
-    expect(screen.getByText(new RegExp(`/ ${totalSteps} steps`, 'i'))).toBeInTheDocument();
+  it('renders the brand mark icon', () => {
+    const { container } = render(<StatsHeader />);
+    // The Zap icon is a lucide-react <svg> — verify it exists in the header
+    const svg = container.querySelector('header svg');
+    expect(svg).toBeInTheDocument();
   });
 
-  it('displays run status badge', () => {
+  it('does NOT render the live metric cards (those moved to StatsRail)', () => {
     render(<StatsHeader />);
-    const result = simulationStore.getState().result;
-    if (result?.status === 'solved') {
-      expect(screen.getByText(/Solved/i)).toBeInTheDocument();
-    }
-  });
-
-  it('displays attacking pairs conflicts count', () => {
-    render(<StatsHeader />);
-    expect(screen.getByText(/Attacking Pairs/i)).toBeInTheDocument();
+    // The five live metrics now live in StatsRail, not here.
+    expect(screen.queryByText(/Run Status/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Timeline Cursor/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Attacking Pairs/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Step Phase/i)).not.toBeInTheDocument();
   });
 });

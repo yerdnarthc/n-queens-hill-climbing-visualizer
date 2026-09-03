@@ -18,29 +18,45 @@ test.describe('Playback — keyboard shortcuts and scrubber', () => {
     // one rendered. We assert the play button no longer shows the "Play"
     // label (i.e. the toggle has flipped) by checking the timeline cursor
     // advances.
-    const cursorBefore = await page.locator('header').getByText(/^\d+$/).first().textContent();
+    const cursorBefore = await page
+      .getByTestId('stats-rail')
+      .getByText(/^\d+$/)
+      .first()
+      .textContent();
     await page.waitForTimeout(800);
-    const cursorAfter = await page.locator('header').getByText(/^\d+$/).first().textContent();
+    const cursorAfter = await page
+      .getByTestId('stats-rail')
+      .getByText(/^\d+$/)
+      .first()
+      .textContent();
     expect(Number(cursorAfter)).toBeGreaterThan(Number(cursorBefore ?? '0'));
 
     // Pressing Space again pauses.
     await page.keyboard.press('Space');
-    const cursorAfterPause = await page.locator('header').getByText(/^\d+$/).first().textContent();
+    const cursorAfterPause = await page
+      .getByTestId('stats-rail')
+      .getByText(/^\d+$/)
+      .first()
+      .textContent();
     await page.waitForTimeout(500);
-    const cursorStillPaused = await page.locator('header').getByText(/^\d+$/).first().textContent();
+    const cursorStillPaused = await page
+      .getByTestId('stats-rail')
+      .getByText(/^\d+$/)
+      .first()
+      .textContent();
     expect(cursorStillPaused).toBe(cursorAfterPause);
   });
 
   test('ArrowRight advances exactly one step', async ({ hydratedHome: page }) => {
     await page.locator('body').click({ position: { x: 1, y: 1 } });
     const cursorBefore = Number(
-      await page.locator('header').getByText(/^\d+$/).first().textContent(),
+      await page.getByTestId('stats-rail').getByText(/^\d+$/).first().textContent(),
     );
     await page.keyboard.press('ArrowRight');
     // give React a tick to flush
     await page.waitForTimeout(50);
     const cursorAfter = Number(
-      await page.locator('header').getByText(/^\d+$/).first().textContent(),
+      await page.getByTestId('stats-rail').getByText(/^\d+$/).first().textContent(),
     );
     expect(cursorAfter).toBe(cursorBefore + 1);
   });
@@ -53,11 +69,13 @@ test.describe('Playback — keyboard shortcuts and scrubber', () => {
     await page.keyboard.press('ArrowRight');
     await page.waitForTimeout(50);
     const beforeBack = Number(
-      await page.locator('header').getByText(/^\d+$/).first().textContent(),
+      await page.getByTestId('stats-rail').getByText(/^\d+$/).first().textContent(),
     );
     await page.keyboard.press('ArrowLeft');
     await page.waitForTimeout(50);
-    const afterBack = Number(await page.locator('header').getByText(/^\d+$/).first().textContent());
+    const afterBack = Number(
+      await page.getByTestId('stats-rail').getByText(/^\d+$/).first().textContent(),
+    );
     expect(afterBack).toBe(beforeBack - 1);
   });
 
@@ -71,7 +89,9 @@ test.describe('Playback — keyboard shortcuts and scrubber', () => {
     await page.keyboard.press('r');
     await page.waitForTimeout(100);
     // Cursor is back at 0.
-    const cursor = Number(await page.locator('header').getByText(/^\d+$/).first().textContent());
+    const cursor = Number(
+      await page.getByTestId('stats-rail').getByText(/^\d+$/).first().textContent(),
+    );
     expect(cursor).toBe(0);
   });
 
@@ -82,7 +102,7 @@ test.describe('Playback — keyboard shortcuts and scrubber', () => {
     await page.keyboard.press('ArrowRight');
     await page.waitForTimeout(50);
     const cursorBefore = Number(
-      await page.locator('header').getByText(/^\d+$/).first().textContent(),
+      await page.getByTestId('stats-rail').getByText(/^\d+$/).first().textContent(),
     );
     expect(cursorBefore).toBeGreaterThanOrEqual(2);
 
@@ -96,7 +116,7 @@ test.describe('Playback — keyboard shortcuts and scrubber', () => {
 
     // Cursor should now be at bestStep — different from cursorBefore.
     const cursorAfter = Number(
-      await page.locator('header').getByText(/^\d+$/).first().textContent(),
+      await page.getByTestId('stats-rail').getByText(/^\d+$/).first().textContent(),
     );
     expect(cursorAfter).not.toBe(cursorBefore);
   });

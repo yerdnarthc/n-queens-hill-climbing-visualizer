@@ -44,7 +44,9 @@ test.describe('Smoke — app boots', () => {
     // bootstraps a run in its mount effect (default N=8, seed=27,
     // steepest-ascent). The exact terminal status varies by run length, but it
     // is one of the three resolved states.
-    const statusBadge = page.locator('header').getByText(/(solved|stagnated|exhausted|frozen)/i);
+    const statusBadge = page
+      .getByTestId('stats-rail')
+      .getByText(/(solved|stagnated|exhausted|frozen)/i);
     await expect(statusBadge).toBeVisible();
     await expect(page.getByText(/initializing/i)).toHaveCount(0);
   });

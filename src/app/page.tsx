@@ -5,6 +5,7 @@ import { useSimulationDriver } from '@/hooks/useSimulationDriver';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useUrlConfigSync } from '@/hooks/useUrlConfigSync';
 import { StatsHeader } from '@/components/visualizer/stats-header';
+import { StatsRail } from '@/components/visualizer/stats-rail';
 import { PlaybackControls } from '@/components/visualizer/playback-controls';
 import { ConfigPanel } from '@/components/visualizer/config-panel';
 import { Chessboard } from '@/components/visualizer/chessboard';
@@ -52,13 +53,35 @@ function HomeContent() {
       <StatsHeader />
 
       {/* Main Visualizer Workspace */}
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-10">
           {/* Left / Center: Interactive Board & Playback Scrubber (7 cols on lg) */}
           <div className="flex flex-col gap-5 lg:col-span-7">
-            {/* Chessboard Card */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-border/80 bg-card/40 p-4 shadow-sm backdrop-blur-sm sm:p-6">
-              <Chessboard />
+            {/* Chessboard Card with embedded Stats Rail */}
+            <div
+              data-testid="chessboard-card"
+              className="flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/40 p-4 shadow-sm backdrop-blur-sm sm:p-4"
+            >
+              {/* Compact stats strip — visible on <lg, scrolls horizontally */}
+              <div className="-mx-1 flex overflow-x-auto px-1 lg:hidden">
+                <StatsRail variant="compact" />
+              </div>
+
+              {/* Main interior: rail (left) + board (right) on lg+, stacked on <lg */}
+              <div className="flex flex-col items-stretch gap-5 lg:flex-row lg:items-stretch lg:gap-5">
+                {/* Stats Rail — 4/15 on lg+ */}
+                <aside
+                  aria-label="Live simulation metrics"
+                  className="hidden lg:flex lg:w-4/15 lg:shrink-0 lg:flex-col"
+                >
+                  <StatsRail variant="rail" />
+                </aside>
+
+                {/* Chessboard — 11/15 on lg+, fills width on <lg */}
+                <div className="flex flex-1 items-center justify-center lg:w-11/15">
+                  <Chessboard />
+                </div>
+              </div>
             </div>
 
             {/* Playback Controls & Timeline Scrubber */}
