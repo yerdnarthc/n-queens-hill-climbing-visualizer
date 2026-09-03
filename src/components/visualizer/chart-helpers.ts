@@ -8,6 +8,14 @@ export interface PhaseColors {
   initial: string;
   globalMax: string;
   primary: string;
+  /**
+   * Color for the "current step" cursor — the vertical markLine + its
+   * "Step N" label that shows where the user is in the playback. Distinct
+   * from `initial` (which is the color of an algorithm snapshot in the
+   * 'initial' phase). The two are conceptually different even though both
+   * were previously aliased to the same value.
+   */
+  cursor: string;
   grid: string;
   axis: string;
   card: string;
@@ -20,9 +28,10 @@ export const DEFAULT_DARK_COLORS: PhaseColors = {
   shoulder: '#fdba74', // orange-300
   worsening: '#fb7185', // rose-400
   restart: '#fbbf24', // amber-400
-  initial: '#a78bfa', // violet-400
+  initial: '#cbd0f5', // violet-400
   globalMax: '#34d399', // emerald-400
   primary: '#8b5cf6', // violet-500
+  cursor: '#cbd0f5', // pale lavender — high-contrast against dark backgrounds
   grid: '#1e293b', // slate-800
   axis: '#94a3b8', // slate-400
   card: '#111827', // gray-900
@@ -38,6 +47,7 @@ export const DEFAULT_LIGHT_COLORS: PhaseColors = {
   initial: '#7c3aed', // violet-600
   globalMax: '#059669', // emerald-600
   primary: '#7c3aed', // violet-600
+  cursor: '#8665fc', // mid violet — visible against light backgrounds
   grid: '#e2e8f0', // slate-200
   axis: '#64748b', // slate-500
   card: '#ffffff',
@@ -135,7 +145,7 @@ export function buildDataZoomConfig(
       // slider a bit more breathing room from the bottom border and
       // reads as visually balanced against the 14% top padding.
       bottom: 8,
-      height: 18,
+      height: 28,
       start,
       end,
       filterMode: 'filter',
@@ -315,7 +325,8 @@ export function buildConvergenceChartOption(
       label: {
         formatter: `Restart #${s.restartCount}`,
         color: colors.restart,
-        fontSize: 10,
+        fontSize: 14,
+        fontFamily: 'Chivo Mono, monospace',
         position: 'insideEndTop' as const,
       },
     }));
@@ -324,15 +335,16 @@ export function buildConvergenceChartOption(
   const currentStepMarkLine = {
     xAxis: currentStep,
     lineStyle: {
-      color: colors.improving,
+      color: colors.cursor,
       type: 'solid' as const,
       width: 1,
     },
     label: {
       show: true,
       formatter: `Step ${currentStep}`,
-      color: colors.improving,
-      fontSize: 11,
+      color: colors.cursor,
+      fontFamily: 'Chivo Mono, monospace',
+      fontSize: 12,
       fontWeight: 'bold' as const,
       position: 'end' as const,
     },
@@ -446,7 +458,7 @@ export function buildConvergenceChartOption(
       trigger: 'axis',
       backgroundColor: colors.card,
       borderColor: colors.grid,
-      textStyle: { color: colors.foreground, fontSize: 12 },
+      textStyle: { color: colors.foreground, fontSize: 14 },
       axisPointer: {
         type: 'line',
         lineStyle: { color: colors.primary, width: 1.5, type: 'dashed' },
@@ -460,27 +472,27 @@ export function buildConvergenceChartOption(
         const phaseColor = getPhaseColor(snap.phase, snap.conflicts, colors);
         const phaseName = getPhaseLabel(snap.phase, snap.conflicts);
 
-        let html = `<div style="font-weight:600;margin-bottom:4px;">Step ${snap.step}</div>`;
-        html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+        let html = `<div style="font-weight:600;margin-bottom:6px;font-family:var(--font-sora-sans), sans-serif;font-size:0.75rem;">Step ${snap.step}</div>`;
+        html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;font-family:var(--font-sora-sans), sans-serif;font-size:0.6rem;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${phaseColor};"></span>
           <span>${phaseName}</span>
         </div>`;
-        html += `<div><strong>Conflicts:</strong> ${snap.conflicts}</div>`;
+        html += `<div style="font-family:var(--font-sora-sans), sans-serif;font-size:0.6rem;"><strong>Conflicts:</strong> ${snap.conflicts}</div>`;
 
         if (snap.move) {
-          html += `<div style="color:${colors.muted};font-size:11px;margin-top:2px;">
+          html += `<div style="color:${colors.muted};font-size:0.6rem;font-family:var(--font-chivo-mono), monospace;margin-top:2px;">
             Col ${snap.move.column}: Row ${snap.move.fromRow} &rarr; ${snap.move.toRow} (Δ ${snap.move.deltaConflicts})
           </div>`;
         }
 
         if (snap.temperature !== null) {
-          html += `<div style="color:${colors.worsening};font-size:11px;">
+          html += `<div style="color:${colors.worsening};font-size:0.6rem;font-family:var(--font-chivo-mono), monospace;margin-top:2px;">
             <strong>Temp:</strong> ${snap.temperature.toFixed(3)}
           </div>`;
         }
 
         if (snap.restartCount > 0) {
-          html += `<div style="color:${colors.restart};font-size:11px;">
+          html += `<div style="color:${colors.restart};font-size:0.6rem;font-family:var(--font-chivo-mono), monospace;margin-top:2px;">
             <strong>Restart attempt:</strong> #${snap.restartCount} (iter ${snap.iterationInRestart})
           </div>`;
         }
@@ -503,7 +515,7 @@ export function buildConvergenceChartOption(
       // position via ECharts' default 'end' nameLocation), so the
       // bottom region only has the xAxis name and the slider — the
       // 20% bottom padding is enough.
-      top: '20%',
+      top: '15%',
       bottom: '20%',
       containLabel: true,
     },
@@ -512,12 +524,12 @@ export function buildConvergenceChartOption(
       data: steps,
       boundaryGap: false,
       axisLine: { lineStyle: { color: colors.grid } },
-      axisLabel: { color: colors.axis, fontSize: 11 },
+      axisLabel: { color: colors.axis, fontSize: 13, fontFamily: 'Chivo Mono, monospace' },
       splitLine: { show: true, lineStyle: { color: colors.grid, type: 'dotted' } },
       name: 'Step',
       nameLocation: 'middle',
-      nameGap: 35,
-      nameTextStyle: { color: colors.axis, fontSize: 11 },
+      nameGap: 40,
+      nameTextStyle: { color: colors.axis, fontSize: 12, fontFamily: 'Chivo Mono, monospace' },
     },
     yAxis: [
       {
@@ -542,9 +554,20 @@ export function buildConvergenceChartOption(
         // names are back at the top — and we make the top region
         // roomy enough (grid.top: '15%') to prevent collision with
         // the axisPointer label.
-        nameTextStyle: { color: colors.axis, fontSize: 11, align: 'left' },
+        nameTextStyle: {
+          color: colors.axis,
+          fontSize: 12,
+          fontFamily: 'Chivo Mono, monospace',
+          align: 'center',
+          padding: [0, 30, 0, 0], // top/right/bottom/left
+        },
         axisLine: { lineStyle: { color: colors.grid } },
-        axisLabel: { color: colors.axis, fontSize: 11 },
+        axisLabel: {
+          color: colors.axis,
+          fontSize: 13,
+          fontFamily: 'Chivo Mono, monospace',
+          margin: 30,
+        },
         splitLine: { lineStyle: { color: colors.grid } },
         // Pinned: see the yAxisMaxConflicts computation above. Together
         // with `scale: false` (the default) this keeps the Y-axis
@@ -572,11 +595,19 @@ export function buildConvergenceChartOption(
               // to give the yAxis name and the axisPointer label plenty
               // of room to breathe. `align: 'right'` keeps the text
               // right-anchored to the right side of the chart.
-              nameTextStyle: { color: colors.worsening, fontSize: 11, align: 'right' },
+              nameTextStyle: {
+                color: colors.worsening,
+                fontSize: 12,
+                fontFamily: 'Chivo Mono, monospace',
+                align: 'center',
+                padding: [0, -30, 0, 0], // top/right/bottom/left
+              },
               axisLine: { lineStyle: { color: colors.worsening } },
               axisLabel: {
                 color: colors.worsening,
-                fontSize: 10,
+                fontSize: 13,
+                fontFamily: 'Chivo Mono, monospace',
+                margin: 20,
                 formatter: (val: number) => val.toFixed(1),
               },
               splitLine: { show: false },
@@ -778,22 +809,22 @@ export function buildLandscapeChartOption(
         const phaseColor = getPhaseColor(snap.phase, snap.conflicts, colors);
         const phaseName = getPhaseLabel(snap.phase, snap.conflicts);
 
-        let html = `<div style="font-weight:600;margin-bottom:4px;">Landscape Step ${snap.step}</div>`;
-        html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+        let html = `<div style="font-weight:600;margin-bottom:6px;font-family:var(--font-sora-sans), sans-serif;font-size:0.75rem;">Landscape Step ${snap.step}</div>`;
+        html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;font-family:var(--font-sora-sans), sans-serif;font-size:0.6rem;">
           <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${phaseColor};"></span>
           <span><strong>${phaseName}</strong></span>
         </div>`;
-        html += `<div><strong>Objective h(s):</strong> ${snap.conflicts} conflicts</div>`;
+        html += `<div style="font-family:var(--font-sora-sans), sans-serif;font-size:0.6rem;"><strong>Objective h(s):</strong> ${snap.conflicts} conflicts</div>`;
 
         if (snap.move) {
-          html += `<div style="color:${colors.muted};font-size:11px;margin-top:2px;">
+          html += `<div style="color:${colors.muted};font-size:0.6rem;font-family:var(--font-chivo-mono), monospace;margin-top:2px;">
             Queen col ${snap.move.column}: row ${snap.move.fromRow} &rarr; ${snap.move.toRow}
             (Δ = ${snap.move.deltaConflicts}, evaluated ${snap.move.evaluatedMoves} moves)
           </div>`;
         }
 
         if (snap.restartCount > 0) {
-          html += `<div style="color:${colors.restart};font-size:11px;">
+          html += `<div style="color:${colors.restart};font-size:0.6rem;font-family:var(--font-chivo-mono), monospace;margin-top:2px;">
             Restart #${snap.restartCount} · step ${snap.iterationInRestart}
           </div>`;
         }
@@ -810,7 +841,7 @@ export function buildLandscapeChartOption(
       // room for the xAxis name and the dataZoom slider. The
       // yAxis name stays at the top via ECharts' default 'end'
       // nameLocation.
-      top: '20%',
+      top: '15%',
       bottom: '20%',
       containLabel: true,
     },
@@ -834,10 +865,10 @@ export function buildLandscapeChartOption(
       boundaryGap: false,
       name: 'Step Iteration',
       nameLocation: 'middle',
-      nameGap: 35,
-      nameTextStyle: { color: colors.axis, fontSize: 11 },
+      nameGap: 40,
+      nameTextStyle: { color: colors.axis, fontSize: 12, fontFamily: 'Chivo Mono, monospace' },
       axisLine: { lineStyle: { color: colors.grid } },
-      axisLabel: { color: colors.axis, fontSize: 11 },
+      axisLabel: { color: colors.axis, fontSize: 13, fontFamily: 'Chivo Mono, monospace' },
       splitLine: { show: true, lineStyle: { color: colors.grid, type: 'dotted' } },
     },
     yAxis: {
@@ -857,9 +888,20 @@ export function buildLandscapeChartOption(
       // places the name at the TOP of the axis. The top region is
       // padded with grid.top: '15%' to give the name and the
       // axisPointer label room to breathe without collision.
-      nameTextStyle: { color: colors.axis, fontSize: 11, align: 'left' },
+      nameTextStyle: {
+        color: colors.axis,
+        fontSize: 12,
+        align: 'center',
+        fontFamily: 'Chivo Mono, monospace',
+        padding: [0, 0, 0, 80], // top/right/bottom/left
+      },
       axisLine: { lineStyle: { color: colors.grid } },
-      axisLabel: { color: colors.axis, fontSize: 11 },
+      axisLabel: {
+        color: colors.axis,
+        fontSize: 13,
+        fontFamily: 'Chivo Mono, monospace',
+        margin: 30,
+      },
       splitLine: { lineStyle: { color: colors.grid } },
       // Pinned to the full-run max (see yAxisMaxConflicts above). The
       // `scale: false` makes the intent explicit — we never want the
@@ -886,13 +928,13 @@ export function buildLandscapeChartOption(
             {
               xAxis: currentStep,
               lineStyle: {
-                color: colors.improving,
+                color: colors.cursor,
                 type: 'solid' as const,
                 width: 1,
               },
               label: {
                 formatter: `Step ${currentStep}`,
-                color: colors.improving,
+                color: colors.cursor,
                 fontSize: 11,
                 fontWeight: 'bold' as const,
                 position: 'end' as const,

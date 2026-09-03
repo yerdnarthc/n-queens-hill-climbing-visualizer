@@ -70,6 +70,12 @@ function readThemeColors(isDark: boolean): PhaseColors {
       initial: getVal('--primary', defaults.initial),
       globalMax: getVal('--feature-global-max', defaults.globalMax),
       primary: getVal('--primary', defaults.primary),
+      // No CSS variable indirection: the cursor color is theme-locked
+      // (pale lavender in dark, mid violet in light) so it stays visually
+      // distinct from the trajectory line and the per-phase markers. If
+      // we ever want to make it tweakable, expose a `--chart-cursor` in
+      // globals.css and switch to `getVal('--chart-cursor', defaults.cursor)`.
+      cursor: defaults.cursor,
       grid: getVal('--chart-grid', defaults.grid),
       axis: getVal('--chart-axis', defaults.axis),
       card: getVal('--card', defaults.card),

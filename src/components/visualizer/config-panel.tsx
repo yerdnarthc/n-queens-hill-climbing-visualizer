@@ -1,16 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Dices,
-  Settings2,
-  SlidersHorizontal,
-  ChevronDown,
-  Info,
-  Sparkles,
-  Link2,
-  Check,
-} from 'lucide-react';
+import { Dices, Settings2, SlidersHorizontal, ChevronDown, Info, Link2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -78,13 +69,13 @@ export function ConfigPanel() {
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm">
-      <div className="flex items-center justify-between border-b border-border/60 pb-3">
+      <div className="flex items-center justify-between border-b-1 border-border/60 pb-3">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-primary" />
           <h2 className="text-sm font-semibold tracking-tight">Configuration</h2>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+          <span className="rounded bg-muted px-3 py-1 font-mono text-[0.7rem] text-muted-foreground">
             N = {config.boardSize} Queens
           </span>
           <button
@@ -92,18 +83,18 @@ export function ConfigPanel() {
             onClick={handleCopyLink}
             aria-label="Copy share link"
             title="Copy share link — the URL reproduces this exact run"
-            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {copiedLink ? (
-              <Check className="h-3.5 w-3.5 text-emerald-500" />
+              <Check className="h-4 w-4 text-green-pill" />
             ) : (
-              <Link2 className="h-3.5 w-3.5" />
+              <Link2 className="h-4 w-4" />
             )}
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 gap-y-5">
         {/* Board Size N */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -125,7 +116,7 @@ export function ConfigPanel() {
             className="cursor-pointer py-1"
           />
 
-          <div className="flex justify-between text-[10px] text-muted-foreground">
+          <div className="flex justify-between font-sans text-[0.55rem] text-muted-foreground">
             <span>N={BOARD_SIZE_LIMITS.min} (Fast)</span>
             <span>N=8 (Standard)</span>
             <span>N={BOARD_SIZE_LIMITS.max} (Complex)</span>
@@ -134,12 +125,13 @@ export function ConfigPanel() {
 
         {/* Strategy Selection */}
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="strategy-select" className="text-xs font-semibold">
-            Hill Climbing Variant
-          </Label>
+          <Label className="text-xs font-semibold">Hill Climbing Variant</Label>
 
           <Select value={config.strategy} onValueChange={handleStrategyChange}>
-            <SelectTrigger id="strategy-select" className="w-full text-xs font-medium">
+            <SelectTrigger
+              id="strategy-select"
+              className="w-full border-transparent bg-transparent text-xs font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50"
+            >
               <SelectValue placeholder="Select strategy" />
             </SelectTrigger>
             <SelectContent>
@@ -160,7 +152,7 @@ export function ConfigPanel() {
           </Select>
 
           {/* Strategy Mini Callout */}
-          <div className="flex items-start gap-1.5 rounded-lg border border-border/50 bg-muted/40 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
+          <div className="flex items-start gap-2 rounded-lg border border-border/50 bg-muted/40 p-2.5 font-sans text-[0.6rem] leading-relaxed text-muted-foreground">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
             <span>{currentStratInfo.description}</span>
           </div>
@@ -172,7 +164,6 @@ export function ConfigPanel() {
             <Label htmlFor="seed-input" className="text-xs font-semibold">
               RNG Seed (Determinism)
             </Label>
-            <span className="text-[10px] text-muted-foreground">mulberry32</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -191,7 +182,7 @@ export function ConfigPanel() {
               size="default"
               onClick={newSeed}
               title="Pick a random seed"
-              className="h-9 shrink-0 gap-1.5 rounded-lg text-xs font-semibold"
+              className="h-9 shrink-0 gap-1.5 rounded-lg text-xs font-semibold transition-all hover:border-primary/30 dark:hover:bg-accent/50"
             >
               <Dices className="h-4 w-4" />
               <span>Random</span>
@@ -203,7 +194,7 @@ export function ConfigPanel() {
         <Collapsible
           open={isOpenAdvanced}
           onOpenChange={setIsOpenAdvanced}
-          className="rounded-lg border border-border/60 bg-muted/20"
+          className="rounded-lg border border-border/60 bg-dark-accent"
         >
           <CollapsibleTrigger asChild>
             <Button
@@ -211,8 +202,8 @@ export function ConfigPanel() {
               size="sm"
               className="flex w-full items-center justify-between p-3 text-xs font-medium text-muted-foreground hover:text-foreground"
             >
-              <div className="flex items-center gap-1.5">
-                <Settings2 className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-2">
+                <Settings2 className="h-5 w-5" />
                 <span>Advanced Policy Knobs</span>
               </div>
               <ChevronDown
@@ -223,14 +214,16 @@ export function ConfigPanel() {
             </Button>
           </CollapsibleTrigger>
 
-          <CollapsibleContent className="flex flex-col gap-3.5 border-t border-border/50 p-3 pt-3">
+          <CollapsibleContent className="flex flex-col gap-5 border-t border-border/50 p-3 pt-3">
             {/* Sideways Moves Policy */}
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-0.5">
                 <Label htmlFor="allow-sideways-switch" className="text-xs font-medium">
                   Allow Sideways Moves
                 </Label>
-                <span className="text-[10px] text-muted-foreground">Traverse plateaus (Δ = 0)</span>
+                <span className="text-[0.6rem] text-muted-foreground">
+                  Traverse plateaus (Δ = 0)
+                </span>
               </div>
               <Switch
                 id="allow-sideways-switch"
@@ -241,7 +234,7 @@ export function ConfigPanel() {
 
             {(config.allowSideways ?? true) && (
               <div className="flex flex-col gap-1 border-l-2 border-primary/20 pl-2">
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-[0.7rem]">
                   <span className="text-muted-foreground">Max Plateau Streak</span>
                   <span className="font-mono font-semibold">
                     {config.maxConsecutiveSideways ?? 100}
@@ -266,7 +259,7 @@ export function ConfigPanel() {
                 <Label htmlFor="allow-restarts-switch" className="text-xs font-medium">
                   Random Restarts
                 </Label>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-[0.6rem] text-muted-foreground">
                   Restart from new board if stuck
                 </span>
               </div>
@@ -297,13 +290,12 @@ export function ConfigPanel() {
             {/* Simulated Annealing Knobs (if SA is selected) */}
             {isSA && (
               <div className="flex flex-col gap-2 border-t border-border/40 pt-2">
-                <div className="flex items-center gap-1 text-[11px] font-semibold text-primary">
-                  <Sparkles className="h-3 w-3" />
+                <div className="flex items-center gap-1 text-xs font-medium">
                   <span>Simulated Annealing Knobs</span>
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-[11px]">
+                  <div className="flex items-center justify-between text-[0.65rem]">
                     <span className="text-muted-foreground">Cooling Rate (α)</span>
                     <span className="font-mono font-semibold">{config.saCoolingRate ?? 0.99}</span>
                   </div>

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import 'katex/dist/katex.min.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -9,7 +10,7 @@
 :root {
   --radius: 0.75rem;
 
-  --background: #d3d5d8;
+  --background: #ececea;
   --foreground: #0e121b;
 
   --card: #ffffff;
@@ -53,6 +54,11 @@
   /* ECharts theme alignment */
   --chart-grid: #c0c7cf;
   --chart-axis: #1d2125;
+
+  --green-ls-600: #40a028;
+  --rose-ls-600: #cc1f1f;
+  --rose-ls-200: #ff6969;
+  --blue-ls-200: #56a5ff;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -68,14 +74,14 @@
   --popover: #22242c;
   --popover-foreground: #e2e8f0;
 
-  --primary: #6e50db;
+  --primary: #8665fc;
   --primary-foreground: #ffffff;
 
   --secondary: #1e293b;
   --secondary-foreground: #e2e8f0;
 
-  --muted: #292d33;
-  --muted-foreground: #899ebb;
+  --muted: #272a30;
+  --muted-foreground: #8c97a7;
 
   --accent: #713fcf;
   --accent-foreground: #ffffff;
@@ -99,6 +105,12 @@
 
   --chart-grid: #313049;
   --chart-axis: #c8cbe2;
+
+  --dark-accent: #17181d;
+}
+
+html {
+  font-size: 20px;
 }
 
 @theme inline {
@@ -122,6 +134,11 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-green-pill: var(--green-ls-600);
+  --color-rose-pill: var(--rose-ls-600);
+  --color-rose-ls-200: var(--rose-ls-200);
+  --color-blue-ls-200: var(--blue-ls-200);
+  --color-dark-accent: var(--dark-accent);
 
   /* semantic landscape features */
   --color-improving: var(--feature-improving);
@@ -142,8 +159,28 @@
   --radius-xl: calc(var(--radius) + 4px);
 
   /* fonts */
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-sora-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-chivo-mono), ui-monospace, monospace;
+
+  /* Text-size scale — all expressed in rem so they scale with the root
+     font-size (see the `body { font-size: 18px }` rule below). This
+     matches Tailwind v4's default scale exactly: at a 16px root,
+     text-base = 16px, text-sm = 14px, text-lg = 18px, etc. At an
+     18px root (our actual setting), text-base = 18px, text-sm = 15.75px,
+     and so on — every step scales uniformly. */
+  --text-xs: 0.75rem; /* 12px @ 16px root, 13.5px @ 18px root */
+  --text-sm: 0.875rem; /* 14px @ 16px root, 15.75px @ 18px root */
+  --text-base: 1.125rem; /* 16px @ 16px root, 18px @ 18px root */
+  --text-lg: 1.125rem; /* 18px @ 16px root, 20.25px @ 18px root */
+  --text-xl: 1.25rem; /* 20px @ 16px root, 22.5px @ 18px root */
+  --text-2xl: 1.5rem; /* 24px @ 16px root, 27px @ 18px root */
+  --text-3xl: 1.875rem; /* 30px @ 16px root */
+  --text-4xl: 2.25rem; /* 36px @ 16px root */
+  --text-5xl: 3rem; /* 48px @ 16px root */
+  --text-6xl: 3.75rem; /* 60px @ 16px root */
+  --text-7xl: 4.5rem; /* 72px @ 16px root */
+  --text-8xl: 6rem; /* 96px @ 16px root */
+  --text-9xl: 8rem; /* 128px @ 16px root */
 }
 
 @layer base {
@@ -171,6 +208,45 @@
     mask-image: linear-gradient(to bottom, black 0%, transparent 70%);
     opacity: 0.5;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   KaTeX — theme integration
+   ─────────────────────────────────────────────────────────────
+   KaTeX's distribution CSS hardcodes dark text by default, which
+   breaks in dark mode. We rely on `colorIsTextColor: true` (set in
+   the <Math> component's renderToString options) to make KaTeX
+   inherit the parent's `color` via the `currentcolor` keyword. The
+   rules below cascade that color through all of KaTeX's internal
+   spans (.mord, .mrel, etc.) so variables, operators, and
+   punctuation all read as foreground/muted-foreground text.
+
+   We set the rules OUTSIDE @layer base so they win against the
+   `@import 'katex/dist/katex.min.css'` rules earlier in the file
+   (later rules in CSS source order beat earlier rules at equal
+   specificity). */
+.katex,
+.katex .mord,
+.katex .mrel,
+.katex .mbin,
+.katex .mopen,
+.katex .mclose,
+.katex .mpunct,
+.katex .minner,
+.katex .mathnormal,
+.katex .mathit,
+.katex .mathbf,
+.katex .mathsf,
+.katex .mathtt {
+  color: currentColor;
+}
+
+/* KaTeX's rule color (e.g. overlines, sqrt lines) — use a muted
+   version of the text color so it's visible but not loud. */
+.katex .overline,
+.katex .sqrt > .root,
+.katex .sqrt > .sqrt-sign {
+  color: color-mix(in oklab, currentColor 60%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

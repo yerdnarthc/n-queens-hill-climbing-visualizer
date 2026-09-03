@@ -595,7 +595,7 @@ describe('chart-helpers', () => {
       const config = buildDataZoomConfig(DEFAULT_DARK_COLORS);
       const slider = config[1] as { bottom: number; height: number };
       expect(slider.bottom).toBe(8);
-      expect(slider.height).toBe(18);
+      expect(slider.height).toBe(28);
     });
   });
 
@@ -623,7 +623,7 @@ describe('chart-helpers', () => {
         DEFAULT_DARK_COLORS,
       );
       const grid = option.grid as { top: string; bottom: string };
-      expect(grid.top).toBe('20%');
+      expect(grid.top).toBe('15%');
       expect(grid.bottom).toBe('20%');
     });
 
@@ -668,7 +668,7 @@ describe('chart-helpers', () => {
     it('Landscape: grid is padded with 20% top and 20% bottom', () => {
       const option = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
       const grid = option.grid as { top: string; bottom: string };
-      expect(grid.top).toBe('20%');
+      expect(grid.top).toBe('15%');
       expect(grid.bottom).toBe('20%');
     });
 

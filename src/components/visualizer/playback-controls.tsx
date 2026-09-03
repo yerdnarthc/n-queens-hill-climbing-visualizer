@@ -71,13 +71,13 @@ export function PlaybackControls() {
       {/* Timeline Scrubber */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5 font-medium">
+          <div className="flex items-center gap-5 font-medium">
             <span>Timeline</span>
-            <span className="font-mono text-[11px] font-semibold text-foreground">
+            <span className="font-mono text-[0.65rem] font-semibold text-foreground">
               Step {currentStep}
             </span>
           </div>
-          <span className="font-mono text-[11px]">{progressPercent}%</span>
+          <span className="font-mono text-[0.65rem]">{progressPercent}%</span>
         </div>
 
         <Slider
@@ -114,7 +114,7 @@ export function PlaybackControls() {
       </div>
 
       {/* Main Playback Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
         {/* Step Navigation Controls */}
         <div className="flex items-center gap-1.5">
           <Button
@@ -207,8 +207,8 @@ export function PlaybackControls() {
 
         {/* Speed Controls */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Gauge className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Gauge className="h-4 w-4" />
             <span className="hidden font-medium sm:inline">Speed:</span>
           </div>
 
@@ -220,7 +220,7 @@ export function PlaybackControls() {
                   key={p}
                   type="button"
                   onClick={() => setSpeed(p)}
-                  className={`rounded px-2 py-1 font-mono text-[11px] font-semibold transition-all ${
+                  className={`rounded px-2 py-1 font-mono text-[0.7rem] font-semibold transition-all ${
                     active
                       ? 'bg-background text-foreground shadow-xs'
                       : 'text-muted-foreground hover:text-foreground'
@@ -246,7 +246,7 @@ export function PlaybackControls() {
         </div>
 
         {/* Timeline event legend + keyboard shortcuts */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/50 pt-2.5 text-[11px] text-muted-foreground">
+        <div className="flex w-full flex-wrap items-center justify-between border-t border-border/50 px-5 pt-2.5 text-[0.65rem] text-muted-foreground">
           <div className="flex items-center gap-3">
             {restartSteps.length > 0 && (
               <span className="flex items-center gap-1 font-medium">
@@ -265,22 +265,22 @@ export function PlaybackControls() {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="hidden sm:inline">Shortcuts:</span>
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-border/70 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+              <kbd className="rounded border border-border/70 bg-muted/95 px-1.5 py-0.5 font-mono text-[0.65rem] font-semibold text-foreground">
                 Space
               </kbd>
               Play / Pause
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-border/70 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+              <kbd className="rounded border border-border/70 bg-muted/95 px-1.5 py-0.5 font-mono text-[0.65rem] font-semibold text-foreground">
                 ←
               </kbd>
-              <kbd className="rounded border border-border/70 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+              <kbd className="rounded border border-border/70 bg-muted/95 px-1.5 py-0.5 font-mono text-[0.65rem] font-semibold text-foreground">
                 →
               </kbd>
               Step
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-border/70 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+              <kbd className="rounded border border-border/70 bg-muted/95 px-1.5 py-0.5 font-mono text-[0.65rem] font-semibold text-foreground">
                 R
               </kbd>
               Reset

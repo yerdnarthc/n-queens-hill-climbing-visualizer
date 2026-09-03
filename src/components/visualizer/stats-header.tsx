@@ -30,26 +30,28 @@ const STATUS_CONFIG: Record<
     label: 'Solved (Global Opt)',
     variant: 'default',
     className:
-      'bg-emerald-600 hover:bg-emerald-600/90 text-white border-emerald-500 shadow-xs dark:bg-emerald-500 dark:text-emerald-950 font-semibold',
+      'bg-green-pill hover:bg-green-pill/90 text-white shadow-xs dark:bg-green-pill dark:text-white font-medium text-[0.7rem] px-4 py-1',
     icon: CheckCircle2,
   },
   stagnated: {
     label: 'Stagnated (Local Max)',
     variant: 'outline',
     className:
-      'border-amber-500/80 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold',
+      'border-amber-500/20 bg-yellow-500/15 text-amber-600 dark:text-amber-400 text-[0.7rem] font-medium px-4 py-1',
     icon: AlertTriangle,
   },
   exhausted: {
     label: 'Step Limit Hit',
     variant: 'destructive',
-    className: 'bg-rose-500/15 border-rose-500/50 text-rose-600 dark:text-rose-400 font-semibold',
+    className:
+      'bg-rose-pill/8 border-rose-500/10 text-rose-600 dark:bg-rose-pill/20 dark:text-rose-ls-200 font-medium text-[0.7rem] px-4 py-1',
     icon: Flame,
   },
   frozen: {
     label: 'Frozen (SA Tmin)',
     variant: 'outline',
-    className: 'border-sky-500/80 bg-sky-500/10 text-sky-600 dark:text-sky-400 font-semibold',
+    className:
+      'border-blue-ls-200/20 bg-sky-500/10 text-sky-600 dark:text-blue-ls-200 font-medium text-[0.7rem] px-4 py-1',
     icon: Snowflake,
   },
 };
@@ -60,27 +62,31 @@ const PHASE_CONFIG: Record<
 > = {
   initial: {
     label: 'Initial Board',
-    className: 'bg-muted text-muted-foreground border-border',
+    className: 'bg-muted text-muted-foreground border-border font-medium text-[0.7rem] px-4 py-1',
     icon: Sparkles,
   },
   improving: {
     label: 'Improving Move (Δ < 0)',
-    className: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30',
+    className:
+      'bg-sky-500/15 text-sky-600 dark:text-blue-ls-200 border-blue-ls-200/20 font-medium text-[0.7rem] px-4 py-1',
     icon: TrendingDown,
   },
   shoulder: {
     label: 'Plateau / Shoulder (Δ = 0)',
-    className: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30',
+    className:
+      'border-amber-500/20 bg-yellow-500/15 text-amber-600 dark:text-amber-400 text-[0.7rem] font-medium px-4 py-1',
     icon: Minus,
   },
   worsening: {
     label: 'Metropolis Uphill (Δ > 0)',
-    className: 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30',
+    className:
+      'bg-rose-pill/8 border-rose-500/10 text-rose-600 dark:bg-rose-pill/20 dark:text-rose-ls-200 font-medium text-[0.7rem] px-4 py-1',
     icon: TrendingUp,
   },
   restart: {
     label: 'Random Restart',
-    className: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30',
+    className:
+      'bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/10 font-medium text-[0.7rem] px-4 py-1',
     icon: RotateCcw,
   },
 };
@@ -104,40 +110,28 @@ export function StatsHeader() {
   const isSolved = conflicts === 0;
 
   return (
-    <header className="flex flex-col gap-4 border-b border-border/80 bg-card/40 px-4 py-4 backdrop-blur-md sm:min-h-[17rem] sm:px-6 lg:min-h-[13rem] lg:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <header className="flex flex-col gap-4 border-b border-border/80 bg-card/40 px-4 py-6 backdrop-blur-md sm:min-h-[17rem] sm:px-6 lg:min-h-[13rem] lg:px-8">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/90 to-primary/40 text-primary-foreground shadow-inner shadow-white/20">
             <Zap className="h-5 w-5 fill-current" />
           </div>
-          <div>
+          <div className="flex flex-col gap-y-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
-                N-Queens Hill Climbing
+              <h1 className="text-xl font-bold tracking-tight sm:text-4xl">
+                N-Queens Hill Climbing <span className="text-muted-foreground">Visualizer</span>
               </h1>
-              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                Local Search Visualizer
-              </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              AIMA Ch. 4 & 6 · Deterministic Seeded Simulation · Time-Travel State
-            </p>
+            <p className="text-base text-muted-foreground">Local Search Visualizer</p>
           </div>
-        </div>
-
-        {/* Global actions & theme */}
-        <div className="flex items-center gap-2">
-          <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-            AIMA Ch. 4 & 6
-          </span>
         </div>
       </div>
 
       {/* Live State & Metrics Bar */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+      <div className="grid min-h-24 grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5">
         {/* Run Status */}
-        <div className="flex flex-col justify-center rounded-lg border border-border/60 bg-card/60 p-2.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-muted-foreground">Run Status</span>
+        <div className="flex flex-col justify-center gap-y-1 rounded-lg border border-border/60 bg-card/60 p-4 shadow-2xs">
+          <span className="font-mono text-xs font-medium text-muted-foreground">Run Status</span>
           <div className="mt-1 flex items-center gap-1.5">
             <Badge
               variant={statusMeta.variant}
@@ -150,36 +144,40 @@ export function StatsHeader() {
         </div>
 
         {/* Step Progress */}
-        <div className="flex flex-col justify-center rounded-lg border border-border/60 bg-card/60 p-2.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-muted-foreground">Timeline Cursor</span>
-          <div className="mt-1 flex items-baseline gap-1 font-mono text-sm font-semibold">
+        <div className="flex flex-col justify-center gap-y-1 rounded-lg border border-border/60 bg-card/60 p-4 shadow-2xs">
+          <span className="font-mono text-xs font-medium text-muted-foreground">
+            Timeline Cursor
+          </span>
+          <div className="mt-1 flex items-baseline gap-1 font-sans text-base font-semibold">
             <span className="text-foreground">{currentStep}</span>
-            <span className="text-xs text-muted-foreground">/ {totalSteps} steps</span>
+            <span className="text-muted-foreground">/ {totalSteps} steps</span>
           </div>
         </div>
 
         {/* Conflicts */}
-        <div className="flex flex-col justify-center rounded-lg border border-border/60 bg-card/60 p-2.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-muted-foreground">Attacking Pairs</span>
-          <div className="mt-1 flex items-baseline gap-2">
+        <div className="flex flex-col justify-center gap-y-1 rounded-lg border border-border/60 bg-card/60 p-2.5 shadow-2xs">
+          <span className="font-mono text-xs font-medium text-muted-foreground">
+            Attacking Pairs
+          </span>
+          <div className="mt-1 flex items-baseline gap-2 font-sans text-base font-semibold">
             <span
-              className={`font-mono text-base font-bold ${
+              className={`font-bold ${
                 isSolved
                   ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-rose-600 dark:text-rose-400'
+                  : 'text-rose-ls-200 dark:text-rose-ls-200'
               }`}
             >
               {conflicts}
             </span>
-            <span className="text-[11px] text-muted-foreground">
-              (best: <strong className="font-mono text-foreground">{bestConflicts}</strong>)
+            <span className="text-muted-foreground">
+              (best: <strong className="text-foreground">{bestConflicts}</strong>)
             </span>
           </div>
         </div>
 
         {/* Move Phase */}
-        <div className="flex flex-col justify-center rounded-lg border border-border/60 bg-card/60 p-2.5 shadow-2xs">
-          <span className="text-[11px] font-medium text-muted-foreground">Step Phase</span>
+        <div className="flex flex-col justify-center gap-y-1 rounded-lg border border-border/60 bg-card/60 p-2.5 shadow-2xs">
+          <span className="font-mono text-xs font-medium text-muted-foreground">Step Phase</span>
           <div className="mt-1">
             <span
               className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${phaseMeta.className}`}
@@ -191,19 +189,19 @@ export function StatsHeader() {
         </div>
 
         {/* Restarts or Temperature */}
-        <div className="col-span-2 flex flex-col justify-center rounded-lg border border-border/60 bg-card/60 p-2.5 shadow-2xs sm:col-span-4 lg:col-span-1">
-          <span className="text-[11px] font-medium text-muted-foreground">
+        <div className="col-span-2 flex flex-col justify-center gap-y-1 rounded-lg border border-border/60 bg-card/60 p-2.5 shadow-2xs sm:col-span-4 lg:col-span-1">
+          <span className="font-mono text-xs font-medium text-muted-foreground">
             {snapshot?.temperature !== null ? 'Annealing Temp (T)' : 'Restarts'}
           </span>
-          <div className="mt-1 font-mono text-sm font-semibold text-foreground">
+          <div className="mt-1 font-sans text-base font-bold text-foreground">
             {snapshot?.temperature !== null && snapshot?.temperature !== undefined ? (
-              <span className="text-sky-600 dark:text-sky-400">
+              <span className="text-sky-600 dark:text-sky-600">
                 {snapshot.temperature.toFixed(3)}
               </span>
             ) : (
               <span>
                 {snapshot?.restartCount ?? 0}{' '}
-                <span className="text-xs font-normal text-muted-foreground">restarts</span>
+                <span className="text-base font-semibold text-muted-foreground">restarts</span>
               </span>
             )}
           </div>

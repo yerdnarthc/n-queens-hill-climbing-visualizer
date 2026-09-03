@@ -12,37 +12,32 @@ import { SiteNav } from '@/components/site-nav';
  * names match the previous `next/font/google` setup so `globals.css` (and the
  * `--font-*` token consumers) are unchanged.
  */
-const geistSans = localFont({
+const soraSans = localFont({
   src: [
     {
-      path: '../assets/fonts/Geist-VariableFont_wght.ttf',
+      path: '../assets/fonts/Sora-VariableFont_wght.ttf',
       weight: '100 900',
       style: 'normal',
     },
-    {
-      path: '../assets/fonts/Geist-Italic-VariableFont_wght.ttf',
-      weight: '100 900',
-      style: 'italic',
-    },
   ],
-  variable: '--font-geist-sans',
+  variable: '--font-sora-sans',
   display: 'swap',
 });
 
-const geistMono = localFont({
+const chivoMono = localFont({
   src: [
     {
-      path: '../assets/fonts/GeistMono-VariableFont_wght.ttf',
+      path: '../assets/fonts/ChivoMono-VariableFont_wght.ttf',
       weight: '100 900',
       style: 'normal',
     },
     {
-      path: '../assets/fonts/GeistMono-Italic-VariableFont_wght.ttf',
+      path: '../assets/fonts/ChivoMono-Italic-VariableFont_wght.ttf',
       weight: '100 900',
       style: 'italic',
     },
   ],
-  variable: '--font-geist-mono',
+  variable: '--font-chivo-mono',
   display: 'swap',
 });
 
@@ -76,7 +71,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${soraSans.variable} ${chivoMono.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
