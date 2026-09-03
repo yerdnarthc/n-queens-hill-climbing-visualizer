@@ -559,7 +559,7 @@ export function buildConvergenceChartOption(
           fontSize: 12,
           fontFamily: 'Chivo Mono, monospace',
           align: 'center',
-          padding: [0, 30, 0, 0], // top/right/bottom/left
+          padding: [0, 5, 0, 0], // top/right/bottom/left
         },
         axisLine: { lineStyle: { color: colors.grid } },
         axisLabel: {

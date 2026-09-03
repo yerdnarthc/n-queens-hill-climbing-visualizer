@@ -21,7 +21,24 @@ import {
   Download,
 } from 'lucide-react';
 
-export function AnalyticsPanel() {
+export interface AnalyticsPanelProps {
+  /**
+   * `bare` strips the outer card chrome (rounded border, padding, header
+   * block with the "Analytics & Optimization" title) so the panel can be
+   * nested inside another container — e.g. the workspace card on the
+   * visualizer home page, where the board + analytics share one frame.
+   *
+   * Default `false` keeps the original full chrome (used by tests and
+   * any future context that hosts the panel standalone).
+   *
+   * The `data-testid="analytics-panel"` is ALWAYS present (so test
+   * selectors keep working), but the class on the outer wrapper changes
+   * based on `bare`.
+   */
+  bare?: boolean;
+}
+
+export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
   const result = useSimulationStore((s) => s.result);
   const currentStep = useSimulationStore((s) => s.currentStep);
   const strategy = useSimulationStore((s) => s.config.strategy);
@@ -77,53 +94,91 @@ export function AnalyticsPanel() {
   return (
     <div
       data-testid="analytics-panel"
-      className="flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm sm:p-5"
+      data-bare={bare ? 'true' : 'false'}
+      className={
+        bare
+          ? // Nested inside the workspace card — no extra border / padding.
+            'flex flex-col gap-3'
+          : // Standalone card chrome (default).
+            'flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm sm:p-5'
+      }
     >
-      {/* Header with Title & Quick Active State Badges */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <LineChart className="h-4 w-4" />
+      {/* Header with Title & Quick Active State Badges — hidden when bare */}
+      {!bare && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <LineChart className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Analytics & Optimization</h2>
+              <p className="text-[0.65rem] text-muted-foreground">
+                Real-time heuristic convergence, energy trajectory & phase diagnostics
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Analytics & Optimization</h2>
-            <p className="text-[0.65rem] text-muted-foreground">
-              Real-time heuristic convergence, energy trajectory & phase diagnostics
-            </p>
-          </div>
-        </div>
 
-        {/* Current State Indicator */}
-        {currentSnapshot && (
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="flex items-center gap-1.5 border-border/80 bg-background/50 px-2.5 py-1 text-[0.65rem]"
-            >
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: activePhaseColor }}
-              />
-              <span className="font-medium">{activePhaseLabel}</span>
-            </Badge>
-            <Badge variant="secondary" className="px-2 py-1 text-[0.65rem]">
-              h(s) = <strong className="ml-1 text-foreground">{currentSnapshot.conflicts}</strong>
-            </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => result && downloadRunCsv(result)}
-              disabled={!result}
-              aria-label="Export run as CSV"
-              title="Download the full snapshot history as CSV"
-              className="h-7 gap-1.5 rounded-lg px-2.5 text-[0.65rem]"
-            >
-              <Download className="h-3 w-3" />
-              <span className="hidden sm:inline">Export CSV</span>
-            </Button>
-          </div>
-        )}
-      </div>
+          {/* Current State Indicator */}
+          {currentSnapshot && (
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className="flex items-center gap-1.5 border-border/80 bg-background/50 px-2.5 py-1 text-[0.65rem]"
+              >
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: activePhaseColor }}
+                />
+                <span className="font-medium">{activePhaseLabel}</span>
+              </Badge>
+              <Badge variant="secondary" className="px-2 py-1 text-[0.65rem]">
+                h(s) = <strong className="ml-1 text-foreground">{currentSnapshot.conflicts}</strong>
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => result && downloadRunCsv(result)}
+                disabled={!result}
+                aria-label="Export run as CSV"
+                title="Download the full snapshot history as CSV"
+                className="h-7 gap-1.5 rounded-lg px-2.5 text-[0.65rem]"
+              >
+                <Download className="h-3 w-3" />
+                <span className="hidden sm:inline">Export CSV</span>
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bare-mode compact toolbar: shows the active phase badge + CSV export
+          when the panel is nested inside the workspace card (no big header). */}
+      {bare && currentSnapshot && (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Badge
+            variant="outline"
+            className="flex items-center gap-1.5 border-border/80 bg-background/50 px-2.5 py-1 text-[0.65rem]"
+          >
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: activePhaseColor }} />
+            <span className="font-medium">{activePhaseLabel}</span>
+          </Badge>
+          <Badge variant="secondary" className="px-2 py-1 text-[0.65rem]">
+            h(s) = <strong className="ml-1 text-foreground">{currentSnapshot.conflicts}</strong>
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => result && downloadRunCsv(result)}
+            disabled={!result}
+            aria-label="Export run as CSV"
+            title="Download the full snapshot history as CSV"
+            className="h-7 gap-1.5 rounded-lg px-2.5 text-[0.65rem]"
+          >
+            <Download className="h-3 w-3" />
+            <span className="hidden sm:inline">Export CSV</span>
+          </Button>
+        </div>
+      )}
 
       {/* Tabs: Convergence Curve vs Landscape View vs Diagnostics */}
       <Tabs defaultValue="convergence" className="w-full">
@@ -158,7 +213,7 @@ export function AnalyticsPanel() {
               onZoomChange={handleZoomChange}
             />
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 px-20 text-[0.65rem] text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-18 text-[0.65rem] text-muted-foreground">
             <div className="flex items-center gap-6">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-primary" /> Conflicts <Math>h(s)</Math>
@@ -189,7 +244,7 @@ export function AnalyticsPanel() {
               onZoomChange={handleZoomChange}
             />
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 px-20 text-[0.65rem] text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center gap-3 px-10 text-[0.65rem] text-muted-foreground">
             <div className="flex flex-wrap items-center gap-6">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-sky-400" /> Improving
@@ -207,7 +262,6 @@ export function AnalyticsPanel() {
                 <span className="h-2 w-2 rounded-full bg-emerald-400" /> Solved
               </span>
             </div>
-            <span>Point size indicates current playback cursor</span>
           </div>
         </TabsContent>
 

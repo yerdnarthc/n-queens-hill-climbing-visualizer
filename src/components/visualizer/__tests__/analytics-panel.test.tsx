@@ -108,6 +108,42 @@ describe('AnalyticsPanel Component', () => {
     expect(screen.getByTestId('convergence-chart-empty')).toBeInTheDocument();
   });
 
+  it('strips outer card chrome when rendered with bare={true}', () => {
+    // When the panel is nested inside the workspace card (home page), the
+    // "Analytics & Optimization" header and the rounded card border/padding
+    // are suppressed — see the workspace-card layout in src/app/page.tsx.
+    const { container } = render(<AnalyticsPanel bare />);
+    const panel = screen.getByTestId('analytics-panel');
+    expect(panel).toHaveAttribute('data-bare', 'true');
+
+    // The big "Analytics & Optimization" header title is NOT rendered
+    // in bare mode (the workspace card already supplies the visual context).
+    expect(screen.queryByText('Analytics & Optimization')).not.toBeInTheDocument();
+
+    // Standalone chrome classes (rounded-2xl border border-border/80 bg-card/60)
+    // are NOT applied in bare mode.
+    expect(panel.className).not.toMatch(/rounded-2xl/);
+    expect(panel.className).not.toMatch(/shadow-sm/);
+
+    // The tabs + content still render (we didn't accidentally hide them).
+    expect(screen.getByRole('tab', { name: /convergence/i })).toBeInTheDocument();
+    expect(screen.getByTestId('convergence-chart')).toBeInTheDocument();
+
+    // Sanity: the outer wrapper is still in the DOM.
+    expect(container).toBeInTheDocument();
+  });
+
+  it('preserves the full chrome when rendered with default props (standalone mode)', () => {
+    render(<AnalyticsPanel />);
+    const panel = screen.getByTestId('analytics-panel');
+    expect(panel).toHaveAttribute('data-bare', 'false');
+    // The big header is present in standalone mode.
+    expect(screen.getByText('Analytics & Optimization')).toBeInTheDocument();
+    // Standalone chrome classes are applied.
+    expect(panel.className).toMatch(/rounded-2xl/);
+    expect(panel.className).toMatch(/shadow-sm/);
+  });
+
   it('preserves the X-axis zoom range across tab switches (shared parent state)', async () => {
     // Regression test for the "zoom resets when switching tabs" bug.
     //

@@ -20,7 +20,19 @@ import { BOARD_SIZE_LIMITS, STRATEGY_IDS, type StrategyId } from '@/lib/engine';
 import { STRATEGY_INFO } from '@/lib/strategy-info';
 import { copyTextToClipboard } from '@/lib/clipboard';
 
-export function ConfigPanel() {
+export interface ConfigPanelProps {
+  /**
+   * `compact` tightens padding, font sizes, and slider heights so the panel
+   * fits gracefully inside a narrow left column (e.g. the 2/7 workspace
+   * sidebar that lives next to the chessboard). The "Advanced" collapsible
+   * already starts closed, so only the essentials show by default.
+   *
+   * Default `false` keeps the original standalone card look.
+   */
+  compact?: boolean;
+}
+
+export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
   const config = useSimulationStore((s) => s.config);
   const setConfig = useSimulationStore((s) => s.setConfig);
   const newSeed = useSimulationStore((s) => s.newSeed);
@@ -68,11 +80,36 @@ export function ConfigPanel() {
   const isSA = config.strategy === 'simulated-annealing';
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm">
-      <div className="flex items-center justify-between border-b-1 border-border/60 pb-3">
+    <div
+      data-compact={compact ? 'true' : 'false'}
+      className={
+        compact
+          ? // Narrow-column variant: tighter padding so the form fits in a
+            // ~200-330px sidebar. The "Advanced" collapsible (state below)
+            // starts closed by default, so only essentials show first.
+            'flex flex-col gap-2.5 rounded-xl border border-border/80 bg-card/60 p-3 shadow-sm backdrop-blur-sm'
+          : // Standalone card (default).
+            'flex flex-col gap-4 rounded-xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm'
+      }
+    >
+      <div
+        className={
+          compact
+            ? 'flex items-center justify-between border-b border-border/50 pb-2'
+            : 'flex items-center justify-between border-b-1 border-border/60 pb-3'
+        }
+      >
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-semibold tracking-tight">Configuration</h2>
+          <h2
+            className={
+              compact
+                ? 'text-xs font-semibold tracking-tight'
+                : 'text-sm font-semibold tracking-tight'
+            }
+          >
+            Configuration
+          </h2>
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded bg-muted px-3 py-1 font-mono text-[0.7rem] text-muted-foreground">
@@ -94,9 +131,9 @@ export function ConfigPanel() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 gap-y-5">
+      <div className={compact ? 'flex flex-col gap-2.5' : 'flex flex-col gap-4 gap-y-5'}>
         {/* Board Size N */}
-        <div className="flex flex-col gap-2">
+        <div className={compact ? 'flex flex-col gap-1.5' : 'flex flex-col gap-2'}>
           <div className="flex items-center justify-between">
             <Label htmlFor="board-size-slider" className="text-xs font-semibold">
               Board Dimension (N × N)
@@ -113,10 +150,16 @@ export function ConfigPanel() {
             step={1}
             value={[config.boardSize]}
             onValueChange={(val) => val[0] !== undefined && setConfig({ boardSize: val[0] })}
-            className="cursor-pointer py-1"
+            className={compact ? 'cursor-pointer py-0.5' : 'cursor-pointer py-1'}
           />
 
-          <div className="flex justify-between font-sans text-[0.55rem] text-muted-foreground">
+          <div
+            className={
+              compact
+                ? 'flex justify-between font-sans text-[0.55rem] text-muted-foreground'
+                : 'flex justify-between font-sans text-[0.6rem] text-muted-foreground'
+            }
+          >
             <span>N={BOARD_SIZE_LIMITS.min} (Fast)</span>
             <span>N=8 (Standard)</span>
             <span>N={BOARD_SIZE_LIMITS.max} (Complex)</span>
@@ -124,13 +167,17 @@ export function ConfigPanel() {
         </div>
 
         {/* Strategy Selection */}
-        <div className="flex flex-col gap-1.5">
+        <div className={compact ? 'flex flex-col gap-1' : 'flex flex-col gap-1.5'}>
           <Label className="text-xs font-semibold">Hill Climbing Variant</Label>
 
           <Select value={config.strategy} onValueChange={handleStrategyChange}>
             <SelectTrigger
               id="strategy-select"
-              className="w-full border-transparent bg-transparent text-xs font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50"
+              className={
+                compact
+                  ? 'h-8 w-full border-transparent bg-transparent text-xs font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
+                  : 'w-full border-transparent bg-transparent text-xs font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
+              }
             >
               <SelectValue placeholder="Select strategy" />
             </SelectTrigger>
@@ -151,15 +198,17 @@ export function ConfigPanel() {
             </SelectContent>
           </Select>
 
-          {/* Strategy Mini Callout */}
-          <div className="flex items-start gap-2 rounded-lg border border-border/50 bg-muted/40 p-2.5 font-sans text-[0.6rem] leading-relaxed text-muted-foreground">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-            <span>{currentStratInfo.description}</span>
-          </div>
+          {/* Strategy Mini Callout — only show in standalone mode, skip in compact to save space */}
+          {!compact && (
+            <div className="flex items-start gap-2 rounded-lg border border-border/50 bg-muted/40 p-2.5 font-sans text-[0.6rem] leading-relaxed text-muted-foreground">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+              <span>{currentStratInfo.description}</span>
+            </div>
+          )}
         </div>
 
         {/* Seed Input & Randomizer */}
-        <div className="flex flex-col gap-1.5">
+        <div className={compact ? 'flex flex-col gap-1' : 'flex flex-col gap-1.5'}>
           <div className="flex items-center justify-between">
             <Label htmlFor="seed-input" className="text-xs font-semibold">
               RNG Seed (Determinism)
@@ -174,7 +223,11 @@ export function ConfigPanel() {
               onChange={(e) => setSeedText(e.target.value)}
               onBlur={handleSeedBlur}
               onKeyDown={(e) => e.key === 'Enter' && handleSeedBlur()}
-              className="h-9 font-mono text-xs font-semibold"
+              className={
+                compact
+                  ? 'h-8 font-mono text-xs font-semibold'
+                  : 'h-9 font-mono text-xs font-semibold'
+              }
               placeholder="e.g. 27"
             />
             <Button
@@ -182,7 +235,11 @@ export function ConfigPanel() {
               size="default"
               onClick={newSeed}
               title="Pick a random seed"
-              className="h-9 shrink-0 gap-1.5 rounded-lg text-xs font-semibold transition-all hover:border-primary/30 dark:hover:bg-accent/50"
+              className={
+                compact
+                  ? 'h-8 shrink-0 gap-1.5 rounded-lg text-xs font-semibold transition-all hover:border-primary/30 dark:hover:bg-accent/50'
+                  : 'h-9 shrink-0 gap-1.5 rounded-lg text-xs font-semibold transition-all hover:border-primary/30 dark:hover:bg-accent/50'
+              }
             >
               <Dices className="h-4 w-4" />
               <span>Random</span>

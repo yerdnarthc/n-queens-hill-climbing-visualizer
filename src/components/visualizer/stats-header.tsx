@@ -17,7 +17,7 @@ export function StatsHeader() {
   return (
     <header
       data-testid="stats-header"
-      className="flex flex-col gap-4 border-b border-border/80 bg-card/40 px-4 pt-6 pb-2 backdrop-blur-md sm:px-6 lg:px-8 xl:px-12 2xl:px-36"
+      className="flex flex-col gap-4 border-b border-border/80 bg-card/40 px-4 pt-6 pb-2 backdrop-blur-md sm:px-6 lg:px-8 xl:px-12 2xl:px-16"
     >
       <div className="mb-2 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">

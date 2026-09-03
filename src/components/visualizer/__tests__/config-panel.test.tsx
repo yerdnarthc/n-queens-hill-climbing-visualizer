@@ -48,6 +48,31 @@ describe('ConfigPanel', () => {
     expect(writeText).toHaveBeenCalledWith(window.location.href);
   });
 
+  it('renders in compact mode with tighter padding when compact={true}', () => {
+    const { container } = render(<ConfigPanel compact />);
+
+    // Outer wrapper has data-compact="true" and uses p-3 (not p-4).
+    const outer = container.querySelector('[data-compact="true"]');
+    expect(outer).toBeInTheDocument();
+    expect(outer?.className).toMatch(/\bp-3\b/);
+    expect(outer?.className).not.toMatch(/\bp-4\b/);
+
+    // Strategy mini callout is hidden in compact mode to save vertical space.
+    expect(screen.queryByText(/Always accepts improving moves/i)).not.toBeInTheDocument();
+
+    // Form essentials still render.
+    expect(screen.getByText(/Board Dimension/i)).toBeInTheDocument();
+    expect(screen.getByText(/Hill Climbing Variant/i)).toBeInTheDocument();
+    expect(screen.getByText(/RNG Seed/i)).toBeInTheDocument();
+  });
+
+  it('renders in standalone mode with original padding when compact is omitted', () => {
+    const { container } = render(<ConfigPanel />);
+    const outer = container.querySelector('[data-compact="false"]');
+    expect(outer).toBeInTheDocument();
+    expect(outer?.className).toMatch(/\bp-4\b/);
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });

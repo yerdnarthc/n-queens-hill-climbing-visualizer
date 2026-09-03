@@ -53,162 +53,175 @@ function HomeContent() {
       <StatsHeader />
 
       {/* Main Visualizer Workspace */}
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-10">
-          {/* Left / Center: Interactive Board & Playback Scrubber (7 cols on lg) */}
-          <div className="flex flex-col gap-5 lg:col-span-7">
-            {/* Chessboard Card with embedded Stats Rail */}
+      <main className="max-w-8xl mx-auto w-full flex-1 px-4 py-6 sm:px-6 lg:px-16">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-14">
+          {/* Left / Center: Unified Workspace Card (9 cols on lg) — board + analytics co-located */}
+          <div className="flex flex-col gap-5 lg:col-span-8">
+            {/* Workspace Card — single frame containing board pane (top) and analytics pane (bottom) */}
             <div
-              data-testid="chessboard-card"
-              className="flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/40 p-4 shadow-sm backdrop-blur-sm sm:p-4"
+              data-testid="workspace-card"
+              className="flex flex-col gap-5 rounded-2xl border border-border/80 bg-card/40 p-4 shadow-sm backdrop-blur-sm sm:p-5"
             >
               {/* Compact stats strip — visible on <lg, scrolls horizontally */}
               <div className="-mx-1 flex overflow-x-auto px-1 lg:hidden">
                 <StatsRail variant="compact" />
               </div>
 
-              {/* Main interior: rail (left) + board (right) on lg+, stacked on <lg */}
-              <div className="flex flex-col items-stretch gap-5 lg:flex-row lg:items-stretch lg:gap-5">
-                {/* Stats Rail — 4/15 on lg+ */}
-                <aside
-                  aria-label="Live simulation metrics"
-                  className="hidden lg:flex lg:w-4/15 lg:shrink-0 lg:flex-col"
-                >
-                  <StatsRail variant="rail" />
-                </aside>
+              {/* Top pane: Chessboard + left sidebar (Config + Stats Rail) */}
+              <div data-testid="chessboard-card">
+                {/* Main interior: left sidebar (Config + Rail, 2/7) + board (5/7)
+                    on lg+, stacked on <lg. The sidebar column sizes itself; the
+                    board column takes the remaining space via `flex-1` and caps
+                    at max-w-[800px] inside the Chessboard component itself. */}
+                <div className="flex flex-col items-stretch gap-5 lg:flex-row lg:items-start lg:gap-5">
+                  {/* Left sidebar — 2/7 width on lg+ */}
+                  <div className="flex w-full shrink-0 flex-col gap-4 lg:w-2/7">
+                    {/* Simulation Config Panel — compact mode for the narrow column */}
+                    <ConfigPanel compact />
 
-                {/* Chessboard — 11/15 on lg+, fills width on <lg */}
-                <div className="flex flex-1 items-center justify-center lg:w-11/15">
-                  <Chessboard />
-                </div>
-              </div>
-            </div>
-
-            {/* Playback Controls & Timeline Scrubber */}
-            <PlaybackControls />
-
-            {/* Semantic Visual Legend */}
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/50 bg-card/30 p-3 px-25 text-[0.65rem] text-muted-foreground">
-              <div className="flex items-center gap-1.5 font-medium">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span>Solved (0 Attacks)</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-medium">
-                <span className="h-2 w-2 rounded-full bg-rose-500" />
-                <span>Conflicted Queen</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-medium">
-                <span className="h-2 w-2 rounded-full bg-sky-500" />
-                <span>Moved Queen</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-medium">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                <span>Plateau / Shoulder</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: Configuration & Concept Guides (5 cols on lg) */}
-          <div className="flex flex-col gap-5 lg:col-span-5">
-            {/* Simulation Config Panel */}
-            <ConfigPanel />
-
-            {/* AI Concept Card */}
-            <div className="flex flex-col gap-4 rounded-xl border border-border/80 bg-card/50 p-5 shadow-xs">
-              {/* Header: icon + title + subtitle */}
-              <div className="mb-4 flex items-start gap-3">
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <BookOpen className="h-4 w-4" />
-                </div>
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <h3 className="text-xl font-semibold tracking-tight text-foreground">
-                    About Hill-Climbing Local Search
-                  </h3>
-                  <p className="text-[0.7rem] text-muted-foreground">
-                    How the algorithm hunts for a zero-conflict solution.
-                  </p>
-                </div>
-              </div>
-
-              {/* Concept 1 — State representation */}
-              <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-muted/30 p-3">
-                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <span className="whitespace-pre">1. The state</span>
-                </div>
-                <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
-                  In the <strong className="font-semibold text-foreground">N-Queens puzzle</strong>,
-                  one queen per column is stored as a row index. A <em>move</em> relocates a queen
-                  within its own column.
-                </p>
-                <div className="rounded-md border border-border/40 bg-background/60 px-3 py-2 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
-                      Representation
-                    </span>
-                    <span className="font-mono text-[0.7rem] text-muted-foreground">
-                      N = board size
-                    </span>
+                    {/* Stats Rail — fills the sidebar's width on lg+ (hidden on <lg
+                        via the compact strip above). */}
+                    <aside
+                      aria-label="Live simulation metrics"
+                      className="hidden lg:flex lg:flex-col"
+                    >
+                      <StatsRail variant="rail" />
+                    </aside>
                   </div>
-                  <div className="mt-1.5 flex flex-col items-center gap-1">
-                    <Math block>rows[col] = row</Math>
+
+                  {/* Right side — chessboard. flex-1 claims the remaining width
+                      after the 2/7 sidebar. Chessboard's own max-w-[800px]
+                      keeps it from over-scaling on very wide screens. */}
+                  <div className="flex flex-1 items-center justify-center">
+                    <Chessboard />
                   </div>
                 </div>
-                <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
-                  Each move explores a neighbor space of size{' '}
-                  <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
-                    <Math>N(N-1)</Math>
-                  </span>
-                  .
-                </p>
               </div>
 
-              {/* Divider */}
-              <div className="h-px w-full bg-border/50" />
+              {/* Playback Controls & Timeline Scrubber — sits inside workspace card */}
+              <PlaybackControls />
 
-              {/* Concept 2 — Heuristic objective */}
-              <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-muted/30 p-3">
-                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <span className="whitespace-pre">2. The objective</span>
+              {/* Semantic Visual Legend */}
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/50 bg-card/30 p-3 px-25 text-[0.65rem] text-muted-foreground">
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span>Solved (0 Attacks)</span>
                 </div>
-                <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
-                  The heuristic{' '}
-                  <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
-                    <Math>h(s)</Math>
-                  </span>{' '}
-                  counts the number of attacking queen pairs (row and diagonal collisions). The
-                  algorithm chooses moves that{' '}
-                  <strong className="font-semibold text-foreground">minimize</strong> it.
-                </p>
-                <div className="rounded-md border border-border/40 bg-background/60 px-3 py-2 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
-                      Termination
-                    </span>
-                    <span className="font-mono text-[0.7rem] text-emerald-600 dark:text-emerald-400">
-                      solved
-                    </span>
-                  </div>
-                  <div className="mt-1.5 flex flex-col items-center gap-1">
-                    <Math block>h(s) = 0</Math>
-                  </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="h-2 w-2 rounded-full bg-rose-500" />
+                  <span>Conflicted Queen</span>
                 </div>
-                <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
-                  When the search reaches a global optimum{' '}
-                  <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
-                    <Math>h = 0</Math>
-                  </span>
-                  , the puzzle is solved. Otherwise it gets stuck at{' '}
-                  <em className="text-foreground">local maxima</em> or{' '}
-                  <em className="text-foreground">plateaus</em> — which is why the strategy selector
-                  above exists.
-                </p>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="h-2 w-2 rounded-full bg-sky-500" />
+                  <span>Moved Queen</span>
+                </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  <span>Plateau / Shoulder</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Full-Width Section: Analytics & Optimization Charts (12 cols on lg) */}
-          <div className="lg:col-span-12">
+          {/* Right: Configuration & Analytics (7 cols on lg) */}
+          <div className="flex flex-col gap-5 lg:col-span-6">
+            {/* Analytics & Optimization — sits below the config panel in the right column */}
             <AnalyticsPanel />
+          </div>
+        </div>
+
+        {/* AI Concept Card — full-width reference panel below the workspace row */}
+        <div
+          data-testid="ai-concept-card"
+          className="mt-6 flex flex-col gap-4 rounded-xl border border-border/80 bg-card/50 p-5 shadow-xs"
+        >
+          {/* Header: icon + title + subtitle */}
+          <div className="mb-4 flex items-start gap-3">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <BookOpen className="h-4 w-4" />
+            </div>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <h3 className="text-xl font-semibold tracking-tight text-foreground">
+                About Hill-Climbing Local Search
+              </h3>
+              <p className="text-[0.7rem] text-muted-foreground">
+                How the algorithm hunts for a zero-conflict solution.
+              </p>
+            </div>
+          </div>
+
+          {/* Concept 1 — State representation */}
+          <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-muted/30 p-3">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <span className="whitespace-pre">1. The state</span>
+            </div>
+            <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
+              In the <strong className="font-semibold text-foreground">N-Queens puzzle</strong>, one
+              queen per column is stored as a row index. A <em>move</em> relocates a queen within
+              its own column.
+            </p>
+            <div className="rounded-md border border-border/40 bg-background/60 px-3 py-2 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-mono text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
+                  Representation
+                </span>
+                <span className="font-mono text-[0.7rem] text-muted-foreground">
+                  N = board size
+                </span>
+              </div>
+              <div className="mt-1.5 flex flex-col items-center gap-1">
+                <Math block>rows[col] = row</Math>
+              </div>
+            </div>
+            <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
+              Each move explores a neighbor space of size{' '}
+              <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
+                <Math>N(N-1)</Math>
+              </span>
+              .
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px w-full bg-border/50" />
+
+          {/* Concept 2 — Heuristic objective */}
+          <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-muted/30 p-3">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <span className="whitespace-pre">2. The objective</span>
+            </div>
+            <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
+              The heuristic{' '}
+              <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
+                <Math>h(s)</Math>
+              </span>{' '}
+              counts the number of attacking queen pairs (row and diagonal collisions). The
+              algorithm chooses moves that{' '}
+              <strong className="font-semibold text-foreground">minimize</strong> it.
+            </p>
+            <div className="rounded-md border border-border/40 bg-background/60 px-3 py-2 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-mono text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
+                  Termination
+                </span>
+                <span className="font-mono text-[0.7rem] text-emerald-600 dark:text-emerald-400">
+                  solved
+                </span>
+              </div>
+              <div className="mt-1.5 flex flex-col items-center gap-1">
+                <Math block>h(s) = 0</Math>
+              </div>
+            </div>
+            <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
+              When the search reaches a global optimum{' '}
+              <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
+                <Math>h = 0</Math>
+              </span>
+              , the puzzle is solved. Otherwise it gets stuck at{' '}
+              <em className="text-foreground">local maxima</em> or{' '}
+              <em className="text-foreground">plateaus</em> — which is why the strategy selector
+              above exists.
+            </p>
           </div>
         </div>
       </main>
