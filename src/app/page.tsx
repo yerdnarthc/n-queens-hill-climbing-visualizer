@@ -54,9 +54,9 @@ function HomeContent() {
 
       {/* Main Visualizer Workspace */}
       <main className="max-w-8xl mx-auto w-full flex-1 px-4 py-6 sm:px-6 lg:px-16">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-14">
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-15">
           {/* Left / Center: Unified Workspace Card (9 cols on lg) — board + analytics co-located */}
-          <div className="flex flex-col gap-5 lg:col-span-8">
+          <div className="flex flex-col gap-5 lg:col-span-9">
             {/* Workspace Card — single frame containing board pane (top) and analytics pane (bottom) */}
             <div
               data-testid="workspace-card"
@@ -67,30 +67,27 @@ function HomeContent() {
                 <StatsRail variant="compact" />
               </div>
 
-              {/* Top pane: Chessboard + left sidebar (Config + Stats Rail) */}
+              {/* Top pane: Chessboard + left sidebar (Config) */}
               <div data-testid="chessboard-card">
-                {/* Main interior: left sidebar (Config + Rail, 2/7) + board (5/7)
+                {/* Main interior: left sidebar (Config, 2/7) + board (5/7)
                     on lg+, stacked on <lg. The sidebar column sizes itself; the
                     board column takes the remaining space via `flex-1` and caps
-                    at max-w-[800px] inside the Chessboard component itself. */}
+                    at max-w-[800px] inside the Chessboard component itself.
+
+                    NOTE: The 5 metric cards used to live here too (StatsRail
+                    variant="rail"), but they have been moved to a new dashboard
+                    card in the right column BELOW the AnalyticsPanel (see the
+                    right column further down). The 2/7 : 5/7 ratio is preserved
+                    so the Config still has a comfortable column. */}
                 <div className="flex flex-col items-stretch gap-5 lg:flex-row lg:items-start lg:gap-5">
-                  {/* Left sidebar — 2/7 width on lg+ */}
-                  <div className="flex w-full shrink-0 flex-col gap-4 lg:w-2/7">
+                  {/* Left sidebar — 7/20 width on lg+, Config only */}
+                  <div className="flex w-full shrink-0 flex-col gap-4 lg:w-7/20">
                     {/* Simulation Config Panel — compact mode for the narrow column */}
                     <ConfigPanel compact />
-
-                    {/* Stats Rail — fills the sidebar's width on lg+ (hidden on <lg
-                        via the compact strip above). */}
-                    <aside
-                      aria-label="Live simulation metrics"
-                      className="hidden lg:flex lg:flex-col"
-                    >
-                      <StatsRail variant="rail" />
-                    </aside>
                   </div>
 
                   {/* Right side — chessboard. flex-1 claims the remaining width
-                      after the 2/7 sidebar. Chessboard's own max-w-[800px]
+                      after the 7/20 sidebar. Chessboard's own max-w-[800px]
                       keeps it from over-scaling on very wide screens. */}
                   <div className="flex flex-1 items-center justify-center">
                     <Chessboard />
@@ -123,10 +120,15 @@ function HomeContent() {
             </div>
           </div>
 
-          {/* Right: Configuration & Analytics (7 cols on lg) */}
+          {/* Right: Analytics + Context Metrics (6 cols on lg) */}
           <div className="flex flex-col gap-5 lg:col-span-6">
-            {/* Analytics & Optimization — sits below the config panel in the right column */}
+            {/* Analytics & Optimization — sits in the right column */}
             <AnalyticsPanel />
+
+            {/* Context Stats — 5 metric cards in a dashboard layout
+                (2×2 grid + full-width Run Status hero card). Wrapped in a
+                card frame to match the AnalyticsPanel's chrome above. */}
+            <StatsRail variant="context" />
           </div>
         </div>
 
@@ -150,78 +152,81 @@ function HomeContent() {
             </div>
           </div>
 
-          {/* Concept 1 — State representation */}
-          <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-muted/30 p-3">
-            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <span className="whitespace-pre">1. The state</span>
-            </div>
-            <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
-              In the <strong className="font-semibold text-foreground">N-Queens puzzle</strong>, one
-              queen per column is stored as a row index. A <em>move</em> relocates a queen within
-              its own column.
-            </p>
-            <div className="rounded-md border border-border/40 bg-background/60 px-3 py-2 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-mono text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
-                  Representation
-                </span>
-                <span className="font-mono text-[0.7rem] text-muted-foreground">
-                  N = board size
-                </span>
+          {/* Concepts row: stacks vertically on <lg, side-by-side on lg+.
+              Concept 1 (state) takes 3/5 of the row width, Concept 2 (objective)
+              takes 2/5 — the uneven split puts more visual weight on the state
+              representation, which is the foundation that the objective builds on. */}
+          <div className="flex flex-col gap-4 p-2 lg:flex-row lg:items-start lg:gap-10">
+            {/* Concept 1 — State representation */}
+            <article className="flex flex-col gap-3 rounded-xl p-5 lg:w-3/5 dark:bg-card-foreground/5">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                <span className="whitespace-pre">1. The state</span>
               </div>
-              <div className="mt-1.5 flex flex-col items-center gap-1">
-                <Math block>rows[col] = row</Math>
+              <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+                In the <strong className="font-semibold text-foreground">N-Queens puzzle</strong>,
+                one queen per column is stored as a row index. A <em>move</em> relocates a queen
+                within its own column.
+              </p>
+              <div className="mb-2 rounded-md border border-border/40 bg-background/60 px-3 py-2 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
+                    Representation
+                  </span>
+                  <span className="font-mono text-[0.7rem] text-muted-foreground">
+                    N = board size
+                  </span>
+                </div>
+                <div className="mt-1.5 flex flex-col items-center gap-1">
+                  <Math block>rows[col] = row</Math>
+                </div>
               </div>
-            </div>
-            <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
-              Each move explores a neighbor space of size{' '}
-              <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
-                <Math>N(N-1)</Math>
-              </span>
-              .
-            </p>
-          </div>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Each move explores a neighbor space of size{' '}
+                <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
+                  <Math>N(N-1)</Math>
+                </span>
+                .
+              </p>
+            </article>
 
-          {/* Divider */}
-          <div className="h-px w-full bg-border/50" />
-
-          {/* Concept 2 — Heuristic objective */}
-          <div className="flex flex-col gap-4 rounded-lg border border-border/50 bg-muted/30 p-3">
-            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-              <span className="whitespace-pre">2. The objective</span>
-            </div>
-            <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
-              The heuristic{' '}
-              <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
-                <Math>h(s)</Math>
-              </span>{' '}
-              counts the number of attacking queen pairs (row and diagonal collisions). The
-              algorithm chooses moves that{' '}
-              <strong className="font-semibold text-foreground">minimize</strong> it.
-            </p>
-            <div className="rounded-md border border-border/40 bg-background/60 px-3 py-2 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-mono text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
-                  Termination
-                </span>
-                <span className="font-mono text-[0.7rem] text-emerald-600 dark:text-emerald-400">
-                  solved
-                </span>
+            {/* Concept 2 — Heuristic objective */}
+            <article className="flex flex-col gap-3 rounded-xl p-5 lg:w-2/5 dark:bg-card-foreground/5">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                <span className="whitespace-pre">2. The objective</span>
               </div>
-              <div className="mt-1.5 flex flex-col items-center gap-1">
-                <Math block>h(s) = 0</Math>
+              <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+                The heuristic{' '}
+                <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
+                  <Math>h(s)</Math>
+                </span>{' '}
+                counts the number of attacking queen pairs (row and diagonal collisions). The
+                algorithm chooses moves that{' '}
+                <strong className="font-semibold text-foreground">minimize</strong> it.
+              </p>
+              <div className="mb-2 rounded-md border border-border/40 bg-background/60 px-3 py-2 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
+                    Termination
+                  </span>
+                  <span className="font-mono text-[0.7rem] text-emerald-600 dark:text-emerald-400">
+                    solved
+                  </span>
+                </div>
+                <div className="mt-1.5 flex flex-col items-center gap-1">
+                  <Math block>h(s) = 0</Math>
+                </div>
               </div>
-            </div>
-            <p className="text-[0.7rem] leading-relaxed text-muted-foreground">
-              When the search reaches a global optimum{' '}
-              <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
-                <Math>h = 0</Math>
-              </span>
-              , the puzzle is solved. Otherwise it gets stuck at{' '}
-              <em className="text-foreground">local maxima</em> or{' '}
-              <em className="text-foreground">plateaus</em> — which is why the strategy selector
-              above exists.
-            </p>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                When the search reaches a global optimum{' '}
+                <span className="inline-block rounded bg-background/70 px-1.5 py-0.5 align-middle">
+                  <Math>h = 0</Math>
+                </span>
+                , the puzzle is solved. Otherwise it gets stuck at{' '}
+                <em className="text-foreground">local maxima</em> or{' '}
+                <em className="text-foreground">plateaus</em> — which is why the strategy selector
+                above exists.
+              </p>
+            </article>
           </div>
         </div>
       </main>

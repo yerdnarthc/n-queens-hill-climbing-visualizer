@@ -104,7 +104,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
           <h2
             className={
               compact
-                ? 'text-xs font-semibold tracking-tight'
+                ? 'text-sm font-semibold tracking-tight'
                 : 'text-sm font-semibold tracking-tight'
             }
           >
@@ -112,9 +112,6 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
           </h2>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded bg-muted px-3 py-1 font-mono text-[0.7rem] text-muted-foreground">
-            N = {config.boardSize} Queens
-          </span>
           <button
             type="button"
             onClick={handleCopyLink}
@@ -131,11 +128,11 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
         </div>
       </div>
 
-      <div className={compact ? 'flex flex-col gap-2.5' : 'flex flex-col gap-4 gap-y-5'}>
+      <div className={compact ? 'flex flex-col gap-4' : 'flex flex-col gap-4 gap-y-5'}>
         {/* Board Size N */}
         <div className={compact ? 'flex flex-col gap-1.5' : 'flex flex-col gap-2'}>
           <div className="flex items-center justify-between">
-            <Label htmlFor="board-size-slider" className="text-xs font-semibold">
+            <Label htmlFor="board-size-slider" className="text-[0.7rem] font-semibold">
               Board Dimension (N × N)
             </Label>
             <span className="font-mono text-xs font-bold text-foreground">
@@ -156,7 +153,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
           <div
             className={
               compact
-                ? 'flex justify-between font-sans text-[0.55rem] text-muted-foreground'
+                ? 'flex justify-between font-sans text-[0.5rem] text-muted-foreground'
                 : 'flex justify-between font-sans text-[0.6rem] text-muted-foreground'
             }
           >
@@ -168,14 +165,14 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
 
         {/* Strategy Selection */}
         <div className={compact ? 'flex flex-col gap-1' : 'flex flex-col gap-1.5'}>
-          <Label className="text-xs font-semibold">Hill Climbing Variant</Label>
+          <Label className="text-[0.7rem] font-semibold">Hill Climbing Variant</Label>
 
           <Select value={config.strategy} onValueChange={handleStrategyChange}>
             <SelectTrigger
               id="strategy-select"
               className={
                 compact
-                  ? 'h-8 w-full border-transparent bg-transparent text-xs font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
+                  ? 'h-8 w-full border-transparent bg-transparent text-[0.7rem] font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
                   : 'w-full border-transparent bg-transparent text-xs font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
               }
             >
@@ -185,7 +182,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
               {STRATEGY_IDS.map((stratId) => {
                 const strat = STRATEGY_INFO[stratId];
                 return (
-                  <SelectItem key={stratId} value={stratId} className="py-2 text-xs">
+                  <SelectItem key={stratId} value={stratId} className="py-2 text-[0.7rem]">
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2 font-semibold">
                         <span>{strat.name}</span>
@@ -198,19 +195,17 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
             </SelectContent>
           </Select>
 
-          {/* Strategy Mini Callout — only show in standalone mode, skip in compact to save space */}
-          {!compact && (
-            <div className="flex items-start gap-2 rounded-lg border border-border/50 bg-muted/40 p-2.5 font-sans text-[0.6rem] leading-relaxed text-muted-foreground">
-              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-              <span>{currentStratInfo.description}</span>
-            </div>
-          )}
+          {/* Strategy Mini Callout */}
+          <div className="flex items-start gap-2 rounded-lg border border-border/50 bg-muted/40 p-2.5 font-sans text-[0.6rem] leading-relaxed text-muted-foreground">
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+            <span>{currentStratInfo.description}</span>
+          </div>
         </div>
 
         {/* Seed Input & Randomizer */}
         <div className={compact ? 'flex flex-col gap-1' : 'flex flex-col gap-1.5'}>
           <div className="flex items-center justify-between">
-            <Label htmlFor="seed-input" className="text-xs font-semibold">
+            <Label htmlFor="seed-input" className="text-[0.7rem] font-semibold">
               RNG Seed (Determinism)
             </Label>
           </div>
@@ -225,7 +220,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
               onKeyDown={(e) => e.key === 'Enter' && handleSeedBlur()}
               className={
                 compact
-                  ? 'h-8 font-mono text-xs font-semibold'
+                  ? 'h-8 font-mono text-[0.7rem] font-semibold'
                   : 'h-9 font-mono text-xs font-semibold'
               }
               placeholder="e.g. 27"
@@ -237,7 +232,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
               title="Pick a random seed"
               className={
                 compact
-                  ? 'h-8 shrink-0 gap-1.5 rounded-lg text-xs font-semibold transition-all hover:border-primary/30 dark:hover:bg-accent/50'
+                  ? 'h-8 shrink-0 gap-1.5 rounded-lg text-[0.7rem] font-semibold transition-all hover:border-primary/30 dark:hover:bg-accent/50'
                   : 'h-9 shrink-0 gap-1.5 rounded-lg text-xs font-semibold transition-all hover:border-primary/30 dark:hover:bg-accent/50'
               }
             >
@@ -257,7 +252,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
             <Button
               variant="ghost"
               size="sm"
-              className="flex w-full items-center justify-between p-3 text-xs font-medium text-muted-foreground hover:text-foreground"
+              className="flex w-full items-center justify-between p-5 text-[0.7rem] font-medium text-muted-foreground hover:text-foreground"
             >
               <div className="flex items-center gap-2">
                 <Settings2 className="h-5 w-5" />
@@ -275,7 +270,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
             {/* Sideways Moves Policy */}
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-0.5">
-                <Label htmlFor="allow-sideways-switch" className="text-xs font-medium">
+                <Label htmlFor="allow-sideways-switch" className="text-[0.7rem] font-medium">
                   Allow Sideways Moves
                 </Label>
                 <span className="text-[0.6rem] text-muted-foreground">
@@ -291,7 +286,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
 
             {(config.allowSideways ?? true) && (
               <div className="flex flex-col gap-1 border-l-2 border-primary/20 pl-2">
-                <div className="flex items-center justify-between text-[0.7rem]">
+                <div className="flex items-center justify-between text-[0.65rem]">
                   <span className="text-muted-foreground">Max Plateau Streak</span>
                   <span className="font-mono font-semibold">
                     {config.maxConsecutiveSideways ?? 100}
@@ -313,7 +308,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
             {/* Random Restarts Policy */}
             <div className="flex items-center justify-between pt-1">
               <div className="flex flex-col gap-0.5">
-                <Label htmlFor="allow-restarts-switch" className="text-xs font-medium">
+                <Label htmlFor="allow-restarts-switch" className="text-[0.7rem] font-medium">
                   Random Restarts
                 </Label>
                 <span className="text-[0.6rem] text-muted-foreground">

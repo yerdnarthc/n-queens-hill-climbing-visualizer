@@ -89,4 +89,57 @@ describe('StatsRail', () => {
     expect(rail).toHaveAttribute('data-variant', 'rail');
     expect(rail.className).toMatch(/flex-col/);
   });
+
+  it('renders in context variant with a 2x2 grid plus a full-width Run Status card', () => {
+    const { container } = render(<StatsRail variant="context" />);
+    const rail = screen.getByTestId('stats-rail');
+    expect(rail).toHaveAttribute('data-variant', 'context');
+
+    // All 5 labels are present.
+    expect(screen.getByText('Run Status')).toBeInTheDocument();
+    expect(screen.getByText('Timeline Cursor')).toBeInTheDocument();
+    expect(screen.getByText('Attacking Pairs')).toBeInTheDocument();
+    expect(screen.getByText('Step Phase')).toBeInTheDocument();
+    // Restarts label for non-SA default
+    expect(screen.getByText('Restarts')).toBeInTheDocument();
+
+    // Outer wrapper is a card frame (rounded-2xl border bg-card/60) — the
+    // context variant owns its own chrome to sit next to the AnalyticsPanel.
+    expect(rail.className).toMatch(/rounded-2xl/);
+    expect(rail.className).toMatch(/border/);
+
+    // A 2×2 grid is present for the 4 small cards (Timeline, Phase, Attacks, Restarts).
+    // We locate it as a div that has both `grid` and `grid-cols-2` classes.
+    const grid = container.querySelector('[data-testid="stats-rail"] .grid.grid-cols-2');
+    expect(grid).toBeInTheDocument();
+
+    // The Run Status card uses a horizontal layout (the wrapper has flex items-center
+    // justify-between) — distinct from the 4 small cards above.
+    const horizontalCard = container.querySelector(
+      '[data-testid="stats-rail"] .flex.items-center.justify-between',
+    );
+    expect(horizontalCard).toBeInTheDocument();
+  });
+
+  it('context variant shows the h(s) value and step in the Run Status hero card', () => {
+    const result = simulationStore.getState().result;
+    if (!result) return; // skip when no result in test env
+
+    const { container } = render(<StatsRail variant="context" />);
+    // The hero card shows "h(s) = N · Step X / Y" as a single context line.
+    // The h(s) value is a strong tag with the conflicts digit.
+    const html = container.innerHTML;
+    expect(html).toMatch(/h\(s\)\s*=/);
+    expect(html).toMatch(new RegExp(`>${result.finalConflicts}<`));
+    // "Step X / Y" — note: the X is wrapped in a <strong> tag, so the digit
+    // and the slash are not directly adjacent. The looser regex tolerates
+    // intermediate tags between "Step" and the slash.
+    expect(html).toMatch(/Step\b[\s\S]*?\/\s*\d+/);
+  });
+
+  it('context variant shows Annealing Temp (T) when strategy is SA', () => {
+    simulationStore.getState().setConfig({ strategy: 'simulated-annealing' });
+    render(<StatsRail variant="context" />);
+    expect(screen.getByText(/Annealing Temp \(T\)/i)).toBeInTheDocument();
+  });
 });

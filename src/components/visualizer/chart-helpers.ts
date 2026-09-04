@@ -559,14 +559,14 @@ export function buildConvergenceChartOption(
           fontSize: 12,
           fontFamily: 'Chivo Mono, monospace',
           align: 'center',
-          padding: [0, 5, 0, 0], // top/right/bottom/left
+          padding: [0, -30, 0, 0], // top/right/bottom/left
         },
         axisLine: { lineStyle: { color: colors.grid } },
         axisLabel: {
           color: colors.axis,
           fontSize: 13,
           fontFamily: 'Chivo Mono, monospace',
-          margin: 30,
+          margin: 15,
         },
         splitLine: { lineStyle: { color: colors.grid } },
         // Pinned: see the yAxisMaxConflicts computation above. Together
@@ -893,14 +893,14 @@ export function buildLandscapeChartOption(
         fontSize: 12,
         align: 'center',
         fontFamily: 'Chivo Mono, monospace',
-        padding: [0, 0, 0, 80], // top/right/bottom/left
+        padding: [0, 0, 0, 115], // top/right/bottom/left
       },
       axisLine: { lineStyle: { color: colors.grid } },
       axisLabel: {
         color: colors.axis,
         fontSize: 13,
         fontFamily: 'Chivo Mono, monospace',
-        margin: 30,
+        margin: 15,
       },
       splitLine: { lineStyle: { color: colors.grid } },
       // Pinned to the full-run max (see yAxisMaxConflicts above). The
