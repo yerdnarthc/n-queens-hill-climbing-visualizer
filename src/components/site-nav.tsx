@@ -50,6 +50,7 @@ export function SiteNav() {
               <Link
                 key={link.href}
                 href={link.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   'rounded-lg px-3 py-1.5 text-[0.7rem] font-semibold transition-colors',
                   isActive

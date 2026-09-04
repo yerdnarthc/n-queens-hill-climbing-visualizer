@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useSimulationDriver } from '@/hooks/useSimulationDriver';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useUrlConfigSync } from '@/hooks/useUrlConfigSync';
@@ -236,12 +237,12 @@ function HomeContent() {
             N-Queens Hill Climbing Visualizer · Built with Next.js 15, React 19, Tailwind CSS v4 &
             Zustand
           </span>
-          <a
+          <Link
             href="/how-it-works"
             className="font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             How it works →
-          </a>
+          </Link>
         </div>
       </footer>
     </div>
