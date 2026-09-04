@@ -1,8 +1,8 @@
 # Architecture — How is it structured?
 
-> Verified against the codebase on **2026-09-04** (commit `c9f500d`,
-> post-D-042 + memory-bank in-repo move). 15 follow-up commits since
-> the Phase 7 baseline (`71c6581`); 27 commits total.
+> Verified against the codebase on **2026-09-04** (commit `4c1d96e`,
+> post-D-043 + .clinerules/ in-repo + a11y/code fixes). 17 follow-up
+> commits since the Phase 7 baseline (`71c6581`); 29 commits total.
 
 ## Repository layout
 
@@ -10,6 +10,10 @@
 N-Queens Visualizer/            ← task workspace root
 ├── package-lock.json           ← renamed by the user to "N-Queens Visualizer" (intentional)
 └── n-queens-visualizer/        ← the app (git repo, branch master, Next 16.3.4)
+    ├── .clinerules/            ← AI-agent instruction set (memory-bank.md +
+    │                              nextjs-conventions.md) — version-controlled
+    │                              since `a7dafcb`; the AI reads these at the
+    │                              start of every task before the memory bank
     ├── memory-bank/            ← this memory system, version-controlled (D-043;
     │                              was `docs/` at the workspace root per D-016, moved
     │                              into the repo in commits `577f2eb` + `c9f500d`)

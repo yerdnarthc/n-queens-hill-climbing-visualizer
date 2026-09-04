@@ -1,6 +1,6 @@
 # Progress — Where are we now?
 
-> Update at the end of **every** task. Last updated: **2026-09-04** (post-D-042 + memory-bank in-repo move; 15 follow-up commits since Phase 7, 27 commits total).
+> Update at the end of **every** task. Last updated: **2026-09-04** (post-D-043 + .clinerules/ in-repo + a11y/code fixes; 17 follow-up commits since Phase 7, 29 commits total).
 
 ## TL;DR
 
@@ -33,7 +33,7 @@ Run inside `n-queens-visualizer/`:
 - `npm run lint` → **clean** (0 warnings, 0 errors)
 - `npm run build` → **passes** against Next 16.3.4; 8 static routes: `/`, `/how-it-works`, `/robots.txt`, `/sitemap.xml`, `+not-found`
 - pre-commit (lint-staged: prettier + eslint) ran clean on every commit
-- `41a0603` (D-042, SiteNav/StatsHeader opacity bump) is pushed; `577f2eb` and `c9f500d` ship the in-repo `memory-bank/` move (D-043). `HEAD` = `origin/master` = `c9f500d`.
+- `41a0603` (D-042, SiteNav/StatsHeader opacity bump) is pushed; `577f2eb` and `c9f500d` ship the in-repo `memory-bank/` move (D-043). `HEAD` (local) = `4c1d96e`; `origin/master` = `964d287` (2 commits behind, awaiting push).
 
 ## Known issues / housekeeping
 
@@ -90,3 +90,5 @@ The roadmap is complete. Reasonable follow-ups (not committed to):
 | 2026-09-04 | SiteNav/StatsHeader opacity bump       | `SiteNav` `bg-background/80` → `bg-card`; `StatsHeader` `bg-card/40` → `bg-card/60`. 2-line CSS tweak for legibility on the new warm palette — commit `41a0603`, see **D-042** |
 | 2026-09-04 | **Docs audit** (initial Phase 8/9)     | Audit of all 13 commits since `71c6581`; D-034 through D-042 appended to `DECISIONS.md`; `PROGRESS.md` test count 207 → 298, Phase 8/9 added; `ARCHITECTURE.md` updated for new components (StatsRail, use-follow-current-step, math.tsx, Sora/Chivo Mono fonts, semantic tokens, Next 16, ESLint flat config); `README.md` updated for the same |
 | 2026-09-04 | **Memory-bank in-repo + rename to `memory-bank/`** | `577f2eb` moves `docs/` into the repo; `c9f500d` renames it to `memory-bank/`. D-016 superseded; **D-043** appended. Follow-up doc refresh corrects 12 stale references across `README.md`, `PROJECT_CONTEXT.md`, `ARCHITECTURE.md`, `PROGRESS.md`, `DECISIONS.md` (commit refs, "local-only pending push" claims, in-repo vs out-of-repo wording) |
+| 2026-09-04 | **`.clinerules/` version-controlled in-repo** | New `.clinerules/` directory in the repo (commit `a7dafcb`) containing the AI-agent instruction set: `memory-bank.md` (per-file purpose bullets rewritten to match the actual `memory-bank/` contents — README reframed as AI-agent entry point, PROJECT_CONTEXT's "changes most frequently" claim removed, ARCHITECTURE's "tech stack" claim moved out, DECISIONS's entry format spec updated to `**D-NNN · Title**`, PROGRESS's "every task" update cadence noted) and `nextjs-conventions.md` (App-Router client-subtree note, type-colocation rule corrected, `tailwind.config` → `globals.css` for Tailwind v4, stale `docs/` paths → `memory-bank/`, `aria-current="page"` pattern added). No code or architecture change; rule-text only |
+| 2026-09-04 | **Home footer `<a>` → `next/link` + active-nav `aria-current="page"`** | Commit `4c1d96e`. `src/app/page.tsx`: the footer "How it works →" link (line 239) was a raw `<a href="/how-it-works">` — replaced with `next/link`'s `Link` (adds client-side routing + prefetch; closes the one outstanding violation of the App-Router bullet in `.clinerules/nextjs-conventions.md`). `src/components/site-nav.tsx`: active link now carries `aria-current={isActive ? 'page' : undefined}` so screen readers announce the current page (the visual-only `bg-primary/10` active state was already in place). Validation: `npm run typecheck` clean, `npm run lint` clean (prettier+eslint --fix ran in the pre-commit hook), `npm run test:run` → **298/298 passing across 23 suites** (unchanged from baseline). 4 insertions, 2 deletions |
