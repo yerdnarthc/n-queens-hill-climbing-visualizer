@@ -5,6 +5,7 @@ import { useSimulationStore, selectSnapshot } from '@/store';
 import { createConflicts } from '@/lib/engine';
 import { QueenPiece } from './queen-piece';
 import { MoveTrajectory } from './move-trajectory';
+import { OriginEcho } from './origin-echo';
 import { computeStepDuration } from '@/lib/animation-timings';
 import { cn } from '@/lib/utils';
 
@@ -140,14 +141,12 @@ export function Chessboard() {
                   </span>
                 )}
 
-                {/* Origin ghost marker from last move */}
-                {isOriginSquare && (
-                  <div
-                    title={`Moved from row ${n - row}`}
-                    className="absolute inset-1.5 flex items-center justify-center rounded-full border-2 border-dashed border-improving-deep/70 bg-improving/20 motion-safe:animate-pulse"
-                  >
-                    <div className="h-1.5 w-1.5 rounded-full bg-improving-deep" />
-                  </div>
+                {/* Origin ghost marker from last move — expanding-ring
+                    "departure pulse" via <OriginEcho />. Re-keys on the
+                    move so each new move replays the scale/opacity
+                    animation; duration matches the queen's flight. */}
+                {isOriginSquare && move && move.fromRow !== move.toRow && (
+                  <OriginEcho move={move} speed={speed} />
                 )}
 
                 {/* Queen Piece */}
@@ -159,6 +158,7 @@ export function Chessboard() {
                     isMoved={isDestinationSquare}
                     deltaConflicts={isDestinationSquare ? move?.deltaConflicts : undefined}
                     boardSize={n}
+                    speed={speed}
                   />
                 )}
               </div>
