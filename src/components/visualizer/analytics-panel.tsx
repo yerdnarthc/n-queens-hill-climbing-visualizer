@@ -100,7 +100,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
           ? // Nested inside the workspace card — no extra border / padding.
             'flex flex-col gap-3'
           : // Standalone card chrome (default).
-            'flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm sm:p-5'
+            'flex flex-col gap-4 rounded-2xl border border-border/80 bg-card/70 p-4 shadow-sm backdrop-blur-sm sm:p-5'
       }
     >
       {/* Header with Title & Quick Active State Badges — hidden when bare */}
@@ -151,12 +151,12 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
         <div className="flex shrink-0 items-center gap-2">
           <Badge
             variant="outline"
-            className="flex items-center gap-1.5 border-border/80 bg-background/50 px-2.5 py-1 text-[0.65rem]"
+            className="flex items-center gap-1.5 border-border/80 bg-card/1 px-2.5 py-1 text-[0.65rem]"
           >
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: activePhaseColor }} />
             <span className="font-medium">{activePhaseLabel}</span>
           </Badge>
-          <Badge variant="secondary" className="px-2 py-1 text-[0.65rem]">
+          <Badge variant="secondary" className="bg-card/1 px-2 py-1 text-[0.65rem]">
             h(s) = <strong className="ml-1 text-foreground">{currentSnapshot.conflicts}</strong>
           </Badge>
         </div>
@@ -168,12 +168,12 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Badge
             variant="outline"
-            className="flex items-center gap-1.5 border-border/80 bg-background/50 px-2.5 py-1 text-[0.65rem]"
+            className="flex items-center gap-1.5 border-border/80 bg-card/1 px-2.5 py-1 text-[0.65rem]"
           >
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: activePhaseColor }} />
             <span className="font-medium">{activePhaseLabel}</span>
           </Badge>
-          <Badge variant="secondary" className="px-2 py-1 text-[0.65rem]">
+          <Badge variant="secondary" className="bg-card/1 px-2 py-1 text-[0.65rem]">
             h(s) = <strong className="ml-1 text-foreground">{currentSnapshot.conflicts}</strong>
           </Badge>
           <Button
@@ -194,7 +194,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
       {/* Tabs: Convergence Curve vs Landscape View vs Diagnostics */}
       <Tabs defaultValue="convergence" className="w-full">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <TabsList className="grid grid-cols-3 bg-muted/60">
+          <TabsList className="grid grid-cols-3 bg-card/1">
             <TabsTrigger value="convergence" className="gap-1.5 text-[0.65rem]">
               <TrendingDown className="h-3 w-3" />
               <span>Convergence</span>
@@ -282,7 +282,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
             <div className="flex flex-col gap-4">
               {/* Stat Summary Grid */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <div className="flex flex-col rounded-xl border border-border/50 bg-card p-3">
+                <div className="flex flex-col rounded-xl border border-border/10 bg-card/1 p-3">
                   <span className="font-mono text-xs font-semibold text-muted-foreground">
                     Initial Conflicts
                   </span>
@@ -294,7 +294,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
                   </span>
                 </div>
 
-                <div className="flex flex-col rounded-xl border border-border/50 bg-background/60 p-3">
+                <div className="flex flex-col rounded-xl border border-border/50 bg-background/30 p-3">
                   <span className="font-mono text-xs font-semibold text-muted-foreground">
                     Best Reached
                   </span>
@@ -316,7 +316,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
                   </span>
                 </div>
 
-                <div className="flex flex-col rounded-xl border border-border/50 bg-card p-3">
+                <div className="flex flex-col rounded-xl border border-border/10 bg-card/1 p-3">
                   <span className="font-mono text-xs font-semibold text-muted-foreground">
                     Total Steps
                   </span>
@@ -328,7 +328,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
                   </span>
                 </div>
 
-                <div className="flex flex-col rounded-xl border border-border/50 bg-background/60 p-3">
+                <div className="flex flex-col rounded-xl border border-border/50 bg-background/30 p-3">
                   <span className="font-mono text-xs font-semibold text-muted-foreground">
                     Avg Eval / Step
                   </span>
@@ -342,7 +342,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
               </div>
 
               {/* Phase Distribution Breakdown */}
-              <div className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background/60 p-3.5">
+              <div className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background/30 p-3.5">
                 <div className="mb-2 flex items-center justify-between text-sm font-medium text-foreground">
                   <span className="flex items-center gap-1.5">
                     <span>Search Phase Breakdown</span>
@@ -410,7 +410,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
               </div>
 
               {/* Informational Footer */}
-              <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card p-2.5 text-[0.6rem] text-muted-foreground">
+              <div className="flex items-center gap-2 rounded-lg border border-border/10 bg-card/1 p-2.5 text-[0.6rem] text-muted-foreground">
                 <Info className="h-3.5 w-3.5 shrink-0 text-primary" />
                 <span>
                   Deterministic replay guaranteed. Every simulation step is captured immutably with

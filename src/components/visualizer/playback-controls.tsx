@@ -67,7 +67,7 @@ export function PlaybackControls() {
   const markerPercent = (step: number) => (totalSteps > 0 ? (step / totalSteps) * 100 : 0);
 
   return (
-    <div className="flex flex-col gap-3.5 rounded-xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm">
+    <div className="flex flex-col gap-3.5 rounded-xl border border-border/20 bg-background/20 p-4 backdrop-blur-sm">
       {/* Timeline Scrubber */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-xs text-muted-foreground">

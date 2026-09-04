@@ -65,7 +65,7 @@ export function Chessboard() {
       {/* Chessboard Outer Container */}
       <div
         className={cn(
-          'relative aspect-square w-full max-w-[700px] min-w-[260px] rounded-2xl border-4 p-2 shadow-2xl transition-all duration-300',
+          'relative aspect-square w-full max-w-175 min-w-65 rounded-2xl border-1 p-2 shadow-md transition-all duration-300',
           isSolved
             ? // The `border-emerald-500/80` + `ring-emerald-500/20` class
               // strings are deliberately kept as literal Tailwind palette

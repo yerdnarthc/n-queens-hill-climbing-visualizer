@@ -61,7 +61,7 @@ function HomeContent() {
             {/* Workspace Card — single frame containing board pane (top) and analytics pane (bottom) */}
             <div
               data-testid="workspace-card"
-              className="flex flex-col gap-5 rounded-2xl border border-border/80 bg-card/40 p-4 shadow-sm backdrop-blur-sm sm:p-5"
+              className="flex flex-col gap-5 rounded-2xl border border-border/20 bg-card/80 p-4 shadow-sm backdrop-blur-sm sm:p-5"
             >
               {/* Compact stats strip — visible on <lg, scrolls horizontally */}
               <div className="-mx-1 flex overflow-x-auto px-1 lg:hidden">
@@ -159,7 +159,7 @@ function HomeContent() {
               representation, which is the foundation that the objective builds on. */}
           <div className="flex flex-col gap-4 p-2 lg:flex-row lg:items-start lg:gap-10">
             {/* Concept 1 — State representation */}
-            <article className="flex flex-col gap-3 rounded-xl bg-card/60 p-5 lg:w-3/5 dark:bg-card-foreground/5">
+            <article className="flex flex-col gap-3 rounded-xl bg-card/40 p-5 lg:w-3/5">
               <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                 <span className="whitespace-pre">1. The state</span>
               </div>
@@ -191,7 +191,7 @@ function HomeContent() {
             </article>
 
             {/* Concept 2 — Heuristic objective */}
-            <article className="flex flex-col gap-3 rounded-xl bg-card/60 p-5 lg:w-2/5 dark:bg-card-foreground/5">
+            <article className="flex flex-col gap-3 rounded-xl bg-card/40 p-5 lg:w-2/5">
               <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                 <span className="whitespace-pre">2. The objective</span>
               </div>

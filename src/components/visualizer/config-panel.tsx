@@ -96,7 +96,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
           ? // Narrow-column variant: tighter padding so the form fits in a
             // ~200-330px sidebar. The "Advanced" collapsible (state below)
             // starts closed by default, so only essentials show first.
-            'flex flex-col gap-2.5 rounded-xl border border-border/80 bg-card/60 p-3 shadow-sm backdrop-blur-sm'
+            'flex flex-col gap-2.5 rounded-xl border border-stone-400/5 bg-card p-3 backdrop-blur-sm'
           : // Standalone card (default).
             'flex flex-col gap-4 rounded-xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm'
       }
@@ -181,7 +181,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
               id="strategy-select"
               className={
                 compact
-                  ? 'h-8 w-full border-border bg-card text-[0.7rem] font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
+                  ? 'h-8 w-full border-border bg-card text-[0.7rem] font-medium transition-all hover:border-primary/10 hover:bg-accent hover:text-accent-foreground dark:bg-input/10 dark:hover:bg-accent/50'
                   : 'w-full border-border bg-card text-xs font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
               }
             >
@@ -229,8 +229,8 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
               onKeyDown={(e) => e.key === 'Enter' && handleSeedBlur()}
               className={
                 compact
-                  ? 'h-8 font-mono text-[0.7rem] font-semibold'
-                  : 'h-9 font-mono text-xs font-semibold'
+                  ? 'h-8 border border-foreground/20 font-mono text-[0.7rem] font-semibold'
+                  : 'h-9 border border-foreground/20 font-mono text-xs font-semibold'
               }
               placeholder="e.g. 27"
             />
