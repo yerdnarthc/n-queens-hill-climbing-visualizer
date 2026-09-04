@@ -459,3 +459,86 @@ over `docs/` because it signals the folder's role rather than its
 position. Status: accepted — supersedes D-016 in spirit (D-016 left in
 the log for history; its "outside the repo" reasoning is now retired).
 
+**D-044 · Kinetic Queen move animation overhaul (speed-aware duration, overshoot, lift, shadow grow, origin echo, trajectory line)** *(2026-09-05)*
+Why: the pre-Phase-10 animation was a single fixed-duration spring
+(`stiffness: 450, damping: 32` in `queen-piece.tsx`) that ran at the
+same ~280ms regardless of playback speed. At 0.5× the per-step interval
+is 2000ms — the spring was 7× faster than the step, so the queen settled
+invisible long before the next move fired. At 10×–30× the step is
+33–100ms — the spring was 3–8× slower than the step, so a new move fired
+while the previous queen was still mid-flight and they visually piled
+up. The motion was decoupled from the playback clock. The user's
+self-described pain point was: "I really can't keep track of where the
+queen will move from that place to another."
+
+The fix is a three-commit overhaul (Commits #1–#3 of Phase 10, SHAs
+`e59f548`, `025eb0e`, `1bb1ebb`):
+
+1. **Speed-aware duration** via a new pure helper
+   `computeStepDuration(speed, reducedMotion?)` in
+   `src/lib/animation-timings.ts`. Formula: 60% of the per-step
+   interval, clamped to `[50ms, 400ms]`. At 0.5× and 1× the queen
+   always gets the MAX (400ms — a graceful arc); at 2× the natural
+   300ms; at 5× a snappy 120ms; at 20× and 30× the MIN-clamped 50ms
+   (a blink-and-miss-it snap). Returns 0 under reduced motion to
+   match the existing D-032 short-circuit. Defensive fallbacks for
+   NaN/0/Infinity/negative inputs (all → 400ms — the slowest natural
+   feel, never a `Math` error explosion).
+2. **Trajectory line** via a new `MoveTrajectory` SVG component. A
+   thin vertical line is drawn from the origin square to the
+   destination square during each move, using `stroke-dasharray` +
+   `stroke-dashoffset` to "draw itself" from origin to destination
+   over the move duration (`@keyframes trajectory-draw` in
+   `globals.css`, using the same overshoot cubic-bezier as the queen
+   so they arrive together). Reads the grid's live bounding rect via
+   `useLayoutEffect` + `ResizeObserver` so the line follows the
+   board on resize. Reduced-motion users get a static line; the
+   existing `prefers-reduced-motion` media query in `globals.css`
+   also collapses the CSS animation to 0.01ms automatically.
+3. **Kinetic QueenPiece** + **OriginEcho** (new). The spring
+   transition is replaced with a duration-based tween using the
+   overshoot ease `[0.2, 0.9, 0.3, 1.2]` (gentle lift-off, ~20%
+   overshoot past the destination, then settle). A `useAnimate`-
+   driven scale pulse (`scale: [1, 1.15, 1]`) gives the queen a
+   "lift" at the start of the move and a "land-with-settle" at the
+   end. A second `useAnimate` call grows the queen's `boxShadow`
+   from `shadow-md` to `shadow-lg` and back over the same duration
+   — the depth cue makes the moving queen read as "above" the
+   board. Both animations re-fire on every `(column, row)` change
+   via a `useEffect`; `useAnimate` cancels in-flight animations
+   automatically, so a fast next-step cleanly overrides the
+   previous pulse. The new `OriginEcho` is an expanding-ring
+   "departure pulse" rendered on the square the queen just left
+   (replaces the pre-Phase-10 static dashed circle with
+   `animate-pulse`, which was an always-on pulse, not a per-move
+   trigger). Scales 1 → 1.4 and fades 1 → 0 over the move
+   duration; re-keys on `(column, fromRow, toRow)` so every new
+   move re-mounts and replays the animation. Reduced-motion users
+   get a static dashed ring.
+
+The design choice is **"Option B / kinetic"** (overshoot + lift +
+shadow grow + trajectory line + origin echo) rather than "subtle"
+(just the speed-aware duration) or "schematic" (a teleport-and-
+redraw with no movement). The user's stated priority was "polished,
+production-ready, and smooth" with consistent feel across all speeds
+— kinetic makes the move feel like a physical object being placed
+on a new square, with the from-to direction unmistakable.
+
+Engine purity rule (D-002) extends naturally: `animation-timings.ts`
+imports zero React/framework code. The visualizer-side
+`data-testid`s used by the Playwright e2e suite (`chessboard-grid`,
+`square-{col}-{row}`, `queen-{col}-{row}`) are preserved. New
+`data-testid`s (`move-trajectory`, `origin-echo`) are additive
+only. Engine, store, types, and driver are untouched.
+
+The cubic-bezier `[0.2, 0.9, 0.3, 1.2]` is the single tuning knob
+if the overshoot needs to be more/less pronounced — drop 1.2 to 1.1
+for less overshoot, to 1.0 for none. Same curve is used by the
+trajectory line, so they stay in lockstep. +29 unit tests (13
+animation-timings, 4 move-trajectory, 7 queen-piece, 5
+origin-echo). Validation: typecheck clean, lint clean
+(prettier+eslint clean in pre-commit hook on all 3 commits), 327/327
+unit tests passing across 27 suites (was 298/298 across 23 suites
+pre-Phase-10), production build clean (5 static routes). Status:
+accepted.
+

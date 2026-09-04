@@ -1,6 +1,6 @@
 # Project Context — What is this project?
 
-> Entry point for AI tasks. Verified against the codebase on **2026-09-04** (commit `4c1d96e`, post-D-043 + .clinerules/ in-repo + a11y/code fixes).
+> Entry point for AI tasks. Verified against the codebase on **2026-09-05** (commit `1bb1ebb`, post-D-044 + Queen-move animation overhaul + memory-bank refresh).
 > Update when the project's purpose, scope, or stack changes.
 
 ## One-paragraph summary
@@ -53,14 +53,15 @@ deterministic, fully-tested algorithm engine plus a modern Next.js frontend.
 | StatsRail (rail / compact / context variants) | ✅ complete (Phase 9 — D-040)      |
 | Semantic color tokens + warm-sand/oxblood palette | ✅ complete (Phase 9 — D-039/D-041) |
 | Inline `<Math>` (KaTeX) on the home page   | ✅ complete (Phase 9)               |
+| Kinetic Queen move animation (speed-aware duration, overshoot, lift, shadow grow, origin echo, trajectory line) | ✅ complete (Phase 10 — D-044) |
 
 ## Stack (verified in `n-queens-visualizer/package.json`)
 
 - **Framework**: Next.js **16.3.4** (App Router, Turbopack), React 19.1, TypeScript 5 (strict; `jsx: "react-jsx"` per Next 16)
-- **Styling**: Tailwind CSS v4 (CSS-first `@theme inline`), shadcn/ui (new-york), tw-animate-css; Framer Motion (queen animations + `prefers-reduced-motion`, Phase 3/6); **KaTeX** for inline math via `src/components/ui/math.tsx` (Phase 9)
+- **Styling**: Tailwind CSS v4 (CSS-first `@theme inline`), shadcn/ui (new-york), tw-animate-css; Framer Motion (queen layout/spring + kinetic lift/shadow pulse + origin echo + `prefers-reduced-motion`, Phase 3/6/10); **KaTeX** for inline math via `src/components/ui/math.tsx` (Phase 9)
 - **State**: Zustand 5 — integrated in Phase 2 (store + playback driver) · **Charts**: ECharts 6 (integrated in Phase 4) · **URL state**: nuqs 2 (integrated in Phase 6 — config projection, `history: 'replace'`)
 - **Fonts**: **Sora + Chivo Mono** variable TTFs self-hosted via `next/font/local` in `src/assets/fonts/` (Phase 9; replaced Geist/Geist Mono; same offline-safe invariant from D-029)
-- **Testing**: Vitest 4 + jsdom + Testing Library (23 unit suites, **298 tests passing**);
+- **Testing**: Vitest 4 + jsdom + Testing Library (27 unit suites, **327 tests passing**);
   Playwright E2E (chromium, 7 specs) against the production build
 - **Quality**: ESLint flat config (`eslint-config-next@16` direct import, Phase 9), Prettier (+ tailwindcss plugin), Husky/lint-staged pre-commit
 
@@ -74,6 +75,6 @@ deterministic, fully-tested algorithm engine plus a modern Next.js frontend.
 
 ## Pointers
 
-- App + git repo: `n-queens-visualizer/` (branch `master`, on **Next 16.3.4**, 29 commits, `origin → github.com/yerdnarthc/n-queens-hill-climbing-visualizer`; `4c1d96e` is the latest local commit — `origin/master` is 2 commits behind at `964d287`, awaiting push)
+- App + git repo: `n-queens-visualizer/` (branch `master`, on **Next 16.3.4**, 32 commits, `origin → github.com/yerdnarthc/n-queens-hill-climbing-visualizer`; `1bb1ebb` is the latest local commit — `origin/master` is 4 commits behind at `964d287`, awaiting push)
 - Legacy prototype: `n-queens-visualizer/legacy/index.html` (reference only — do not build on it)
 - Internals: `ARCHITECTURE.md` · Rationale: `DECISIONS.md` · Status: `PROGRESS.md`

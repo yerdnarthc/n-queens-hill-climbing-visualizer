@@ -5,17 +5,19 @@ this project. It lives at **`n-queens-visualizer/memory-bank/`**, version-contro
 alongside the code it describes (this supersedes D-016 — see **D-043** in
 `DECISIONS.md`).
 
-> **Last verified against the codebase:** 2026-09-04 (commit `4c1d96e`,
-> post-D-043 + .clinerules/ in-repo + home-footer `<a>` → `next/link` +
-> active-nav `aria-current="page"` — 17 follow-up commits since the
-> Phase 7 baseline of 2026-09-02 / `71c6581`).
+> **Last verified against the codebase:** 2026-09-05 (commit `1bb1ebb`,
+> post-D-043 + .clinerules/ in-repo + a11y fixes + Queen-move animation
+> overhaul (Phase 10 / D-044) — 21 follow-up commits since the Phase 7
+> baseline of 2026-09-02 / `71c6581`).
 >
-> **Status snapshot:** Phases 0–9 complete. **Phase 8 (chart UX: dataZoom,
-> auto-follow, snappier animation) and Phase 9 (StatsRail extraction,
+> **Status snapshot:** Phases 0–10 complete. **Phase 8 (chart UX: dataZoom,
+> auto-follow, snappier animation), Phase 9 (StatsRail extraction,
 > semantic color tokens, warm-sand/oxblood palette, Next 16.3.4, ESLint
-> flat config) shipped.** 298/298 unit tests passing across 23 suites,
-> typecheck + lint + production build clean, Playwright E2E green.
-> See `PROGRESS.md` for details.
+> flat config), and Phase 10 (kinetic Queen move animation — speed-aware
+> duration, overshoot, lift + shadow grow, origin-square departure echo,
+> from→to trajectory line) shipped.** 327/327 unit tests passing across
+> 27 suites, typecheck + lint + production build clean, Playwright E2E
+> green. See `PROGRESS.md` for details.
 
 ## The file map
 
@@ -33,4 +35,4 @@ alongside the code it describes (this supersedes D-016 — see **D-043** in
 3. **Close the loop** — update `PROGRESS.md` (status, verification results, next steps, task-log entry) and append any new decisions to `DECISIONS.md`.
 4. **Facts only** — every claim should be verifiable against the code (cite file paths) or a command that was run. Mark inferences as inferences.
 
-*Established 2026-08-31. Last updated 2026-09-04 (post-D-043 + memory-bank in-repo + .clinerules/ in-repo + a11y/code fixes via `4c1d96e`). Maintained by hand at the end of each task.*
+*Established 2026-08-31. Last updated 2026-09-05 (post-D-044 + Queen animation overhaul + memory-bank refresh via `1bb1ebb`). Maintained by hand at the end of each task.*
