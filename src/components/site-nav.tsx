@@ -35,7 +35,7 @@ export function SiteNav() {
   }, []);
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-border/80 bg-background/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-40 border-b border-border/80 bg-card backdrop-blur-md">
       <div className="max-w-7x2 mx-auto flex w-full items-center justify-between gap-3 px-2 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/90 to-primary/40 text-primary-foreground shadow-inner shadow-white/20">
