@@ -143,14 +143,18 @@ export function ChartWrapper({
   // This avoids re-running the effect — and thus re-calling setOption with
   // notMerge:true on every render — when only the callback reference changes.
   const onPointClickRef = React.useRef(onPointClick);
-  onPointClickRef.current = onPointClick;
+  React.useEffect(() => {
+    onPointClickRef.current = onPointClick;
+  }, [onPointClick]);
 
   // Same stale-closure guard for the dataZoom handler. We register the
   // 'datazoom' event exactly once at init, and read the latest callback from
   // a ref at fire time so a re-render that only swaps `onZoomChange` doesn't
   // tear down + re-init the chart instance.
   const onZoomChangeRef = React.useRef(onZoomChange);
-  onZoomChangeRef.current = onZoomChange;
+  React.useEffect(() => {
+    onZoomChangeRef.current = onZoomChange;
+  }, [onZoomChange]);
 
   // Track the most recent axisPointer value. ECharts dispatches
   // 'updateAxisPointer' every time the user moves the cursor over the

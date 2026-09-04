@@ -43,6 +43,15 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
   const copiedTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
+    // Sync the local input state when the upstream `config.seed` changes
+    // (e.g. URL state updates). This is the standard "controlled input
+    // backed by an external store" pattern; the `set-state-in-effect`
+    // rule flags it but the new-state-sync is intentional, not a render
+    // cascade. The cleanest replacement is `useSyncExternalStore` on
+    // `useSimulationStore`, but that changes the local-input UX
+    // (the user can no longer type a draft value that differs from the
+    // store's seed).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSeedText(String(config.seed));
   }, [config.seed]);
 
@@ -120,7 +129,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
             className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {copiedLink ? (
-              <Check className="h-4 w-4 text-green-pill" />
+              <Check className="h-4 w-4 text-global-max" />
             ) : (
               <Link2 className="h-4 w-4" />
             )}
@@ -172,8 +181,8 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
               id="strategy-select"
               className={
                 compact
-                  ? 'h-8 w-full border-transparent bg-transparent text-[0.7rem] font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
-                  : 'w-full border-transparent bg-transparent text-xs font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
+                  ? 'h-8 w-full border-border bg-card text-[0.7rem] font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
+                  : 'w-full border-border bg-card text-xs font-medium transition-all hover:border-primary/30 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50'
               }
             >
               <SelectValue placeholder="Select strategy" />
@@ -286,7 +295,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
 
             {(config.allowSideways ?? true) && (
               <div className="flex flex-col gap-1 border-l-2 border-primary/20 pl-2">
-                <div className="flex items-center justify-between text-[0.65rem]">
+                <div className="flex items-center justify-between text-[0.7rem]">
                   <span className="text-muted-foreground">Max Plateau Streak</span>
                   <span className="font-mono font-semibold">
                     {config.maxConsecutiveSideways ?? 100}
@@ -308,7 +317,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
             {/* Random Restarts Policy */}
             <div className="flex items-center justify-between pt-1">
               <div className="flex flex-col gap-0.5">
-                <Label htmlFor="allow-restarts-switch" className="text-[0.7rem] font-medium">
+                <Label htmlFor="allow-restarts-switch" className="text-xs font-medium">
                   Random Restarts
                 </Label>
                 <span className="text-[0.6rem] text-muted-foreground">

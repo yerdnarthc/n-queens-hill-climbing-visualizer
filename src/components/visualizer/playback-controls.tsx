@@ -98,14 +98,14 @@ export function PlaybackControls() {
               <span
                 key={`restart-${step}`}
                 title={`Restart at step ${step}`}
-                className="absolute top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-amber-500 ring-2 ring-background/80"
+                className="absolute top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-local-max ring-2 ring-background/80"
                 style={{ left: `${markerPercent(step)}%` }}
               />
             ))}
             {bestStep !== null && (
               <span
                 title={`Best (${result?.bestConflicts} conflicts) at step ${bestStep}`}
-                className="absolute top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-emerald-500 ring-2 ring-background/80"
+                className="absolute top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-global-max ring-2 ring-background/80"
                 style={{ left: `${markerPercent(bestStep)}%` }}
               />
             )}
@@ -250,13 +250,13 @@ export function PlaybackControls() {
           <div className="flex items-center gap-3">
             {restartSteps.length > 0 && (
               <span className="flex items-center gap-1 font-medium">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                <span className="h-2 w-2 rounded-full bg-local-max" />
                 Restart
               </span>
             )}
             {bestStep !== null && (
               <span className="flex items-center gap-1 font-medium">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="h-2 w-2 rounded-full bg-global-max" />
                 Best (step {bestStep})
               </span>
             )}

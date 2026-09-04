@@ -22,9 +22,15 @@ const NAV_LINKS = [
 export function SiteNav() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  // The theme toggle button is only rendered after mount because
+  // `next-themes` can't know the user's preference during SSR — rendering
+  // the wrong icon (Sun vs Moon) on the server would cause a hydration
+  // mismatch. This is the canonical "client-only state" pattern that
+  // next-themes docs document; the new `react-hooks/set-state-in-effect`
+  // rule flags it but doesn't yet understand the hydration-mount case.
   const [mounted, setMounted] = React.useState(false);
-
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

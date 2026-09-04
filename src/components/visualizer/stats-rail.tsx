@@ -16,8 +16,8 @@ import type { RunStatus, SnapshotPhase } from '@/lib/engine';
  *
  * No icons inside the cards — color + text do the work. The status/phase
  * badges already carry semantic color encoding (emerald = solved, amber =
- * stagnated, rose = worsening, sky = improving, violet = restart) which
- * reads cleanly without the icon clutter.
+ * stagnated / restart, red = worsening / exhausted, sky = improving /
+ * frozen) which reads cleanly without the icon clutter.
  */
 
 const STATUS_CONFIG: Record<
@@ -32,25 +32,25 @@ const STATUS_CONFIG: Record<
     label: 'Solved (Global Opt)',
     variant: 'default',
     className:
-      'bg-green-pill hover:bg-green-pill/90 text-white shadow-xs dark:bg-green-pill dark:text-white font-medium text-[0.7rem] px-2.5 py-0.5',
+      'bg-global-max hover:bg-global-max/90 text-primary-foreground shadow-xs font-medium text-[0.7rem] px-2.5 py-0.5',
   },
   stagnated: {
     label: 'Stagnated (Local Max)',
     variant: 'outline',
     className:
-      'border-amber-500/20 bg-yellow-500/15 text-amber-600 dark:text-amber-400 text-[0.7rem] font-medium px-2.5 py-0.5',
+      'border-local-max/30 bg-local-max/15 text-local-max text-[0.7rem] font-medium px-2.5 py-0.5',
   },
   exhausted: {
     label: 'Step Limit Hit',
     variant: 'destructive',
     className:
-      'bg-rose-pill/8 border-rose-500/10 text-rose-600 dark:bg-rose-pill/20 dark:text-rose-ls-200 font-medium text-[0.7rem] px-2.5 py-0.5',
+      'bg-conflict/10 border-conflict/20 text-conflict font-medium text-[0.7rem] px-2.5 py-0.5',
   },
   frozen: {
     label: 'Frozen (SA Tmin)',
     variant: 'outline',
     className:
-      'border-blue-ls-200/20 bg-sky-500/10 text-sky-600 dark:text-blue-ls-200 font-medium text-[0.7rem] px-2.5 py-0.5',
+      'border-improving/30 bg-improving/10 text-improving font-medium text-[0.7rem] px-2.5 py-0.5',
   },
 };
 
@@ -63,22 +63,22 @@ const PHASE_CONFIG: Record<SnapshotPhase, { label: string; className: string }> 
   improving: {
     label: 'Improving (Δ < 0)',
     className:
-      'bg-sky-500/15 text-sky-600 dark:text-blue-ls-200 border-blue-ls-200/20 font-medium text-[0.6rem] px-2.5 py-0.5',
+      'bg-improving/15 text-improving border-improving/20 font-medium text-[0.6rem] px-2.5 py-0.5',
   },
   shoulder: {
     label: 'Plateau / Shoulder (Δ = 0)',
     className:
-      'border-amber-500/20 bg-yellow-500/15 text-amber-600 dark:text-amber-400 text-[0.6rem] font-medium px-2.5 py-0.5',
+      'border-shoulder/30 bg-shoulder/15 text-shoulder text-[0.6rem] font-medium px-2.5 py-0.5',
   },
   worsening: {
     label: 'Worsening / Exploration (Δ > 0)',
     className:
-      'bg-rose-pill/8 border-rose-500/10 text-rose-600 dark:bg-rose-pill/20 dark:text-rose-ls-200 font-medium text-[0.6rem] px-2.5 py-0.5',
+      'bg-conflict/10 border-conflict/20 text-conflict font-medium text-[0.6rem] px-2.5 py-0.5',
   },
   restart: {
     label: 'Random Restart',
     className:
-      'bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/10 font-medium text-[0.6rem] px-2.5 py-0.5',
+      'bg-local-max/10 text-local-max border-local-max/20 font-medium text-[0.6rem] px-2.5 py-0.5',
   },
 };
 
@@ -117,10 +117,10 @@ export function StatsRail({ variant = 'rail' }: StatsRailProps) {
 
   const cardBase = isCompact
     ? // Compact: tighter, horizontal, no border (sits in a horizontal strip)
-      'flex shrink-0 flex-col justify-center -space-y-1 rounded-md bg-card/60 px-3 py-1.5 shadow-2xs min-w-[120px]'
+      'flex shrink-0 flex-col justify-center -space-y-1 rounded-md bg-card px-3 py-1.5 shadow-2xs min-w-[120px]'
     : isContext
       ? // Context: solid bordered cards, no flex-1 (each card sizes to its grid cell)
-        'flex min-h-0 flex-col justify-center gap-y-0.5 rounded-lg border border-border/60 bg-card/60 px-3 py-2 shadow-2xs'
+        'flex min-h-0 flex-col justify-center gap-y-0.5 rounded-lg border border-border/60 bg-card px-3 py-2 shadow-2xs'
       : // Rail: solid bordered cards, equal height via flex-1
         'flex min-h-0 flex-1 flex-col justify-center -space-y-0 rounded-lg border border-border/60 bg-card/60 py-0 px-4 shadow-2xs';
 
@@ -165,13 +165,7 @@ export function StatsRail({ variant = 'rail' }: StatsRailProps) {
           <div className={cardBase}>
             <span className={labelClass}>Attacking Pairs</span>
             <div className="mt-0.5 flex items-baseline gap-1.5 font-sans text-sm font-semibold">
-              <span
-                className={`font-bold ${
-                  isSolved
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-rose-ls-200 dark:text-rose-ls-200'
-                }`}
-              >
+              <span className={`font-bold ${isSolved ? 'text-global-max' : 'text-conflict'}`}>
                 {conflicts}
               </span>
               <span className="text-muted-foreground">
@@ -189,9 +183,7 @@ export function StatsRail({ variant = 'rail' }: StatsRailProps) {
             </span>
             <div className="mt-0.5 font-sans text-sm font-bold text-foreground">
               {snapshot?.temperature !== null && snapshot?.temperature !== undefined ? (
-                <span className="text-sky-600 dark:text-sky-600">
-                  {snapshot.temperature.toFixed(3)}
-                </span>
+                <span className="text-improving">{snapshot.temperature.toFixed(3)}</span>
               ) : (
                 <span>
                   {snapshot?.restartCount ?? 0}{' '}
@@ -217,9 +209,7 @@ export function StatsRail({ variant = 'rail' }: StatsRailProps) {
               <span>
                 h(s) ={' '}
                 <strong
-                  className={`font-semibold ${
-                    isSolved ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'
-                  }`}
+                  className={`font-semibold ${isSolved ? 'text-global-max' : 'text-foreground'}`}
                 >
                   {conflicts}
                 </strong>
@@ -277,13 +267,7 @@ export function StatsRail({ variant = 'rail' }: StatsRailProps) {
               : 'mt-1 flex items-baseline gap-2 font-sans text-sm font-semibold'
           }
         >
-          <span
-            className={`font-bold ${
-              isSolved
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-rose-ls-200 dark:text-rose-ls-200'
-            }`}
-          >
+          <span className={`font-bold ${isSolved ? 'text-global-max' : 'text-conflict'}`}>
             {conflicts}
           </span>
           <span className="text-muted-foreground">
@@ -319,9 +303,7 @@ export function StatsRail({ variant = 'rail' }: StatsRailProps) {
           }
         >
           {snapshot?.temperature !== null && snapshot?.temperature !== undefined ? (
-            <span className="text-sky-600 dark:text-sky-600">
-              {snapshot.temperature.toFixed(3)}
-            </span>
+            <span className="text-improving">{snapshot.temperature.toFixed(3)}</span>
           ) : (
             <span>
               {snapshot?.restartCount ?? 0}{' '}

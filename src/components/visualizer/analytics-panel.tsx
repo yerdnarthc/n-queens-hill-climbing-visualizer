@@ -206,7 +206,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
 
         {/* 1. Convergence Chart Content */}
         <TabsContent value="convergence" className="mt-3 flex flex-col gap-2">
-          <div className="rounded-xl border border-border/40 bg-background/30 p-2">
+          <div className="rounded-xl border border-border/40 bg-card p-2 dark:bg-background/70">
             <ConvergenceChart
               height={420}
               zoomRange={sharedZoomRange}
@@ -220,12 +220,12 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
               </span>
               {strategy === 'simulated-annealing' && (
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-rose-400" /> Temp <Math>T</Math>
+                  <span className="h-2 w-2 rounded-full bg-conflict" /> Temp <Math>T</Math>
                 </span>
               )}
               {result && result.restarts > 0 && (
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-amber-400" /> Restarts
+                  <span className="h-2 w-2 rounded-full bg-local-max" /> Restarts
                 </span>
               )}
             </div>
@@ -237,7 +237,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
 
         {/* 2. Optimization Landscape Content */}
         <TabsContent value="landscape" className="mt-3 flex flex-col gap-2">
-          <div className="rounded-xl border border-border/40 bg-background/30 p-2">
+          <div className="rounded-xl border border-border/40 bg-card p-2 dark:bg-background/70">
             <LandscapeChart
               height={420}
               zoomRange={sharedZoomRange}
@@ -247,19 +247,19 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
           <div className="flex flex-wrap items-center justify-center gap-3 px-10 text-[0.65rem] text-muted-foreground">
             <div className="flex flex-wrap items-center gap-6">
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-sky-400" /> Improving
+                <span className="h-2 w-2 rounded-full bg-improving" /> Improving
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-orange-300" /> Shoulder
+                <span className="h-2 w-2 rounded-full bg-shoulder" /> Shoulder
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-rose-400" /> Exploration
+                <span className="h-2 w-2 rounded-full bg-conflict" /> Exploration
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-amber-400" /> Restart
+                <span className="h-2 w-2 rounded-full bg-local-max" /> Restart
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" /> Solved
+                <span className="h-2 w-2 rounded-full bg-global-max" /> Solved
               </span>
             </div>
           </div>
@@ -271,7 +271,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
             <div className="flex flex-col gap-4">
               {/* Stat Summary Grid */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <div className="flex flex-col rounded-xl border border-border/50 bg-background/40 p-3">
+                <div className="flex flex-col rounded-xl border border-border/50 bg-card p-3">
                   <span className="font-mono text-xs font-semibold text-muted-foreground">
                     Initial Conflicts
                   </span>
@@ -283,7 +283,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
                   </span>
                 </div>
 
-                <div className="flex flex-col rounded-xl border border-border/50 bg-background/40 p-3">
+                <div className="flex flex-col rounded-xl border border-border/50 bg-background/60 p-3">
                   <span className="font-mono text-xs font-semibold text-muted-foreground">
                     Best Reached
                   </span>
@@ -292,7 +292,10 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
                       {analytics.bestConflicts}
                     </span>
                     {analytics.bestConflicts === 0 && (
-                      <Badge variant="default" className="bg-green-pill px-1 py-0 text-[0.6rem]">
+                      <Badge
+                        variant="default"
+                        className="bg-global-max px-1 py-0 text-[0.6rem] text-primary-foreground"
+                      >
                         SOLVED
                       </Badge>
                     )}
@@ -302,7 +305,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
                   </span>
                 </div>
 
-                <div className="flex flex-col rounded-xl border border-border/50 bg-background/40 p-3">
+                <div className="flex flex-col rounded-xl border border-border/50 bg-card p-3">
                   <span className="font-mono text-xs font-semibold text-muted-foreground">
                     Total Steps
                   </span>
@@ -314,7 +317,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
                   </span>
                 </div>
 
-                <div className="flex flex-col rounded-xl border border-border/50 bg-background/40 p-3">
+                <div className="flex flex-col rounded-xl border border-border/50 bg-background/60 p-3">
                   <span className="font-mono text-xs font-semibold text-muted-foreground">
                     Avg Eval / Step
                   </span>
@@ -328,7 +331,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
               </div>
 
               {/* Phase Distribution Breakdown */}
-              <div className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background/30 p-3.5">
+              <div className="flex flex-col gap-2 rounded-xl border border-border/50 bg-background/60 p-3.5">
                 <div className="mb-2 flex items-center justify-between text-sm font-medium text-foreground">
                   <span className="flex items-center gap-1.5">
                     <span>Search Phase Breakdown</span>
@@ -342,22 +345,22 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
                 <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
                   <div
                     style={{ width: `${analytics.distribution.improvingPct}%` }}
-                    className="bg-sky-500 transition-all"
+                    className="bg-improving transition-all"
                     title={`Improving: ${analytics.distribution.improving} (${analytics.distribution.improvingPct}%)`}
                   />
                   <div
                     style={{ width: `${analytics.distribution.shoulderPct}%` }}
-                    className="bg-orange-400 transition-all"
+                    className="bg-shoulder transition-all"
                     title={`Shoulder: ${analytics.distribution.shoulder} (${analytics.distribution.shoulderPct}%)`}
                   />
                   <div
                     style={{ width: `${analytics.distribution.worseningPct}%` }}
-                    className="bg-rose-500 transition-all"
+                    className="bg-conflict transition-all"
                     title={`Worsening: ${analytics.distribution.worsening} (${analytics.distribution.worseningPct}%)`}
                   />
                   <div
                     style={{ width: `${analytics.distribution.restartPct}%` }}
-                    className="bg-amber-500 transition-all"
+                    className="bg-local-max transition-all"
                     title={`Restarts: ${analytics.distribution.restart} (${analytics.distribution.restartPct}%)`}
                   />
                 </div>
@@ -365,28 +368,28 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
                 {/* Legend & Percentages */}
                 <div className="grid grid-cols-2 gap-2 pt-1 text-[0.7rem] sm:grid-cols-4">
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-sky-500" />
+                    <span className="h-2 w-2 rounded-full bg-improving" />
                     <span>
                       Improving: <strong>{analytics.distribution.improvingPct}%</strong> (
                       {analytics.distribution.improving})
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-orange-400" />
+                    <span className="h-2 w-2 rounded-full bg-shoulder" />
                     <span>
                       Shoulder: <strong>{analytics.distribution.shoulderPct}%</strong> (
                       {analytics.distribution.shoulder})
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-rose-500" />
+                    <span className="h-2 w-2 rounded-full bg-conflict" />
                     <span>
                       Worsening: <strong>{analytics.distribution.worseningPct}%</strong> (
                       {analytics.distribution.worsening})
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
+                    <span className="h-2 w-2 rounded-full bg-local-max" />
                     <span>
                       Restarts: <strong>{analytics.distribution.restartPct}%</strong> (
                       {analytics.distribution.restart})
@@ -396,7 +399,7 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
               </div>
 
               {/* Informational Footer */}
-              <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card/40 p-2.5 text-[0.6rem] text-muted-foreground">
+              <div className="flex items-center gap-2 rounded-lg border border-border/40 bg-card p-2.5 text-[0.6rem] text-muted-foreground">
                 <Info className="h-3.5 w-3.5 shrink-0 text-primary" />
                 <span>
                   Deterministic replay guaranteed. Every simulation step is captured immutably with

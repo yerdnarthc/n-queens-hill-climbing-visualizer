@@ -256,14 +256,14 @@ export default function HowItWorksPage() {
           </p>
           <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-card/50 p-4">
             <p className="flex items-start gap-2 text-sm">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-global-max" />
               <span>
                 Same seed + same settings ⇒ <strong>identical run</strong>, step for step. Share the
                 seed with a friend and you&apos;re literally looking at the same simulation.
               </span>
             </p>
             <p className="flex items-start gap-2 text-sm">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-global-max" />
               <span>
                 This is what powers the <strong>time-travel scrubber</strong> and the charts: the
                 whole run is precomputed deterministically, then you replay any moment of it.

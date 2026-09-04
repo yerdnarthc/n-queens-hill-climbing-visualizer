@@ -54,7 +54,14 @@ export function Chessboard() {
         className={cn(
           'relative aspect-square w-full max-w-[700px] min-w-[260px] rounded-2xl border-4 p-2 shadow-2xl transition-all duration-300',
           isSolved
-            ? 'border-emerald-500/80 ring-4 shadow-emerald-500/10 ring-emerald-500/20'
+            ? // The `border-emerald-500/80` + `ring-emerald-500/20` class
+              // strings are deliberately kept as literal Tailwind palette
+              // classes (instead of the new `bg-global-max`-style semantic
+              // tokens) so the Playwright e2e test in
+              // `e2e/solve-flow.spec.ts` — which locates the solved wrapper
+              // by `.border-emerald-500\/80` — keeps working. The semantic
+              // equivalence with `--feature-global-max` is intentional.
+              'border-emerald-500/80 ring-4 shadow-emerald-500/10 ring-emerald-500/20'
             : totalConflicts > 0
               ? 'border-border/90 bg-card/80 shadow-black/20'
               : 'border-border bg-card/60',
@@ -92,8 +99,8 @@ export function Chessboard() {
                   isLightSquare
                     ? 'bg-[#f0d9b5] text-[#b58863] dark:bg-[#f0d9b5] dark:text-[#8a6549]'
                     : 'bg-[#b88f6e] text-[#f0d9b5] dark:bg-[#b88f6e] dark:text-[#d9c3a3]',
-                  isMovedCol && !isDestinationSquare && 'ring-1 ring-sky-500/30 ring-inset',
-                  isDestinationSquare && 'ring-2 ring-sky-500/70 ring-inset',
+                  isMovedCol && !isDestinationSquare && 'ring-1 ring-improving/30 ring-inset',
+                  isDestinationSquare && 'ring-2 ring-improving/70 ring-inset',
                 )}
               >
                 {/* Rank label on left edge */}
@@ -124,9 +131,9 @@ export function Chessboard() {
                 {isOriginSquare && (
                   <div
                     title={`Moved from row ${n - row}`}
-                    className="absolute inset-1.5 flex items-center justify-center rounded-full border-2 border-dashed border-sky-600/70 bg-sky-500/20 motion-safe:animate-pulse"
+                    className="absolute inset-1.5 flex items-center justify-center rounded-full border-2 border-dashed border-improving-deep/70 bg-improving/20 motion-safe:animate-pulse"
                   >
-                    <div className="h-1.5 w-1.5 rounded-full bg-sky-600" />
+                    <div className="h-1.5 w-1.5 rounded-full bg-improving-deep" />
                   </div>
                 )}
 

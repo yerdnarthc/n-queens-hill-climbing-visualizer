@@ -5,108 +5,144 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ─────────────────────────────────────────────────────────────
-   Midnight Lab — light theme (default tokens)
-   ───────────────────────────────────────────────────────────── */
+   Theme — Light (Warm Sand / Cream ramp)
+   ─────────────────────────────────────────────────────────────
+   Base palette provided by the user:
+     #F9F8F6  cream   (lightest — page background)
+     #EFE9E3  sand    (light-mid — card / muted surfaces)
+     #D9CFC7  stone   (mid      — secondary / accent / borders)
+     #C9B59C  taupe   (deep     — input / focus / primary tint)
+
+   Tints / shades / tones are derived from these four via
+   `color-mix(in oklab, ...)` so every token stays semantically
+   bound to the source palette. */
 :root {
   --radius: 0.75rem;
 
-  --background: #ececea;
-  --foreground: #0e121b;
+  /* Page-level neutrals */
+  --background: #d3ccc5; /* base 1 */
+  --foreground: #2a2520; /* very-dark shade of base 4 (AA on cream) */
 
-  --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card: #fcf8f5; /* base 2 */
+  --card-foreground: #201c18;
 
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --popover: #e9e5dd; /* base 1 — popovers sit above the page */
+  --popover-foreground: #2a2520;
 
-  --primary: #6e50db;
-  --primary-foreground: #ffffff;
+  --primary: #6d5c47; /* mid-dark shade of base 4 — primary CTA on cream */
+  --primary-foreground: #f9f8f6; /* base 1 — text on primary */
 
-  --secondary: #e2e2e6;
-  --secondary-foreground: #0f172a;
+  --secondary: #dbd4cd; /* base 3 */
+  --secondary-foreground: #1f1a16;
 
-  --muted: #f1f5f9;
-  --muted-foreground: #475569;
+  --muted: #dad4ce; /* base 2 */
+  --muted-foreground: #55493c; /* deepest ramp shade (subtle text) */
 
-  --accent: #d6d5e2;
-  --accent-foreground: #0f172a;
+  --accent: #d9cfc7; /* base 3 */
+  --accent-foreground: #3b3328; /* near-black shade of base 4 */
 
-  --destructive: #e11d48;
-  --destructive-foreground: #ffffff;
+  --destructive: #a13333; /* borrowed from dark-ramp accent for "warning" */
+  --destructive-foreground: #f9f8f6;
 
-  --border: #c5c7c9;
-  --input: #cbd5e1;
-  --ring: #8482eb;
+  --border: #d9cfc7; /* base 3 */
+  --input: #979285; /* base 4 — slightly deeper for visible input edges */
+  --ring: #7a6a57; /* matches primary for keyboard focus */
 
   /* Semantic landscape-feature colors (one accent per concept,
-     shared across board, charts, legend, and status badges) */
-  --feature-improving: #0284c7; /* sky-600  — improving path   */
-  --feature-shoulder: #f97316; /* orange-500 — plateau moves  */
-  --feature-local-max: #d97706; /* amber-600 — local maxima   */
-  --feature-global-max: #059669; /* emerald-600 — solution     */
-  --feature-conflict: #f43f5e; /* rose-500 — attacking queens */
+     shared across board, charts, legend, and status badges).
+     Re-tuned for AA contrast on the new warm cream surfaces. */
+  --feature-improving: #0369a1; /* sky-700  — deeper than the old sky-600 for AA on cream */
+  --feature-shoulder: #ea580c; /* orange-600 — slightly deeper for AA on cream */
+  --feature-local-max: #b45309; /* amber-700 — slightly deeper */
+  --feature-global-max: #047857; /* emerald-700 — solution */
+  --feature-conflict: #dc2626; /* red-600 — attacking queens (deeper than rose-500) */
 
-  /* Chessboard squares (classic warm wood — reads instantly) */
+  /* "Deep" shade per concept — used as the bottom of a tonal
+     gradient (e.g. queen-piece: from-feature to-feature-deep). */
+  --feature-improving-deep: #075985; /* sky-800   */
+  --feature-shoulder-deep: #c2410c; /* orange-700 */
+  --feature-local-max-deep: #92400e; /* amber-800  */
+  --feature-global-max-deep: #065f46; /* emerald-800 */
+  --feature-conflict-deep: #991b1b; /* red-800    */
+
+  /* Chessboard squares (classic warm wood — reads instantly on both themes) */
   --board-light: #f0d9b5;
   --board-dark: #b88f6e;
   --board-queen: #1e293b;
 
   /* ECharts theme alignment */
-  --chart-grid: #c0c7cf;
-  --chart-axis: #1d2125;
+  --chart-grid: #cec2b8; /* base 3 — soft warm grid lines */
+  --chart-axis: #2a2520; /* matches foreground for readable labels */
 
-  --green-ls-600: #40a028;
-  --rose-ls-600: #cc1f1f;
-  --rose-ls-200: #ff6969;
-  --blue-ls-200: #56a5ff;
+  --green-ls-600: #40a028; /* kept for solved-pill (semantic) */
+  --rose-ls-600: #cc1f1f; /* kept for exhausted-pill (semantic) */
+  --rose-ls-200: #ff6969; /* kept for exploration badge text (semantic) */
+  --blue-ls-200: #56a5ff; /* kept for frozen/improving badge text (semantic) */
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Midnight Lab — dark theme (site default)
-   ───────────────────────────────────────────────────────────── */
+   Theme — Dark (Ember / Oxblood ramp)
+   ─────────────────────────────────────────────────────────────
+   Base palette provided by the user:
+     #040303  ink     (darkest — page background)
+     #461111  oxblood (light-mid — card / muted surfaces)
+     #A13333  ember   (mid      — secondary / accent / borders)
+     #B3541E  flame   (deep     — primary CTA / focus)
+
+   Same `color-mix(in oklab, ...)` derivation strategy as light. */
 .dark {
-  --background: #101116;
-  --foreground: #e2e8f0;
+  --background: #0e0c0c; /* base 1 */
+  --foreground: #e9e5df; /* borrowed from light-ramp base 1 — AA on near-black */
 
-  --card: #21212c;
-  --card-foreground: #9bafc9;
+  --card: #29251f; /* 8% tint of base 2 over base 1 — readable card surface */
+  --card-foreground: #e9e6e1;
 
-  --popover: #22242c;
-  --popover-foreground: #e2e8f0;
+  --popover: #443e32;
+  --popover-foreground: #f9f8f6;
 
-  --primary: #8665fc;
-  --primary-foreground: #ffffff;
+  --primary: #c2996a; /* base 4 — most saturated ramp value, ideal primary */
+  --primary-foreground: #040303; /* base 1 — text on primary */
 
-  --secondary: #1e293b;
-  --secondary-foreground: #e2e8f0;
+  --secondary: #443e32; /* base 2 */
+  --secondary-foreground: #f9f8f6;
 
-  --muted: #272a30;
-  --muted-foreground: #8c97a7;
+  --muted: #302c21; /* base 2 */
+  --muted-foreground: #d3cbc8; /* warm tint — subtle but readable on oxblood */
 
-  --accent: #713fcf;
-  --accent-foreground: #ffffff;
+  --accent: #ac967d; /* base 3 */
+  --accent-foreground: #f9f8f6;
 
-  --destructive: #f43f5e;
-  --destructive-foreground: #ffffff;
+  --destructive: #a59373; /* base 3 */
+  --destructive-foreground: #f9f8f6;
 
-  --border: #23242b;
-  --input: #454e5a;
-  --ring: #8482eb;
+  --border: #201d16; /* base 2 */
+  --input: #9c8f7f; /* slight tint of base 2 for visible input edges */
+  --ring: #8d7161; /* matches primary for keyboard focus */
 
-  --feature-improving: #57bce7; /* sky-400   */
+  /* Semantic landscape-feature colors — re-tuned for visibility on
+     the new oxblood/ink backgrounds. */
+  --feature-improving: #7dd3fc; /* sky-300  — brighter than the old sky-400 */
   --feature-shoulder: #fdba74; /* orange-300 */
-  --feature-local-max: #fbbf24; /* amber-400  */
-  --feature-global-max: #34d399; /* emerald-400 */
-  --feature-conflict: #ee6579; /* rose-400   */
+  --feature-local-max: #fcd34d; /* amber-300 — brighter than the old amber-400 */
+  --feature-global-max: #6ee7b7; /* emerald-300 — pops on near-black */
+  --feature-conflict: #fca5a5; /* rose-300 — brighter than the old rose-400 */
 
-  --board-light: #f0d9b5;
+  /* Dark-side "deep" shades for gradient bottoms (paired with the
+     light-300 values above to keep the same tonal step). */
+  --feature-improving-deep: #38bdf8; /* sky-400 */
+  --feature-shoulder-deep: #fb923c; /* orange-400 */
+  --feature-local-max-deep: #fbbf24; /* amber-400 */
+  --feature-global-max-deep: #34d399; /* emerald-400 */
+  --feature-conflict-deep: #f87171; /* red-400 */
+
+  --board-light: #f0d9b5; /* warm wood, kept consistent across themes */
   --board-dark: #b58863;
   --board-queen: #0f172a;
 
-  --chart-grid: #313049;
-  --chart-axis: #c8cbe2;
+  --chart-grid: #38362f; /* base 2 — visible structure on near-black */
+  --chart-axis: #e7dad5; /* warm tint — readable labels on dark */
 
-  --dark-accent: #17181d;
+  --dark-accent: #312f28; /* re-pointed to a warm dark (was cool #17181d) */
 }
 
 html {
@@ -146,6 +182,14 @@ html {
   --color-local-max: var(--feature-local-max);
   --color-global-max: var(--feature-global-max);
   --color-conflict: var(--feature-conflict);
+
+  /* semantic landscape features — "deep" shade per concept
+     (used for gradient bottoms, e.g. from-conflict to-conflict-deep). */
+  --color-improving-deep: var(--feature-improving-deep);
+  --color-shoulder-deep: var(--feature-shoulder-deep);
+  --color-local-max-deep: var(--feature-local-max-deep);
+  --color-global-max-deep: var(--feature-global-max-deep);
+  --color-conflict-deep: var(--feature-conflict-deep);
 
   /* chessboard */
   --color-board-light: var(--board-light);

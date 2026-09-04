@@ -23,36 +23,50 @@ export interface PhaseColors {
   muted: string;
 }
 
+/**
+ * SSR-time fallback theme colors. The live values are read from
+ * `--feature-*` / `--primary` / `--chart-*` / `--card` / `--foreground`
+ * / `--muted` CSS custom properties (see `chart-wrapper.tsx` →
+ * `readThemeColors`). These defaults must mirror the values declared
+ * in `globals.css` so the first paint — before the
+ * `MutationObserver` swaps to the live CSS values — matches the
+ * rendered theme.
+ *
+ * Theme: Dark (Ember / Oxblood ramp, see `globals.css` `.dark`).
+ */
 export const DEFAULT_DARK_COLORS: PhaseColors = {
-  improving: '#38bdf8', // sky-400
+  improving: '#7dd3fc', // sky-300
   shoulder: '#fdba74', // orange-300
-  worsening: '#fb7185', // rose-400
-  restart: '#fbbf24', // amber-400
-  initial: '#cbd0f5', // violet-400
-  globalMax: '#34d399', // emerald-400
-  primary: '#8b5cf6', // violet-500
-  cursor: '#cbd0f5', // pale lavender — high-contrast against dark backgrounds
-  grid: '#1e293b', // slate-800
-  axis: '#94a3b8', // slate-400
-  card: '#111827', // gray-900
-  foreground: '#e2e8f0', // slate-200
-  muted: '#64748b', // slate-500
+  worsening: '#fca5a5', // rose-300
+  restart: '#fcd34d', // amber-300
+  initial: '#c9a89e', // warm tint (was violet-400 — now theme-coupled)
+  globalMax: '#6ee7b7', // emerald-300
+  primary: '#b3541e', // dark-ramp base 4 (flame)
+  cursor: '#e9e5df', // matches primary for a consistent "you are here" marker
+  grid: '#461111', // dark-ramp base 2 (oxblood) — visible structure on near-black
+  axis: '#c9a89e', // warm tint — readable labels
+  card: '#1a0a0a', // warm dark — see --dark-accent in globals.css
+  foreground: '#f9f8f6', // light-ramp base 1 — AA on near-black
+  muted: '#c9a89e', // warm tint
 };
 
+/**
+ * Theme: Light (Warm Sand / Cream ramp, see `globals.css` `:root`).
+ */
 export const DEFAULT_LIGHT_COLORS: PhaseColors = {
-  improving: '#0284c7', // sky-600
-  shoulder: '#f97316', // orange-500
-  worsening: '#f43f5e', // rose-500
-  restart: '#d97706', // amber-600
-  initial: '#7c3aed', // violet-600
-  globalMax: '#059669', // emerald-600
-  primary: '#7c3aed', // violet-600
-  cursor: '#8665fc', // mid violet — visible against light backgrounds
-  grid: '#e2e8f0', // slate-200
-  axis: '#64748b', // slate-500
-  card: '#ffffff',
-  foreground: '#0f172a', // slate-900
-  muted: '#94a3b8', // slate-400
+  improving: '#0369a1', // sky-700
+  shoulder: '#ea580c', // orange-600
+  worsening: '#dc2626', // red-600
+  restart: '#b45309', // amber-700
+  initial: '#7a6a57', // light-ramp derived primary shade (was violet-600)
+  globalMax: '#047857', // emerald-700
+  primary: '#7a6a57', // light-ramp derived primary shade
+  cursor: '#7a6a57', // matches primary
+  grid: '#d9cfc7', // light-ramp base 3 (stone) — soft warm grid lines
+  axis: '#2a2520', // derived dark shade of base 4 — readable labels
+  card: '#efe9e3', // light-ramp base 2 (sand)
+  foreground: '#2a2520', // very-dark shade of base 4
+  muted: '#8a7a66', // deepest ramp shade
 };
 
 /**

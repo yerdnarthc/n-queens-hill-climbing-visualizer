@@ -101,19 +101,19 @@ function HomeContent() {
               {/* Semantic Visual Legend */}
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/50 bg-card/30 p-3 px-25 text-[0.65rem] text-muted-foreground">
                 <div className="flex items-center gap-1.5 font-medium">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="h-2 w-2 rounded-full bg-global-max" />
                   <span>Solved (0 Attacks)</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
-                  <span className="h-2 w-2 rounded-full bg-rose-500" />
+                  <span className="h-2 w-2 rounded-full bg-conflict" />
                   <span>Conflicted Queen</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
-                  <span className="h-2 w-2 rounded-full bg-sky-500" />
+                  <span className="h-2 w-2 rounded-full bg-improving" />
                   <span>Moved Queen</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
-                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  <span className="h-2 w-2 rounded-full bg-local-max" />
                   <span>Plateau / Shoulder</span>
                 </div>
               </div>
@@ -158,7 +158,7 @@ function HomeContent() {
               representation, which is the foundation that the objective builds on. */}
           <div className="flex flex-col gap-4 p-2 lg:flex-row lg:items-start lg:gap-10">
             {/* Concept 1 — State representation */}
-            <article className="flex flex-col gap-3 rounded-xl p-5 lg:w-3/5 dark:bg-card-foreground/5">
+            <article className="flex flex-col gap-3 rounded-xl bg-card/60 p-5 lg:w-3/5 dark:bg-card-foreground/5">
               <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                 <span className="whitespace-pre">1. The state</span>
               </div>
@@ -190,7 +190,7 @@ function HomeContent() {
             </article>
 
             {/* Concept 2 — Heuristic objective */}
-            <article className="flex flex-col gap-3 rounded-xl p-5 lg:w-2/5 dark:bg-card-foreground/5">
+            <article className="flex flex-col gap-3 rounded-xl bg-card/60 p-5 lg:w-2/5 dark:bg-card-foreground/5">
               <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
                 <span className="whitespace-pre">2. The objective</span>
               </div>
@@ -208,9 +208,7 @@ function HomeContent() {
                   <span className="font-mono text-[0.7rem] font-medium tracking-wide text-muted-foreground uppercase">
                     Termination
                   </span>
-                  <span className="font-mono text-[0.7rem] text-emerald-600 dark:text-emerald-400">
-                    solved
-                  </span>
+                  <span className="font-mono text-[0.7rem] text-global-max">solved</span>
                 </div>
                 <div className="mt-1.5 flex flex-col items-center gap-1">
                   <Math block>h(s) = 0</Math>
