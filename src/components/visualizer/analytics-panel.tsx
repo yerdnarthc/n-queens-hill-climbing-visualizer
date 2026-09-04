@@ -105,49 +105,60 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
     >
       {/* Header with Title & Quick Active State Badges — hidden when bare */}
       {!bare && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <LineChart className="h-4 w-4" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">Analytics & Optimization</h2>
-              <p className="text-[0.65rem] text-muted-foreground">
-                Real-time heuristic convergence, energy trajectory & phase diagnostics
-              </p>
+        <div className="flex items-center gap-3 border-b border-border/50 pr-2">
+          {/* Left side: title block + current-state indicators grouped together.
+              `min-w-0` lets the cluster shrink (and the inner sub-label
+              truncate if needed) instead of forcing the row to wrap; the
+              right-side button is `shrink-0` and `ml-auto` so it always
+              stays pinned to the right edge regardless of cluster width. */}
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex shrink-0 items-center gap-3">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <LineChart className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Analytics & Optimization</h2>
+                <p className="text-[0.65rem] text-muted-foreground">
+                  Real-time heuristic convergence, energy trajectory & phase diagnostics
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Current State Indicator */}
-          {currentSnapshot && (
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className="flex items-center gap-1.5 border-border/80 bg-background/50 px-2.5 py-1 text-[0.65rem]"
-              >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: activePhaseColor }}
-                />
-                <span className="font-medium">{activePhaseLabel}</span>
-              </Badge>
-              <Badge variant="secondary" className="px-2 py-1 text-[0.65rem]">
-                h(s) = <strong className="ml-1 text-foreground">{currentSnapshot.conflicts}</strong>
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => result && downloadRunCsv(result)}
-                disabled={!result}
-                aria-label="Export run as CSV"
-                title="Download the full snapshot history as CSV"
-                className="h-7 gap-1.5 rounded-lg px-2.5 text-[0.65rem]"
-              >
-                <Download className="h-3 w-3" />
-                <span className="hidden sm:inline">Export CSV</span>
-              </Button>
-            </div>
-          )}
+          {/* Right side: Export CSV button alone. `shrink-0` keeps it from
+              being squashed if the left cluster gets wide; `ml-auto` pins
+              it to the right edge of the row. The outer row's `pr-2` adds
+              the requested generous padding from the container's right
+              edge so it doesn't over-bleed. `disabled` handles the
+              no-result case. */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => result && downloadRunCsv(result)}
+            disabled={!result}
+            aria-label="Export run as CSV"
+            title="Download the full snapshot history as CSV"
+            className="ml-auto h-7 shrink-0 gap-1.5 rounded-lg px-2.5 text-[0.65rem]"
+          >
+            <Download className="h-3 w-3" />
+            <span className="hidden sm:inline">Export CSV</span>
+          </Button>
+        </div>
+      )}
+
+      {/* Current State Indicator (only when a result exists) */}
+      {currentSnapshot && (
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge
+            variant="outline"
+            className="flex items-center gap-1.5 border-border/80 bg-background/50 px-2.5 py-1 text-[0.65rem]"
+          >
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: activePhaseColor }} />
+            <span className="font-medium">{activePhaseLabel}</span>
+          </Badge>
+          <Badge variant="secondary" className="px-2 py-1 text-[0.65rem]">
+            h(s) = <strong className="ml-1 text-foreground">{currentSnapshot.conflicts}</strong>
+          </Badge>
         </div>
       )}
 
