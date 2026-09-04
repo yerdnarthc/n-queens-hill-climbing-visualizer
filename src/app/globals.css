@@ -293,6 +293,24 @@ html {
   color: color-mix(in oklab, currentColor 60%, transparent);
 }
 
+/* MoveTrajectory line draw-in — the SVG <line> in move-trajectory.tsx
+   uses stroke-dasharray + stroke-dashoffset to "draw itself" from origin
+   to destination. The cubic-bezier ease is the same overshoot curve used
+   by the queen flight (Option B / kinetic — see the plan in
+   chat 2026-09-05), so the line and the queen arrive together.
+
+   The `prefers-reduced-motion` media query at the bottom of this file
+   collapses all CSS animation-durations to 0.01ms, which makes the line
+   draw effectively instant for motion-sensitive users. */
+@keyframes trajectory-draw {
+  from {
+    stroke-dashoffset: var(--trajectory-length, 100%);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

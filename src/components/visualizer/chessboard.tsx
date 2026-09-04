@@ -4,6 +4,8 @@ import * as React from 'react';
 import { useSimulationStore, selectSnapshot } from '@/store';
 import { createConflicts } from '@/lib/engine';
 import { QueenPiece } from './queen-piece';
+import { MoveTrajectory } from './move-trajectory';
+import { computeStepDuration } from '@/lib/animation-timings';
 import { cn } from '@/lib/utils';
 
 const FILE_LABELS = [
@@ -28,6 +30,16 @@ const FILE_LABELS = [
 export function Chessboard() {
   const snapshot = useSimulationStore(selectSnapshot);
   const config = useSimulationStore((s) => s.config);
+  const speed = useSimulationStore((s) => s.speed);
+
+  // Ref to the inner grid container — passed to <MoveTrajectory /> so the
+  // SVG line overlay can measure the grid's live bounding rect.
+  const gridRef = React.useRef<HTMLDivElement>(null);
+
+  // Move duration (ms) matched to the queen's flight in QueenPiece.
+  // Same helper, same formula — both use cases want a duration that
+  // completes inside one playback step at the current speed.
+  const moveDurationMs = React.useMemo(() => computeStepDuration(speed, false), [speed]);
 
   const n = snapshot ? snapshot.board.length : config.boardSize;
   const board = snapshot?.board ?? null;
@@ -72,6 +84,7 @@ export function Chessboard() {
       >
         {/* Inner Grid */}
         <div
+          ref={gridRef}
           className="grid h-full w-full overflow-hidden rounded-xl border border-black/20 shadow-inner"
           style={{
             gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
@@ -152,6 +165,12 @@ export function Chessboard() {
             );
           })}
         </div>
+
+        {/* Trajectory overlay — draws a thin line from the move's origin
+            square to its destination square during the queen's flight.
+            Sits between the grid and the outer container so it overlays
+            the grid without capturing pointer events. */}
+        <MoveTrajectory move={move} boardSize={n} gridRef={gridRef} durationMs={moveDurationMs} />
       </div>
     </div>
   );
