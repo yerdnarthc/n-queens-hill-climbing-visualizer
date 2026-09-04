@@ -1,6 +1,6 @@
 # Progress — Where are we now?
 
-> Update at the end of **every** task. Last updated: **2026-09-04** (post-D-041 refactor; 13 follow-up commits since Phase 7).
+> Update at the end of **every** task. Last updated: **2026-09-04** (post-D-042 + memory-bank in-repo move; 15 follow-up commits since Phase 7, 27 commits total).
 
 ## TL;DR
 
@@ -33,7 +33,7 @@ Run inside `n-queens-visualizer/`:
 - `npm run lint` → **clean** (0 warnings, 0 errors)
 - `npm run build` → **passes** against Next 16.3.4; 8 static routes: `/`, `/how-it-works`, `/robots.txt`, `/sitemap.xml`, `+not-found`
 - pre-commit (lint-staged: prettier + eslint) ran clean on every commit
-- New local-only commit `41a0603` (D-042) bumps SiteNav/StatsHeader background opacity for legibility on the warm palette; not yet pushed to `origin/master = 7b775da`
+- `41a0603` (D-042, SiteNav/StatsHeader opacity bump) is pushed; `577f2eb` and `c9f500d` ship the in-repo `memory-bank/` move (D-043). `HEAD` = `origin/master` = `c9f500d`.
 
 ## Known issues / housekeeping
 
@@ -43,9 +43,7 @@ Run inside `n-queens-visualizer/`:
 2. `NEXT_PUBLIC_SITE_URL` is not set anywhere; `robots.ts`/`sitemap.ts` fall
    back to `http://localhost:3000` — set it in the Vercel deployment env for
    production-absolute URLs.
-3. Local-only commit `41a0603` (D-042, SiteNav/StatsHeader opacity bump) is on
-   `master` but not yet on `origin/master`; push when ready.
-4. The "Midnight Lab" branding in D-013 is retired; the project now uses a
+3. The "Midnight Lab" branding in D-013 is retired; the project now uses a
    warm-sand / oxblood palette (D-039/D-041). The how-it-works prose and any
    external copy referencing the old name should follow.
 
@@ -58,11 +56,6 @@ The roadmap is complete. Reasonable follow-ups (not committed to):
 - Consider extending E2E to assert analytics-tab switching
   (Convergence ↔ Landscape) — the new tab-local zoom state and the
   auto-follow scroll would benefit from a regression test.
-- Push `41a0603` (D-042) to `origin/master` so the legibility fix is in
-  sync with the local copy.
-- **Move the `docs/` folder into `n-queens-visualizer/docs/`** (a
-  follow-up to this audit) so the memory system is version-controlled
-  alongside the code it describes. D-016 will be superseded.
 
 ## Task log
 
@@ -94,5 +87,6 @@ The roadmap is complete. Reasonable follow-ups (not committed to):
 | 2026-09-04 | Concepts side-by-side + ConfigPanel `compact` mode | `HomeContent` "About Hill-Climbing Local Search" section restructured: concepts laid out side-by-side on `lg+` (state 3/5, objective 2/5, `lg:gap-10` gutter), stacked on `<lg`. `ConfigPanel` gains a `compact` boolean: hides the strategy mini-callout, shrinks selects to `h-8`, tightens padding. +61 tests — commit `834bfd4` |
 | 2026-09-04 | `StatsRail` `context` variant (dashboard layout) | New third variant: full-width card with 5 metric tiles in a 2×2 grid + 1 hero Run-Status tile below. `HomeContent` renders `<StatsRail variant="context" />` in the right column under `AnalyticsPanel`. `page.tsx` reshuffles 177 lines. +53 stats-rail tests — commit `44766a1` |
 | 2026-09-04 | **Semantic color tokens + Next 16 + ESLint flat config** | `globals.css`: semantic Tailwind tokens (`bg-global-max`, `bg-local-max`, `bg-conflict`, `bg-improving`, `bg-shoulder`, `bg-worsening`, `bg-restart`, +`*-deep`) wired to `--feature-*` CSS vars. **Next 15.5 → Next 16.3.4**; `eslint.config.mjs` imports `eslint-config-next@16`'s native flat config (drops `@eslint/eslintrc`/`FlatCompat` to bypass `ConfigValidator` `JSON.stringify` circular crash). `tsconfig.json`: `jsx: react-jsx`, +`.next/dev/types/**` in `include`, `incremental: true`. Two non-migrations kept on purpose: chessboard's solved-wrapper keeps literal emerald classes (locked by `e2e/solve-flow.spec.ts`); warm-wood square colours stay constant across themes — commit `7b775da`, see **D-041** |
-| 2026-09-04 | SiteNav/StatsHeader opacity bump *(local-only, not yet pushed)* | `SiteNav` `bg-background/80` → `bg-card`; `StatsHeader` `bg-card/40` → `bg-card/60`. 2-line CSS tweak for legibility on the new warm palette — commit `41a0603`, see **D-042** |
-| 2026-09-04 | **Docs audit** (this task)             | Audit of all 13 commits since `71c6581`; D-034 through D-042 appended to `DECISIONS.md`; `PROGRESS.md` test count 207 → 298, Phase 8/9 added, local-only `41a0603` flagged; `ARCHITECTURE.md` updated for new components (StatsRail, use-follow-current-step, math.tsx, Sora/Chivo Mono fonts, semantic tokens, Next 16, ESLint flat config); `README.md` updated for the same |
+| 2026-09-04 | SiteNav/StatsHeader opacity bump       | `SiteNav` `bg-background/80` → `bg-card`; `StatsHeader` `bg-card/40` → `bg-card/60`. 2-line CSS tweak for legibility on the new warm palette — commit `41a0603`, see **D-042** |
+| 2026-09-04 | **Docs audit** (initial Phase 8/9)     | Audit of all 13 commits since `71c6581`; D-034 through D-042 appended to `DECISIONS.md`; `PROGRESS.md` test count 207 → 298, Phase 8/9 added; `ARCHITECTURE.md` updated for new components (StatsRail, use-follow-current-step, math.tsx, Sora/Chivo Mono fonts, semantic tokens, Next 16, ESLint flat config); `README.md` updated for the same |
+| 2026-09-04 | **Memory-bank in-repo + rename to `memory-bank/`** | `577f2eb` moves `docs/` into the repo; `c9f500d` renames it to `memory-bank/`. D-016 superseded; **D-043** appended. Follow-up doc refresh corrects 12 stale references across `README.md`, `PROJECT_CONTEXT.md`, `ARCHITECTURE.md`, `PROGRESS.md`, `DECISIONS.md` (commit refs, "local-only pending push" claims, in-repo vs out-of-repo wording) |

@@ -1,16 +1,18 @@
 # Architecture — How is it structured?
 
-> Verified against the codebase on **2026-09-04** (commit `41a0603`,
-> post-D-041 refactor). 13 follow-up commits since the previous
-> verification (Phase 5 / `64a68d0`).
+> Verified against the codebase on **2026-09-04** (commit `c9f500d`,
+> post-D-042 + memory-bank in-repo move). 15 follow-up commits since
+> the Phase 7 baseline (`71c6581`); 27 commits total.
 
 ## Repository layout
 
 ```
-N-Queens Visualizer/            ← task workspace root (docs/ memory lives here)
-├── docs/                       ← this memory system (NOT inside the git repo)
+N-Queens Visualizer/            ← task workspace root
 ├── package-lock.json           ← renamed by the user to "N-Queens Visualizer" (intentional)
 └── n-queens-visualizer/        ← the app (git repo, branch master, Next 16.3.4)
+    ├── memory-bank/            ← this memory system, version-controlled (D-043;
+    │                              was `docs/` at the workspace root per D-016, moved
+    │                              into the repo in commits `577f2eb` + `c9f500d`)
     ├── legacy/index.html       ← original 787-line single-file prototype (reference only)
     ├── src/
     │   ├── app/                ← App Router: layout.tsx (SiteNav + NuqsAdapter,

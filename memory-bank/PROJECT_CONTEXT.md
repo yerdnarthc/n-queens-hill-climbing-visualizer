@@ -1,6 +1,6 @@
 # Project Context — What is this project?
 
-> Entry point for AI tasks. Verified against the codebase on **2026-09-04** (commit `41a0603`, post-D-041 refactor).
+> Entry point for AI tasks. Verified against the codebase on **2026-09-04** (commit `c9f500d`, post-D-042 + memory-bank in-repo move).
 > Update when the project's purpose, scope, or stack changes.
 
 ## One-paragraph summary
@@ -74,6 +74,6 @@ deterministic, fully-tested algorithm engine plus a modern Next.js frontend.
 
 ## Pointers
 
-- App + git repo: `n-queens-visualizer/` (branch `master`, on **Next 16.3.4**, ~19 commits, `origin → github.com/yerdnarthc/n-queens-hill-climbing-visualizer`; `41a0603` is the latest local-only commit, pending push)
+- App + git repo: `n-queens-visualizer/` (branch `master`, on **Next 16.3.4**, 27 commits, `origin → github.com/yerdnarthc/n-queens-hill-climbing-visualizer`; `c9f500d` is the latest commit and matches `origin/master`)
 - Legacy prototype: `n-queens-visualizer/legacy/index.html` (reference only — do not build on it)
 - Internals: `ARCHITECTURE.md` · Rationale: `DECISIONS.md` · Status: `PROGRESS.md`

@@ -1,15 +1,15 @@
 # 📚 Project Memory — Read Me First
 
 This folder is the **externalized long-term memory** for all AI-assisted tasks on
-this project. It lives at the **workspace root** (`N-Queens Visualizer/docs/`),
-deliberately outside the git repo, so it is always the first thing a new task
-sees — no matter what happens inside `n-queens-visualizer/`.
+this project. It lives at **`n-queens-visualizer/memory-bank/`**, version-controlled
+alongside the code it describes (this supersedes D-016 — see **D-043** in
+`DECISIONS.md`).
 
-> **Last verified against the codebase:** 2026-09-04 (commit `41a0603`,
-> post-D-041 refactor — 13 follow-up commits since the Phase 7 baseline
-> of 2026-09-02 / `71c6581`).
+> **Last verified against the codebase:** 2026-09-04 (commit `c9f500d`,
+> post-D-042 + memory-bank in-repo move — 15 follow-up commits since the
+> Phase 7 baseline of 2026-09-02 / `71c6581`).
 >
-> **Status snapshot:** Phases 0–7 complete; **Phase 8 (chart UX: dataZoom,
+> **Status snapshot:** Phases 0–9 complete. **Phase 8 (chart UX: dataZoom,
 > auto-follow, snappier animation) and Phase 9 (StatsRail extraction,
 > semantic color tokens, warm-sand/oxblood palette, Next 16.3.4, ESLint
 > flat config) shipped.** 298/298 unit tests passing across 23 suites,
@@ -32,4 +32,4 @@ sees — no matter what happens inside `n-queens-visualizer/`.
 3. **Close the loop** — update `PROGRESS.md` (status, verification results, next steps, task-log entry) and append any new decisions to `DECISIONS.md`.
 4. **Facts only** — every claim should be verifiable against the code (cite file paths) or a command that was run. Mark inferences as inferences.
 
-*Established 2026-08-31. Last updated 2026-09-04 (Phase 8/9 audit). Maintained by hand at the end of each task.*
+*Established 2026-08-31. Last updated 2026-09-04 (post-D-042 + memory-bank in-repo move). Maintained by hand at the end of each task.*

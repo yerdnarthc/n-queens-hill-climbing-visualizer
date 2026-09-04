@@ -434,10 +434,28 @@ one file (`globals.css`); losing the literal class also means e2e
 selectors on theme colours would need to switch to data-attrs if they
 ever need to test colour identity. Status: accepted.
 
-**D-042 · SiteNav/StatsHeader backgrounds bumped to `bg-card` / `bg-card/60` for legibility on the new warm palette** *(2026-09-04, local-only — not on origin/master)*
+**D-042 · SiteNav/StatsHeader backgrounds bumped to `bg-card` / `bg-card/60` for legibility on the new warm palette** *(2026-09-04)*
 Why: the Phase-7 translucent surfaces (`bg-background/80`, `bg-card/40`)
 washed out on the new warm-sand/oxblood backgrounds — the sticky nav
 read as a smudge and the header read as a barely-there bar. Bumped to
 solid `bg-card` and `bg-card/60` respectively for legibility. Status:
-accepted (local-only commit; pending push).
+accepted — pushed to `origin/master` in `41a0603`.
+
+**D-043 · Memory-bank moved into the repo and renamed from `docs/` to `memory-bank/`** *(2026-09-04)*
+Why: D-016 originally placed the memory system at the workspace root
+(`N-Queens Visualizer/docs/`), outside the git repo, on the theory that it
+"must survive repo re-cloning or re-creation" and to keep the agent's
+read-first path decoupled from app commits. In practice, the memory bank
+has become tightly coupled to the SHAs it describes (the audit it
+records is dated by commit), so unversioned memory caused the stale
+state the 2026-09-04 audit had to fix (`41a0603` was locally flagged as
+"pending push" even though it had shipped; `origin/master` was listed as
+`7b775da` two commits behind). Versioning the memory bank gives diff
+reviewability on doc changes, SHAs that always match the local checkout,
+and the same "survive re-clone" property (just `git pull`). Commits
+`577f2eb` (move `docs/` into the repo) and `c9f500d` (rename to
+`memory-bank/`) ship the change; the name `memory-bank/` is preferred
+over `docs/` because it signals the folder's role rather than its
+position. Status: accepted — supersedes D-016 in spirit (D-016 left in
+the log for history; its "outside the repo" reasoning is now retired).
 
