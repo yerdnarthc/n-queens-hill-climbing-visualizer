@@ -542,3 +542,36 @@ unit tests passing across 27 suites (was 298/298 across 23 suites
 pre-Phase-10), production build clean (5 static routes). Status:
 accepted.
 
+**D-045 · Cline → OpenCode migration: rules move to `AGENTS.md`, vendored skills excluded from quality gates** *(2026-09-05, tooling)*
+Why: the user's agentic workflow moved from VS Code + Cline to OpenCode,
+which reads `AGENTS.md` (repo root + `~/.config/opencode/`) instead of
+`.clinerules/`. So `.clinerules/memory-bank.md` +
+`.clinerules/nextjs-conventions.md` were deleted and their content
+preserved in a new root `AGENTS.md` (verified via `git diff`: the new
+file is the concatenation of the two deleted ones — a pure move, no
+rule changes). In the same change, six project-specific skills were
+added under `.agents/skills/` with a `skills-lock.json` pin file
+(motion-advanced/foundations/patterns from `affaan-m/ecc`,
+next-best-practices from `vercel-labs/openreview`, typescript-expert
+from `sickn33/agentic-awesome-skills`, vercel-react-best-practices from
+`vercel-labs/agent-skills`).
+
+The first commit attempt failed in the Husky/lint-staged pre-commit
+hook: `eslint --fix` runs on every staged `*.ts` file, and the
+vendored `typescript-expert/references/utility-types.ts` uses explicit
+`any` throughout (it is a third-party reference sheet demonstrating
+utility types, so `any` is intentional there) — 11
+`@typescript-eslint/no-explicit-any` errors against the project's
+no-`any` rule. Alternatives considered: (a) editing the vendored file
+to satisfy the rule — rejected, it would diverge from upstream on
+every skill update; (b) `git commit --no-verify` — rejected, it
+bypasses the gate once but leaves `npm run lint` broken on every
+future run. Decision: treat `.agents/` as vendored third-party code
+and exclude it everywhere project source is checked —
+`eslint.config.mjs` `ignores` += `.agents/**`, `.prettierignore` +=
+`.agents`, `tsconfig.json` `exclude` += `.agents` (the `include` is
+`**/*.ts`, so skill reference `.ts` files would otherwise be
+typechecked too). Same rationale as the existing
+`node_modules`/`e2e/`/`legacy/` ignores. Status: accepted — commit
+`04e0cb4`; `npm run lint` + `npm run typecheck` clean.
+

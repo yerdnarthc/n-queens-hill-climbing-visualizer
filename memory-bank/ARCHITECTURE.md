@@ -11,10 +11,14 @@
 N-Queens Visualizer/            ← task workspace root
 ├── package-lock.json           ← renamed by the user to "N-Queens Visualizer" (intentional)
 └── n-queens-visualizer/        ← the app (git repo, branch master, Next 16.3.4)
-    ├── .clinerules/            ← AI-agent instruction set (memory-bank.md +
-    │                              nextjs-conventions.md) — version-controlled
-    │                              since `a7dafcb`; the AI reads these at the
-    │                              start of every task before the memory bank
+    ├── AGENTS.md               ← AI-agent instruction set (memory-bank reading
+    │                              protocol + Next.js/TS/Tailwind conventions) —
+    │                              the AI reads this at the start of every task
+    │                              before the memory bank (moved from
+    │                              `.clinerules/` in D-045)
+    │   ├── .agents/skills/         ← vendored third-party agent skills (6 skills
+    │                              + `skills-lock.json` at root); excluded from
+    │                              eslint/prettier/tsc in D-045 — never linted
     ├── memory-bank/            ← this memory system, version-controlled (D-043;
     │                              was `docs/` at the workspace root per D-016, moved
     │                              into the repo in commits `577f2eb` + `c9f500d`)
