@@ -10,15 +10,16 @@ alongside the code it describes (this supersedes D-016 — see **D-043** in
 > overhaul (Phase 10 / D-044) — 21 follow-up commits since the Phase 7
 > baseline of 2026-09-02 / `71c6581`).
 >
-> **Status snapshot:** Phases 0–11 complete. **Phase 8 (chart UX: dataZoom,
+> **Status snapshot:** Phases 0–12 complete. **Phase 8 (chart UX: dataZoom,
 > auto-follow, snappier animation), Phase 9 (StatsRail extraction,
 > semantic color tokens, warm-sand/oxblood palette, Next 16.3.4, ESLint
-> flat config), Phase 10 (kinetic Queen move animation), and Phase 11
+> flat config), Phase 10 (kinetic Queen move animation), Phase 11
 > (explicit x/y queen travel with arc, ghost echo, playback-gated
-> duration, `motion` migration) shipped.** 333/333 unit tests passing
-> across 28 suites, typecheck + lint + production build clean, Playwright
-> E2E 25/30 (5 pre-existing strict-mode failures, proven on clean HEAD).
-> See `PROGRESS.md` for details.
+> duration, `motion` migration), and Phase 12 ("Plateau" rename +
+> first-visit spotlight onboarding tour) shipped.** 344/344 unit tests
+> passing across 29 suites, typecheck + lint + production build clean,
+> Playwright E2E 29/33 (4 pre-existing strict-mode failures, re-proven
+> on clean HEAD). See `PROGRESS.md` for details.
 
 ## The file map
 

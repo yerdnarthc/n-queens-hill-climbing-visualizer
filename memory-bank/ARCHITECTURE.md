@@ -41,6 +41,8 @@ N-Queens Visualizer/            ← task workspace root
     │   │   │                      queen-piece.tsx (explicit x/y travel, Phase 11);
     │   │   │                      origin-echo.tsx (ghost departure marker, Phase 11);
     │   │   │                      useQueenDuration.ts (NEW Phase 11 — playback-gated duration);
+    │   │   │                      onboarding-tour.tsx (NEW Phase 12 — first-visit
+    │   │   │                      spotlight walkthrough, localStorage-gated);
     │   │   │                      chart-helpers.ts, chart-wrapper.tsx,
     │   │   │                      convergence-chart.tsx, landscape-chart.tsx,
     │   │   │                      analytics-panel.tsx (now owns the shared zoom state);
@@ -298,9 +300,48 @@ Engine/store/Playwright e2e: **untouched**. The visualizer-side
 `origin-echo`. `MoveTrajectory`'s `move-trajectory` testid is gone
 with the component (no e2e spec referenced it).
 
+## Onboarding tour (Phase 12, D-047)
+
+First-visit spotlight walkthrough (`src/components/visualizer/
+onboarding-tour.tsx`, mounted once in `src/app/page.tsx`,
+`createPortal` to `document.body`):
+
+- **Persistence** — versioned `localStorage` key `nqueens-tour:v1`
+  (`'1'` seen, `'forever'` opted out). Survives tab close AND browser
+  restart; `?tour=1` forces open, `?tour=0` forces closed, and a footer
+  "Replay tour" button dispatches `REOPEN_TOUR_EVENT` (`CustomEvent`)
+  that the tour subscribes to. No such thing as "clear on browser
+  close" exists on the web (sessionStorage dies with the tab) — hence
+  localStorage + explicit opt-out instead.
+- **Steps** — 10 definitions (`ONBOARDING_TOUR_STEPS`, cooling
+  conditional on simulated-annealing): board N → variant → seed →
+  plateau → restarts → cooling → chessboard → playback → analytics →
+  stats → share/export. Targets resolve via `data-tour` anchors (added
+  to ConfigPanel sections + PlaybackControls root) with fallbacks to
+  existing `data-testid`s; missing targets are skipped via rAF-defer.
+- **No-trace rule** — entry forces `strategy: 'steepest-ascent'` (so
+  every step target exists) and auto-opens the Advanced collapsible
+  for policy steps; exit restores the user's strategy AND the
+  collapsible's prior open state.
+- **Motion** — spotlight cuts instantly (foundations Rule 4 bans
+  layout props in `animate`); only the tooltip fades (opacity,
+  `motionTokens.duration.fast`), wrapped in `AnimatePresence
+  mode="wait"` keyed per step. `role="dialog"` + `aria-modal`, Esc /
+  arrows / backdrop-click advance, light Tab trap, focus moves to Next
+  per step, reduced-motion collapses the fade.
+- **E2E interplay** — fresh Playwright contexts have empty storage, so
+  the tour would intercept every existing spec: `e2e/fixtures/test.ts`
+  suppresses it via `addInitScript` (share URLs untouched), and
+  `e2e/tour.spec.ts` (base client, 3 specs) covers first-show,
+  advance, Skip-persists-across-reload, and Replay.
+- **Tests** — `__tests__/onboarding-tour.test.tsx` (11 tests: 3 pure
+  `placeTourTooltip` placement, 8 behavior). jest-dom jsdom ships
+  storage stubs WITHOUT the Storage API, so `src/test/setup.ts` gains
+  an in-memory `MemoryStorage` mock (D-023 precedent).
+
 ## Testing architecture
 
-- **Unit (Vitest, jsdom, globals)**: 28 suites, **333 tests passing**.
+- **Unit (Vitest, jsdom, globals)**: 29 suites, **344 tests passing**.
   - `src/lib/engine/__tests__/` — config validation, RNG stream/
     statistics, evaluator-vs-oracle (incl. fuzz equivalence), per-
     strategy contracts, orchestration (restarts, budgets, determinism,
@@ -326,19 +367,29 @@ with the component (no e2e spec referenced it).
     origin-echo (+6, Phase 11: ghost + label), useQueenDuration (+4,
     Phase 11: play/step gate contract).
     (`move-trajectory.tsx` + its 4 tests were DELETED in Phase 11.)
+  - `src/components/visualizer/__tests__/onboarding-tour.test.tsx` —
+    Phase 12 (+11: pure tooltip-placement ×3, storage gate, step flow,
+    backdrop advance, Esc, permanent opt-out, strategy force/restore,
+    replay, full 10-step walk).
+  - `src/test/setup.ts` — Phase 12 adds an in-memory `MemoryStorage`
+    mock (this jsdom exposes storage stubs without the Storage API).
   - Fixtures are machine-harvested — never hand-computed (D-014).
 - **Hook tests (RTL)**: `src/hooks/__tests__/useSimulationDriver.test.ts` —
   11 tests, `renderHook` + fake timers. Plus
   `useKeyboardShortcuts.test.ts` (8 tests, D-026).
-- **E2E (Playwright)**: 7 specs in `./e2e` (smoke, solve-flow, playback,
-  theme, navigation, url-state, seo) + shared `fixtures/test.ts` that
+- **E2E (Playwright)**: 8 specs in `./e2e` (smoke, solve-flow, playback,
+  theme, navigation, url-state, seo, **tour — NEW Phase 12**) + shared `fixtures/test.ts` that
   waits for `<Suspense>` hydration. Targets the production build via
   `npm run start`; one-time `npx playwright install chromium` documented
   in `e2e/README.md`. Single `chromium` project, `retries: 2 in CI`,
   traces `on-first-retry`. Smoke and playback specs were updated in
   Phase 9 for the new DOM (StatsRail aside, 10-col home grid); Phase 10
   did not require e2e changes (animation timing is not asserted in
-  Playwright — visual smoke only, verified in the dev server).
+  Playwright — visual smoke only, verified in the dev server). Phase 12:
+  the shared fixture suppresses the first-visit tour via `addInitScript`
+  (fresh contexts have empty storage, so the overlay would otherwise
+  intercept every click); `tour.spec.ts` covers the tour itself against
+  the base client.
 
 ## Commands (run inside `n-queens-visualizer/`)
 

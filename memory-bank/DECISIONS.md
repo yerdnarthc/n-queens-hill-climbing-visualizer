@@ -648,3 +648,70 @@ fail without this change). `data-testid`s (`chessboard-grid`,
 `square-{col}-{row}`, `queen-{col}-{row}`, `origin-echo`) preserved,
 so the e2e selector contract holds. Status: accepted.
 
+**D-047 · "Sideways" renamed to "Plateau" (display only) + first-visit spotlight onboarding tour** *(Phase 12 | 2026-09-06)*
+Why: the user watched queens move vertically-only and read "Allow
+Sideways Moves" as a spatial promise (X-axis/diagonal motion). It is
+not: the engine is the textbook `rows[col] = row` formulation (D-003)
+— every strategy emits `{column, toRow}`, so queens can only travel
+within their column and diagonal moves cannot exist. "Sideways" is the
+AIMA term for a plateau move (Δ = 0), gated per strategy by
+`allowSideways && sidewaysStreak < maxConsecutiveSideways`. The fix is
+copy, not algorithm: `ConfigPanel` label → "Allow Plateau Moves" with
+subtitle "equal-cost moves, not spatial", `POLICY_INFO[0].name` →
+"Plateau Moves" (propagates to `/how-it-works`, which renders the
+shared metadata), layout metadata + how-it-works prose updated. The
+engine field (`allowSideways`), the URL key (`sideways`), and all
+engine tests are deliberately UNTOUCHED — renaming them would break
+share URLs (D-030 projection) for zero user benefit.
+
+The same confusion motivated a first-visit product tour
+(`src/components/visualizer/onboarding-tour.tsx`, mounted in
+`page.tsx`, portal to `body`): a rounded-rect spotlight (user's pick)
+cuts around each target while four dimmed backdrop panels cover the
+rest; clicking empty space advances, Esc/Skip closes, Back goes back,
+"Don't show again" opts out forever, and a footer "Replay tour"
+button reopens on demand via a `CustomEvent`. Nine step definitions
+(board N → variant → seed → plateau → restarts → [SA cooling,
+conditional] → board → playback → analytics → stats → share/export);
+the chessboard step states the vertical-only/diagonal-never rule
+explicitly. Design decisions, all user-confirmed: (a) persistence is
+`localStorage` under versioned key `nqueens-tour:v1` — the user's
+first instinct was sessionStorage-then-browser-close, but no such
+primitive exists (sessionStorage dies with the TAB, localStorage
+survives everything; corrected during planning, documented here so it
+isn't re-litigated); (b) the tour forces `strategy: 'steepest-ascent'`
+on entry and restores the user's strategy + the Advanced collapsible's
+open state on exit (auto-opened via trigger click for the policy
+steps), leaving zero trace; (c) spotlight cuts instantly while only
+the tooltip fades (opacity-only, `motionTokens.duration.fast`) —
+motion-foundations Rule 4 bans top/left/width/height in `animate`, and
+only the tooltip (not the backdrops) lives in `AnimatePresence`
+`mode="wait"` keyed per step, so backdrop testids stay unique and
+exactly one tooltip exists at a time.
+
+Two implementation findings worth recording. First, this repo's jsdom
+exposes `localStorage`/`sessionStorage` as stub objects WITHOUT the
+Storage API (`getItem` undefined) — discovered via probe test, fixed
+with an in-memory `MemoryStorage` mock in `src/test/setup.ts`
+(D-023 precedent). Second, `AnimatePresence mode="wait"` + a fast
+test loop deadlocks on the exiting tooltip's stale closure (every
+click re-sets the same step); the walk test awaits each entering
+title via `findByText` instead — same hazard exists for frantic
+double-clickers in production (180 ms no-op window), accepted as
+trivial. E2E impact: fresh Playwright contexts have empty storage, so
+the tour WOULD intercept every existing spec's pointer events —
+`e2e/fixtures/test.ts` suppresses it via `addInitScript` (URLs
+untouched), and new `e2e/tour.spec.ts` (3 tests, base client) covers
+first-show, advance, Skip-persists-across-reload, and Replay.
+
+Validation: lint + typecheck clean (two targeted
+`set-state-in-effect` disables for the mount-hydration effect and the
+canonical SSR `mounted` guard, same exception family as D-041;
+the missing-target skip was restructured to rAF-defer instead),
+**344/344 unit tests across 29 suites** (+11 tour: 3 placement, 8
+behavior incl. strategy force/restore), build clean, Playwright 29/33
+— the 4 failures (smoke ×2, solve-flow, url-state) are the same
+strict-mode duplicate-text violations, re-proven pre-existing by
+rebuilding stashed clean HEAD and rerunning (identical 4 failures).
+Status: accepted.
+
