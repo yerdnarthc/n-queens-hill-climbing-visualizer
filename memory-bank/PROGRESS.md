@@ -1,10 +1,10 @@
 # Progress — Where are we now?
 
-> Update at the end of **every** task. Last updated: **2026-09-05** (post-D-044 + Queen-move animation overhaul + memory-bank refresh; 21 follow-up commits since Phase 7, 32 commits total; + D-045 Cline→OpenCode migration, commit `04e0cb4`).
+> Update at the end of **every** task. Last updated: **2026-09-06** (Phase 11 queen-travel overhaul + motion migration, commit `0887221`; 43 commits total).
 
 ## TL;DR
 
-Phases 1–9 are **complete and verified**; **Phase 10 (Queen-move animation overhaul — kinetic, Option B, D-044) shipped on 2026-09-05** with 3 commits (`e59f548`, `025eb0e`, `1bb1ebb`). Current status: **327/327 unit tests passing** (27 suites), typecheck clean, lint clean, production build passing, **Playwright E2E green** (7 specs). The home page now renders a full `StatsHeader` + a `<StatsRail variant="rail">` aside inside the chessboard card on `lg+`, a horizontal `<StatsRail variant="compact">` strip on `<lg`, an `AnalyticsPanel` with **shared X-axis dataZoom that auto-scrolls to follow the current-step marker**, a `<StatsRail variant="context">` dashboard under the analytics panel, and **kinetic Queen move animation** (speed-aware duration with overshoot ease, lift + shadow grow on the moving queen, expanding-ring origin-square departure echo, SVG from→to trajectory line — all respecting `prefers-reduced-motion`).
+Phases 1–10 are **complete and verified**; **Phase 11 (queen-travel overhaul + `motion` migration — explicit x/y travel with arc, ghost echo redesign, playback-gated duration, D-046) shipped on 2026-09-06** with commit `0887221`. Current status: **333/333 unit tests passing** (28 suites), typecheck clean, lint clean, production build passing, **Playwright E2E 25/30** (5 failures are pre-existing strict-mode duplicate-text violations in StatsRail/StatsHeader specs, proven on clean HEAD via `git stash` — unrelated to this change). The home page now renders a full `StatsHeader` + a `<StatsRail variant="rail">` aside inside the chessboard card on `lg+`, a horizontal `<StatsRail variant="compact">` strip on `<lg`, an `AnalyticsPanel` with **shared X-axis dataZoom that auto-scrolls to follow the current-step marker**, a `<StatsRail variant="context">` dashboard under the analytics panel, and **explicit queen travel** (absolute overlay, `x` straight + arced `y` tween with distance-scaled settle, ghost departure echo with 2× linger, speed-aware duration only while playing — all respecting `prefers-reduced-motion`).
 
 ## Phase roadmap
 
@@ -23,18 +23,19 @@ Phases 1–9 are **complete and verified**; **Phase 10 (Queen-move animation ove
 | 8     | Chart UX: dataZoom + auto-follow + snappier animation + per-point symbols | ✅ done — commits `a573ac4..16c1d5d` (this audit, 298 tests) |
 | 9     | UI restructure: StatsRail (rail/compact/context), semantic color tokens, Next 16 + ESLint flat config | ✅ done — commits `1fc395d..41a0603` (D-039/D-040/D-041/D-042) |
 | 10    | Queen-move animation overhaul (Option B / kinetic — speed-aware duration, overshoot, lift, shadow, origin echo, trajectory line) | ✅ done — commits `e59f548..1bb1ebb` (D-044) |
+| 11    | Queen-travel overhaul + `motion` migration (explicit x/y overlay travel with arc, ghost echo, playback-gated duration, distance-scaled easing) | ✅ done — commit `0887221` (D-046) |
 
-## Verified status snapshot — 2026-09-05 (post-D-044)
+## Verified status snapshot — 2026-09-06 (Phase 11)
 
 Run inside `n-queens-visualizer/`:
 
-- `npm run test:run` → **327/327 passed** (27 suites; +29 since pre-Phase-10 — animation-timings +13, move-trajectory +4, queen-piece +7, origin-echo +5)
-- `npm run test:e2e` → **7 specs green** (chromium; `e2e/README.md`); Phase 10 did not require e2e changes (animation timing is not asserted in Playwright — visual smoke only, verified in the dev server)
+- `npm run test:run` → **333/333 passed** (28 suites; −4 `move-trajectory` deleted, +1 queen size, +1 echo ghost/label, +4 `useQueenDuration` gate, +4 `easeForTravel`)
+- `npm run test:e2e` → **25/30 pass** (chromium; `e2e/README.md`); 5 failures are strict-mode duplicate-text violations in StatsRail/StatsHeader specs (`navigation`, `smoke` ×2, `solve-flow`, `url-state`) — proven PRE-EXISTING by stashing this change, rebuilding clean HEAD, and re-running (same specs fail without it). `playback.spec.ts` (most animation-adjacent) is fully green.
 - `npm run typecheck` → **clean** (exit 0)
-- `npm run lint` → **clean** (0 warnings, 0 errors)
+- `npm run lint` → **clean** (0 warnings, 0 errors; one `react-hooks/refs` + one `exhaustive-deps` finding fixed during implementation)
 - `npm run build` → **passes** against Next 16.3.4; 5 static routes: `/`, `/how-it-works`, `/robots.txt`, `/sitemap.xml`, `+not-found`
-- pre-commit (lint-staged: prettier + eslint) ran clean on every commit
-- `41a0603` (D-042, SiteNav/StatsHeader opacity bump) is pushed; `577f2eb` and `c9f500d` ship the in-repo `memory-bank/` move (D-043); `b88400b` is the user's CSV-pin commit (between D-043 and the Phase-10 trio). Phase 10 commits `e59f548`, `025eb0e`, `1bb1ebb` (D-044, Queen animation overhaul) are pushed. `HEAD` (local) = `2fab698` (D-045 docs); `origin/master` = `04e0cb4` (D-045 migration commit pushed mid-task) — local is 1 commit ahead (awaiting push).
+- pre-commit (lint-staged: prettier + eslint) ran clean on the commit
+- `HEAD` (local) = `0887221` (D-046, Phase 11); local is 2 commits ahead of `origin/master` (awaiting push).
 
 ## Known issues / housekeeping
 
@@ -99,3 +100,4 @@ The roadmap is complete. Reasonable follow-ups (not committed to):
 | 2026-09-05 | **Phase 10 · Commit 3: kinetic queen move animation + origin echo** | Commit `1bb1ebb`. `queen-piece.tsx` rewrite: spring transition → duration-based tween with overshoot ease `[0.2, 0.9, 0.3, 1.2]`; new `useAnimate`-driven scale pulse (1→1.15→1) and boxShadow grow (shadow-md→shadow-lg→shadow-md) on every `(column, row)` change. New `src/components/visualizer/origin-echo.tsx`: expanding-ring departure pulse on the square the queen just left (replaces the pre-Phase-10 static `animate-pulse` dashed circle), re-keyed per move. `chessboard.tsx` wires `speed` to every QueenPiece and mounts the OriginEcho on the origin square. +12 unit tests (7 for QueenPiece, 5 for OriginEcho). Validation: typecheck/lint/build all clean; **327/327 unit tests passing across 27 suites** (was 315/315 across 25 suites post-Commit-2; +12 new). See **D-044** |
 | 2026-09-05 | **Memory-bank refresh (post-D-044)** | All 5 memory-bank files updated. `README.md` + `PROJECT_CONTEXT.md` headers bumped to `1bb1ebb` / 2026-09-05; new Phase 10 row + new feature goal. `ARCHITECTURE.md`: repo-layout tree adds `move-trajectory.tsx`, `origin-echo.tsx`, `animation-timings.ts`; new "Queen move animation (Phase 10, D-044)" section; testing counts 23→27 suites, 298→327 tests. `DECISIONS.md`: **D-044** appended. `PROGRESS.md`: header + TL;DR + new Phase 10 row + Verified snapshot + 4 new task-log rows (one per new commit). |
 | 2026-09-05 | **Cline → OpenCode migration (AGENTS.md + skills)** | `.clinerules/` (`memory-bank.md`, `nextjs-conventions.md`) deleted; content preserved in root `AGENTS.md` (pure move per `git diff`). 6 project-specific skills added under `.agents/skills/` + `skills-lock.json`. First commit attempt failed in the lint-staged hook (vendored `utility-types.ts` uses intentional `any` → 11 `no-explicit-any` errors); fixed by excluding vendored `.agents/` in `eslint.config.mjs`, `.prettierignore`, `tsconfig.json` — commit `04e0cb4`, lint + typecheck clean. See **D-045** |
+| 2026-09-06 | **Phase 11 · Queen-travel overhaul + `motion` migration** | Commit `0887221`. `framer-motion@13` → `motion@13.2.0` (`motion/react`); tokens in `src/lib/motion-tokens.ts`; queens moved to an absolute overlay with `x`/arced-`y` MotionValue tween (replaces `layout` FLIP); `MoveTrajectory` + test + keyframes deleted per user; `OriginEcho` redesigned (halo + Crown ghost + `R{row}` pill, 2× linger); `useQueenDurationMs` gates speed-awareness to playing (fixed 220 ms stepper otherwise); `easeForTravel` scales overshoot with distance after the user's long-flight stiffness discovery. Validation: lint + typecheck clean, **333/333 across 28 suites**, build clean, e2e 25/30 (5 pre-existing strict-mode failures, proven on clean HEAD). See **D-046** |

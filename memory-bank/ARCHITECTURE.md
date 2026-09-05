@@ -28,22 +28,27 @@ N-Queens Visualizer/            ← task workspace root
     │   │                          self-hosted Sora/Chivo Mono fonts via next/font/local),
     │   │                          page.tsx (visualizer, Suspense-wrapped for URL sync),
     │   │                          how-it-works/, robots.ts, sitemap.ts,
-    │   │                          globals.css (semantic color tokens + warm-sand/oxblood palette
-    │   │                          + @keyframes trajectory-draw for the move-line, Phase 10)
+    │   │                          globals.css (semantic color tokens + warm-sand/oxblood palette;
+    │   │                          the Phase 10 `@keyframes trajectory-draw` was removed in Phase 11
+    │   │                          with MoveTrajectory — queens travel explicitly now)
     │   ├── components/
     │   │   ├── ui/             ← shadcn primitives: badge, button, card, collapsible,
     │   │   │                      select, separator, slider, switch, tabs, tooltip,
     │   │   │                      math.tsx (NEW Phase 9 — KaTeX wrapper for inline math)
-    │   │   ├── visualizer/     ← chessboard, config-panel (with `compact` variant),
+    │   │   ├── visualizer/     ← chessboard (queen overlay + shared grid measurement),
     │   │   │                      playback-controls, stats-header (slim, page-level);
     │   │   │                      stats-rail.tsx (NEW Phase 9 — rail/compact/context);
+    │   │   │                      queen-piece.tsx (explicit x/y travel, Phase 11);
+    │   │   │                      origin-echo.tsx (ghost departure marker, Phase 11);
+    │   │   │                      useQueenDuration.ts (NEW Phase 11 — playback-gated duration);
     │   │   │                      chart-helpers.ts, chart-wrapper.tsx,
     │   │   │                      convergence-chart.tsx, landscape-chart.tsx,
     │   │   │                      analytics-panel.tsx (now owns the shared zoom state);
     │   │   │                      use-follow-current-step.ts (NEW Phase 8 — pure
     │   │   │                      computeFollowRange for the auto-scroll dataZoom);
-    │   │   │                      move-trajectory.tsx (NEW Phase 10 — SVG from→to line);
-    │   │   │                      origin-echo.tsx (NEW Phase 10 — departure pulse)
+    │   │   │                      (move-trajectory.tsx REMOVED in Phase 11 — queens
+    │   │   │                      travel explicitly, no line needed; old opacity 0.85
+    │   │   │                      recorded in D-046 for a potential restore)
     │   │   ├── site-nav.tsx    ← Phase 5 persistent top nav + global theme toggle
     │   │   └── theme-provider.tsx
     │   ├── hooks/               ← useSimulationDriver (the app's only timer),
@@ -51,6 +56,9 @@ N-Queens Visualizer/            ← task workspace root
     │   │                          useUrlConfigSync (Phase 6, URL ⇆ store bridge)
     │   ├── lib/
     │   │   ├── engine/         ← ★ pure algorithm core (zero React deps)
+    │   │   ├── motion-tokens.ts← NEW Phase 11 — durations, easings, queen knobs
+    │   │   │                      (QUEEN_STEPPER_MS, QUEEN_ARC_LIFT_PX,
+    │   │   │                      ORIGIN_ECHO_DURATION_MULTIPLIER, easeForTravel)
     │   │   ├── strategy-info.ts← Phase 5 shared strategy/policy metadata
     │   │   │                      (Phase 9: `tag` field dropped — descriptions only)
     │   │   ├── url-state.ts    ← Phase 6 pure URL ⇆ config schema (nuqs parsers, clamping)
@@ -240,72 +248,59 @@ initial run if none exists. Tested via `renderHook` + `vi.useFakeTimers()`.
   `useSimulationStore((s) => s.currentStep)`), and one set of
   status-meta mappings.
 
-## Queen move animation (Phase 10, D-044)
+## Queen move animation (Phase 10 → Phase 11, D-044 → D-046)
 
-The user's biggest UX complaint pre-Phase-10 was "I can't keep track of
-where the queen is moving from → to." The Phase-10 overhaul addresses
-this with three coordinated layers, all sharing the same speed-aware
-duration so the animation feels consistent at every playback speed.
+Phase 10 proved the speed-aware duration curve but the queen still read as
+teleporting (`layout`-FLIP + pulse + CSS dash line, no authored travel).
+Phase 11 replaces the mechanism while keeping the feel:
 
-- **Speed-aware duration** (`src/lib/animation-timings.ts`,
-  `computeStepDuration(speed, reducedMotion?)`) — pure helper. Formula
-  is 60% of the per-step interval, clamped to `[50ms, 400ms]`. Returns
-  0 when `reducedMotion` is true so callers can collapse to instant
-  (consistent with the existing D-032 short-circuit in `QueenPiece`).
-  Defensive defaults for NaN/0/Infinity/negative inputs (all → 400ms).
-- **`MoveTrajectory`** (`src/components/visualizer/move-trajectory.tsx`)
-  — SVG line drawn from the origin square to the destination square
-  during a move. Uses `stroke-dasharray` + `stroke-dashoffset` to
-  "draw itself" from origin to destination over the move duration
-  (`@keyframes trajectory-draw` in `globals.css`, with the same
-  overshoot cubic-bezier the queen uses). The existing
-  `prefers-reduced-motion` media query in `globals.css` collapses the
-  animation to 0.01ms automatically; the component also has an
-  explicit `reducedMotion` prop for the SVG's static-line branch.
-  `pointer-events-none` so it never blocks clicks on squares.
-- **Kinetic QueenPiece** (`src/components/visualizer/queen-piece.tsx`)
-  — `motion.div layout` with a duration-based tween (was: spring
-  `stiffness: 450, damping: 32`) using the overshoot ease
-  `[0.2, 0.9, 0.3, 1.2]`. A `useAnimate`-driven scale pulse
-  (`scale: [1, 1.15, 1]`) gives the queen a "lift" at the start of the
-  move and a "land-with-settle" at the end. A second `useAnimate` call
-  grows the queen's `boxShadow` from `shadow-md` to `shadow-lg` and
-  back over the same duration — the depth cue makes the moving queen
-  read as "above" the board. Both animations re-fire on every
-  `(column, row)` change via a `useEffect`; `useAnimate` cancels
-  in-flight animations automatically, so a fast next-step cleanly
-  overrides the previous pulse.
-- **`OriginEcho`** (`src/components/visualizer/origin-echo.tsx`) —
-  expanding-ring "departure pulse" rendered on the square the queen
-  just left. Scales 1 → 1.4 and fades 1 → 0 over the move duration.
-  Re-keys on `(column, fromRow, toRow)` so every new move re-mounts
-  the motion.div and replays the scale/opacity animation. Replaces
-  the pre-Phase-10 static dashed circle with `animate-pulse` (which
-  was an always-on pulse, not a per-move trigger).
-- **All four are reduced-motion-safe**: under `prefers-reduced-motion`,
-  every animation collapses to instant; the trajectory becomes a
-  static line; the origin echo becomes a static dashed ring; the
-  queen still moves (the `layout` animation is independently gated),
-  but the scale/shadow pulse is suppressed.
+- **Explicit travel overlay** (`src/components/visualizer/chessboard.tsx`)
+  — squares render empty; queens live in an absolute `inset-0` overlay
+  measured once from the grid's `ResizeObserver` rect (shared with all
+  children, so pixel positions stay exact on resize). Each queen keeps a
+  stable `key={col}` (queens never change column), so Motion tweens travel
+  instead of remounting. No `layout` anywhere (skills forbid it at board
+  scale); the only per-step measurement is the single grid rect.
+- **`QueenPiece`** (`src/components/visualizer/queen-piece.tsx`) — `x`
+  tweens straight, `y` flies `[from, apex, to]` with the arc lift from
+  `QUEEN_ARC_LIFT_PX`, driven by `useMotionValue` + imperative `animate()`
+  (effect-owned: reads via `.get()`, never during render, satisfying
+  `react-hooks/refs`; `controls.stop()` cleanup makes 30× takeovers
+  pile-free). Fall-segment easing is distance-scaled via
+  `easeForTravel` (full overshoot ≤ 1 square → clean settle ≥ 6
+  squares); the rise is `easeIn` so velocity stays continuous through
+  the apex at any distance. The `useAnimate` scale/shadow pulse is kept,
+  now gated on actual position change (toggling play no longer
+  re-pulses). Receives `x/y/size/durationMs/reducedMotion` as props —
+  no longer derives anything from `speed` itself.
+- **Playback-gated duration** (`src/components/visualizer/useQueenDuration.ts`)
+  — the single duration source: playing → `computeStepDuration(speed)`
+  (50…400 ms); paused/stepping/scrubbing → fixed `QUEEN_STEPPER_MS`
+  (220 ms) regardless of configured speed; reduced motion → 0.
+  `computeStepDuration` itself is untouched (engine-purity extension,
+  D-002).
+- **`OriginEcho`** (`src/components/visualizer/origin-echo.tsx`) — ghost
+  departure marker: halo bloom (`ring-2` + `ring-offset-background`,
+  1 → 1.22) + dissolving `Crown` ghost + `R{row}` corner pill, all on
+  one fade lasting `ORIGIN_ECHO_DURATION_MULTIPLIER` (2×) the travel
+  duration. Static twin under reduced motion. Positioned by the parent
+  over the origin square; re-keyed per move.
+- **Motion, not framer-motion** — `motion@13.2.0`, all imports from
+  `motion/react`. Travel deliberately uses a duration TWEEN, not a
+  spring: a spring cannot lock to 60% of `1000/speed` (D-044 clock
+  lock wins over the skill's spring ideal — documented in code).
+  `MoveTrajectory` + its test + `@keyframes trajectory-draw` were
+  deleted (explicit travel needs no line).
 
-Why this is "Option B / kinetic" (vs. "subtle" or "schematic"): the
-overshoot ease + lift + shadow grow + trajectory line + origin echo
-together make the move "feel like" a physical object being placed
-on a new square, with the from-to direction unmistakable. The
-cubic-bezier `[0.2, 0.9, 0.3, 1.2]` overshoots ~20% past the
-destination then settles; this is the single tuning knob if the
-overshoot needs to be more/less pronounced.
-
-Engine/store/Playwright e2e: **untouched**. Engine purity rule (D-002)
-extends naturally to `animation-timings.ts` (zero React imports, pure
-function); the visualizer-side `data-testid`s used by the e2e suite
-(`chessboard-grid`, `square-{col}-{row}`, `queen-{col}-{row}`) are
-preserved. New `data-testid`s (`move-trajectory`, `origin-echo`) are
-additive only.
+Engine/store/Playwright e2e: **untouched**. The visualizer-side
+`data-testid`s used by the e2e suite (`chessboard-grid`,
+`square-{col}-{row}`, `queen-{col}-{row}`) are preserved, plus
+`origin-echo`. `MoveTrajectory`'s `move-trajectory` testid is gone
+with the component (no e2e spec referenced it).
 
 ## Testing architecture
 
-- **Unit (Vitest, jsdom, globals)**: 27 suites, **327 tests passing**.
+- **Unit (Vitest, jsdom, globals)**: 28 suites, **333 tests passing**.
   - `src/lib/engine/__tests__/` — config validation, RNG stream/
     statistics, evaluator-vs-oracle (incl. fuzz equivalence), per-
     strategy contracts, orchestration (restarts, budgets, determinism,
@@ -320,12 +315,17 @@ additive only.
   - `src/lib/__tests__/animation-timings.test.ts` — Phase 10 pure helper
     coverage (13 tests; the speed→duration formula + reduced-motion
     short-circuit + defensive fallbacks for NaN/0/Infinity/negative).
+  - `src/lib/__tests__/motion-tokens.test.ts` — Phase 11
+    `easeForTravel` contract (4 tests: short-hop curve, long-flight
+    settle, monotonic fade, garbage-input hardening).
   - `src/components/visualizer/__tests__/` — chart-helpers (+610 since
     Phase 7), chart-wrapper (+433), analytics-panel (+149), stats-rail
     (+145, new file), stats-header (+25, mostly moved-out tests),
     config-panel (+25, compact variant), use-follow-current-step (+337,
-    new file), move-trajectory (+4, Phase 10), queen-piece (+7,
-    Phase 10), origin-echo (+5, Phase 10).
+    new file), queen-piece (+8, Phase 11: incl. square-size test),
+    origin-echo (+6, Phase 11: ghost + label), useQueenDuration (+4,
+    Phase 11: play/step gate contract).
+    (`move-trajectory.tsx` + its 4 tests were DELETED in Phase 11.)
   - Fixtures are machine-harvested — never hand-computed (D-014).
 - **Hook tests (RTL)**: `src/hooks/__tests__/useSimulationDriver.test.ts` —
   11 tests, `renderHook` + fake timers. Plus

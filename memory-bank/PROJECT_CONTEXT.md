@@ -53,15 +53,16 @@ deterministic, fully-tested algorithm engine plus a modern Next.js frontend.
 | StatsRail (rail / compact / context variants) | ✅ complete (Phase 9 — D-040)      |
 | Semantic color tokens + warm-sand/oxblood palette | ✅ complete (Phase 9 — D-039/D-041) |
 | Inline `<Math>` (KaTeX) on the home page   | ✅ complete (Phase 9)               |
-| Kinetic Queen move animation (speed-aware duration, overshoot, lift, shadow grow, origin echo, trajectory line) | ✅ complete (Phase 10 — D-044) |
+| Kinetic Queen move animation (speed-aware duration, overshoot, lift, shadow grow, origin echo, trajectory line) | ✅ complete (Phase 10 — D-044; mechanism replaced in Phase 11 — see below) |
+| Explicit queen travel (absolute overlay, x/arced-y tween, ghost echo, playback-gated duration, `motion`) | ✅ complete (Phase 11 — D-046) |
 
 ## Stack (verified in `n-queens-visualizer/package.json`)
 
 - **Framework**: Next.js **16.3.4** (App Router, Turbopack), React 19.1, TypeScript 5 (strict; `jsx: "react-jsx"` per Next 16)
-- **Styling**: Tailwind CSS v4 (CSS-first `@theme inline`), shadcn/ui (new-york), tw-animate-css; Framer Motion (queen layout/spring + kinetic lift/shadow pulse + origin echo + `prefers-reduced-motion`, Phase 3/6/10); **KaTeX** for inline math via `src/components/ui/math.tsx` (Phase 9)
+- **Styling**: Tailwind CSS v4 (CSS-first `@theme inline`), shadcn/ui (new-york), tw-animate-css; Motion (`motion/react` v13 — migrated from `framer-motion` in Phase 11; queen x/y travel + lift/shadow pulse + ghost echo + `prefers-reduced-motion`, Phase 10/11); **KaTeX** for inline math via `src/components/ui/math.tsx` (Phase 9)
 - **State**: Zustand 5 — integrated in Phase 2 (store + playback driver) · **Charts**: ECharts 6 (integrated in Phase 4) · **URL state**: nuqs 2 (integrated in Phase 6 — config projection, `history: 'replace'`)
 - **Fonts**: **Sora + Chivo Mono** variable TTFs self-hosted via `next/font/local` in `src/assets/fonts/` (Phase 9; replaced Geist/Geist Mono; same offline-safe invariant from D-029)
-- **Testing**: Vitest 4 + jsdom + Testing Library (27 unit suites, **327 tests passing**);
+- **Testing**: Vitest 4 + jsdom + Testing Library (28 unit suites, **333 tests passing**);
   Playwright E2E (chromium, 7 specs) against the production build
 - **Quality**: ESLint flat config (`eslint-config-next@16` direct import, Phase 9), Prettier (+ tailwindcss plugin), Husky/lint-staged pre-commit
 

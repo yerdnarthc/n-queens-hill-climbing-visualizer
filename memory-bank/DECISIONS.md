@@ -575,3 +575,76 @@ typechecked too). Same rationale as the existing
 `node_modules`/`e2e/`/`legacy/` ignores. Status: accepted — commit
 `04e0cb4`; `npm run lint` + `npm run typecheck` clean.
 
+**D-046 · Motion migration + explicit x/y queen travel with arc, ghost echo redesign, playback-gated duration** *(Phase 11 | 2026-09-06)*
+Why: Phase 10 (D-044) stopped the speed-decoupling but the queen still
+read as teleporting — scale/shadow pulse plus a CSS dash line, with no
+authored point-A→point-B travel. Root cause: `motion.div layout`
+FLIP-measured an implicit box delta after React re-parented the queen
+into another square's div. That violates the vendored motion skills
+(`motion-foundations` Rule 4: transform + opacity only, never layout;
+`motion-patterns` Rule 4: never `layout` on subtrees > ~5 children —
+the board is up to 256 cells) and cost a full-grid measurement per step.
+
+The fix, in commit `0887221`:
+
+1. **Package migration.** `framer-motion@13` → `motion@13.2.0`;
+   `queen-piece.tsx` / `origin-echo.tsx` import from `motion/react`
+   (skills Rule 1). No other file imported framer-motion (verified by
+   grep). All animation numbers centralize in new
+   `src/lib/motion-tokens.ts` (durations, easings incl. the shared
+   `overshoot` token, `QUEEN_STEPPER_MS = 220`,
+   `QUEEN_ARC_LIFT_PX = 12`, `ORIGIN_ECHO_DURATION_MULTIPLIER = 2`,
+   shadow strings, `easeForTravel` helper) per skills Rules 5–6.
+   Deliberate deviation, documented in code: travel uses a
+   duration-driven TWEEN, not a physics spring — a spring cannot lock
+   to 60% of `1000/speed`, and the playback-clock lock (D-044) is the
+   harder requirement.
+2. **Explicit travel.** Queens moved out of the square divs into an
+   absolute overlay (measured once via the grid's `ResizeObserver`
+   rect, shared with all children). Each queen keeps a stable
+   `key={col}` (queens never change column) and tweens `x` straight +
+   `y` through a mid-flight arc via `useMotionValue` + imperative
+   `animate()` (effect-owned, so the `react-hooks/refs` lint rule
+   stays satisfied — an earlier keyframes-during-render draft failed
+   it and was rewritten). `useAnimate` interruption semantics make
+   30× takeovers pile-free. `MoveTrajectory` (CSS dash line) was
+   removed per the user — explicit travel makes it redundant
+   (component + test + `@keyframes trajectory-draw` deleted; the old
+   line's `opacity: 0.85` is recorded here in case it is ever
+   restored as a `motion.line`).
+3. **Origin echo redesign.** The dashed ring was ~1.2:1 contrast on
+   light squares. Now: halo bloom (`ring-2` +
+   `ring-offset-background`, 1 → 1.22) + dissolving `Crown` ghost
+   (shape, not just color, so it survives colorblindness) + `R{row}`
+   corner pill, all on a shared fade. Static twin under reduced
+   motion. The echo lingers `ORIGIN_ECHO_DURATION_MULTIPLIER` (2×)
+   the travel duration so it stays readable at high speeds.
+4. **Playback-gated duration (must-implement design rule).** New
+   `useQueenDurationMs(speed)`: playing → `computeStepDuration`
+   (50…400 ms); paused/stepping/scrubbing → fixed `QUEEN_STEPPER_MS`
+   regardless of configured speed (30× stepping no longer blinks at
+   50 ms); reduced motion → 0. Single call site in `Chessboard`;
+   queens and echo receive it as props. Also fixed two latent bugs:
+   the pulse refired on play-toggle (now gated on actual position
+   change) and the trajectory's hard-coded
+   `computeStepDuration(speed, false)` ignored reduced motion.
+5. **Distance-dependent stiffness, found by the user.** Long flights
+   visibly stalled mid-air while short hops were smooth. Two causes:
+   (a) the rise ease decayed velocity to ~0 at the arc apex, then the
+   fall restarted steep (brake-then-surge); (b) the fixed 20%
+   overshoot is 8 px on a hop but 100+ px past the target on a
+   12-square flight (stall-and-slam). Fix: `easeIn` rise (accelerates
+   through the apex, slopes matched) + `easeForTravel(distanceSquares)`
+   fading overshoot 1.2 → 1.0 between 1 and 6 squares.
+   `computeStepDuration` itself is untouched (D-002 purity).
+
+Validation: `npm run lint` + `typecheck` clean, **333/333 unit tests
+across 28 suites** (−4 trajectory, +1 queen size, +1 echo ghost/label,
++4 duration-gate, +4 easeForTravel), production build clean (5 static
+routes), Playwright 25/30 — the 5 failures are strict-mode
+duplicate-text violations in StatsRail/StatsHeader specs, proven
+pre-existing by rebuilding clean HEAD via `git stash` (same specs
+fail without this change). `data-testid`s (`chessboard-grid`,
+`square-{col}-{row}`, `queen-{col}-{row}`, `origin-echo`) preserved,
+so the e2e selector contract holds. Status: accepted.
+
