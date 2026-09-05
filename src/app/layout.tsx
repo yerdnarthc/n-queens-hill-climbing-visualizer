@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     template: '%s | N-Queens Visualizer',
   },
   description:
-    'An interactive educational visualizer for the N-Queens problem solved with hill climbing — real-time optimization landscape, convergence analytics, and five hill-climbing strategies plus sideways-move & random-restart policies.',
+    'An interactive educational visualizer for the N-Queens problem solved with hill climbing — real-time optimization landscape, convergence analytics, and five hill-climbing strategies plus plateau & random-restart policies.',
   keywords: [
     'N-Queens',
     'hill climbing',

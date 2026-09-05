@@ -22,6 +22,39 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
+// In-memory Web Storage for jsdom: this environment exposes `localStorage` /
+// `sessionStorage` as plain stub objects without the Storage API (`getItem`
+// is undefined), so components that persist UI state get a working store in
+// tests. Real browsers are unaffected.
+class MemoryStorage implements Storage {
+  private readonly store = new Map<string, string>();
+  get length(): number {
+    return this.store.size;
+  }
+  clear(): void {
+    this.store.clear();
+  }
+  getItem(key: string): string | null {
+    return this.store.get(key) ?? null;
+  }
+  key(index: number): string | null {
+    return [...this.store.keys()][index] ?? null;
+  }
+  removeItem(key: string): void {
+    this.store.delete(key);
+  }
+  setItem(key: string, value: string): void {
+    this.store.set(key, String(value));
+  }
+}
+for (const slot of ['localStorage', 'sessionStorage'] as const) {
+  Object.defineProperty(window, slot, {
+    value: new MemoryStorage(),
+    writable: true,
+    configurable: true,
+  });
+}
+
 // Mock HTMLCanvasElement.prototype.getContext for ECharts / ZRender rendering in jsdom
 if (typeof HTMLCanvasElement !== 'undefined') {
   HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, contextType: string) {

@@ -33,7 +33,7 @@ const LANDSCAPE_FEATURES = [
     key: 'shoulder',
     label: 'Plateau / shoulder',
     className: 'bg-shoulder',
-    text: 'A flat step — the conflict count stays the same. Sideways moves let the search walk across a shoulder to keep going.',
+    text: 'A flat step — the conflict count stays the same. Plateau moves let the search walk across a shoulder to keep going.',
   },
   {
     key: 'localMax',

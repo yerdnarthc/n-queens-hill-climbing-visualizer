@@ -46,7 +46,7 @@ export const STRATEGY_INFO: Record<StrategyId, StrategyInfo> = {
 /** Orchestrator policies shared by every strategy (see docs/DECISIONS.md D-006). */
 export const POLICY_INFO = [
   {
-    name: 'Sideways Moves',
+    name: 'Plateau Moves',
     tag: 'Plateau Traversal',
     description:
       'Lets the search keep walking across flat “shoulder” regions (Δ = 0) instead of stopping at the first plateau, up to a consecutive-move budget (default 100, per AIMA).',

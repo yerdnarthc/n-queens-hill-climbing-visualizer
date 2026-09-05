@@ -123,6 +123,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            data-tour="share"
             onClick={handleCopyLink}
             aria-label="Copy share link"
             title="Copy share link — the URL reproduces this exact run"
@@ -139,7 +140,10 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
 
       <div className={compact ? 'flex flex-col gap-4' : 'flex flex-col gap-4 gap-y-5'}>
         {/* Board Size N */}
-        <div className={compact ? 'flex flex-col gap-1.5' : 'flex flex-col gap-2'}>
+        <div
+          data-tour="board-size"
+          className={compact ? 'flex flex-col gap-1.5' : 'flex flex-col gap-2'}
+        >
           <div className="flex items-center justify-between">
             <Label htmlFor="board-size-slider" className="text-[0.7rem] font-semibold">
               Board Dimension (N × N)
@@ -173,7 +177,10 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
         </div>
 
         {/* Strategy Selection */}
-        <div className={compact ? 'flex flex-col gap-1' : 'flex flex-col gap-1.5'}>
+        <div
+          data-tour="strategy"
+          className={compact ? 'flex flex-col gap-1' : 'flex flex-col gap-1.5'}
+        >
           <Label className="text-[0.7rem] font-semibold">Hill Climbing Variant</Label>
 
           <Select value={config.strategy} onValueChange={handleStrategyChange}>
@@ -212,7 +219,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
         </div>
 
         {/* Seed Input & Randomizer */}
-        <div className={compact ? 'flex flex-col gap-1' : 'flex flex-col gap-1.5'}>
+        <div data-tour="seed" className={compact ? 'flex flex-col gap-1' : 'flex flex-col gap-1.5'}>
           <div className="flex items-center justify-between">
             <Label htmlFor="seed-input" className="text-[0.7rem] font-semibold">
               RNG Seed (Determinism)
@@ -255,9 +262,10 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
         <Collapsible
           open={isOpenAdvanced}
           onOpenChange={setIsOpenAdvanced}
+          data-tour="advanced"
           className="rounded-lg border border-border/60 bg-dark-accent"
         >
-          <CollapsibleTrigger asChild>
+          <CollapsibleTrigger asChild data-tour="advanced-trigger">
             <Button
               variant="ghost"
               size="sm"
@@ -276,14 +284,15 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
           </CollapsibleTrigger>
 
           <CollapsibleContent className="flex flex-col gap-5 border-t border-border/50 p-3 pt-3">
-            {/* Sideways Moves Policy */}
-            <div className="flex items-center justify-between">
+            {/* Plateau Moves Policy (display name; the engine field + URL
+                key stay `allowSideways`/`sideways` for back-compat) */}
+            <div data-tour="plateau" className="flex items-center justify-between">
               <div className="flex flex-col gap-0.5">
                 <Label htmlFor="allow-sideways-switch" className="text-[0.7rem] font-medium">
-                  Allow Sideways Moves
+                  Allow Plateau Moves
                 </Label>
                 <span className="text-[0.6rem] text-muted-foreground">
-                  Traverse plateaus (Δ = 0)
+                  Traverse plateaus (Δ = 0) — equal-cost moves, not spatial
                 </span>
               </div>
               <Switch
@@ -315,7 +324,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
             )}
 
             {/* Random Restarts Policy */}
-            <div className="flex items-center justify-between pt-1">
+            <div data-tour="restarts" className="flex items-center justify-between pt-1">
               <div className="flex flex-col gap-0.5">
                 <Label htmlFor="allow-restarts-switch" className="text-xs font-medium">
                   Random Restarts
@@ -350,7 +359,10 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
 
             {/* Simulated Annealing Knobs (if SA is selected) */}
             {isSA && (
-              <div className="flex flex-col gap-2 border-t border-border/40 pt-2">
+              <div
+                data-tour="cooling"
+                className="flex flex-col gap-2 border-t border-border/40 pt-2"
+              >
                 <div className="flex items-center gap-1 text-xs font-medium">
                   <span>Simulated Annealing Knobs</span>
                 </div>

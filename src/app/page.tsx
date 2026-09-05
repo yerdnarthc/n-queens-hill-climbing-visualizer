@@ -11,6 +11,7 @@ import { PlaybackControls } from '@/components/visualizer/playback-controls';
 import { ConfigPanel } from '@/components/visualizer/config-panel';
 import { Chessboard } from '@/components/visualizer/chessboard';
 import { AnalyticsPanel } from '@/components/visualizer/analytics-panel';
+import { OnboardingTour, reopenOnboardingTour } from '@/components/visualizer/onboarding-tour';
 import { BookOpen } from 'lucide-react';
 import { Math } from '@/components/ui/math';
 
@@ -237,14 +238,26 @@ function HomeContent() {
             N-Queens Hill Climbing Visualizer · Built with Next.js 15, React 19, Tailwind CSS v4 &
             Zustand
           </span>
-          <Link
-            href="/how-it-works"
-            className="font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            How it works →
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/how-it-works"
+              className="font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              How it works →
+            </Link>
+            <button
+              type="button"
+              onClick={reopenOnboardingTour}
+              className="font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Replay tour
+            </button>
+          </div>
         </div>
       </footer>
+
+      {/* First-visit spotlight walkthrough (localStorage-gated, portal to body). */}
+      <OnboardingTour />
     </div>
   );
 }
