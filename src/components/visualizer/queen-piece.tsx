@@ -1,10 +1,19 @@
 'use client';
 
 import * as React from 'react';
-import { motion, useAnimate, useReducedMotion } from 'framer-motion';
+// `animateMotionValue` is Motion's standalone imperative animator (drives
+// MotionValues); `animate` below (from `useAnimate`) drives DOM nodes.
+// Different targets, hence the alias.
+import { animate as animateMotionValue, motion, useAnimate, useMotionValue } from 'motion/react';
 import { Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { computeStepDuration } from '@/lib/animation-timings';
+import {
+  easeForTravel,
+  motionTokens,
+  QUEEN_ARC_LIFT_PX,
+  QUEEN_SHADOW_LIFT,
+  QUEEN_SHADOW_REST,
+} from '@/lib/motion-tokens';
 
 interface QueenPieceProps {
   column: number;
@@ -14,12 +23,23 @@ interface QueenPieceProps {
   deltaConflicts?: number;
   boardSize?: number;
   /**
-   * Current playback speed in steps/sec. Drives the move-transition
-   * duration (via `computeStepDuration`) so the queen's flight scales
-   * with the playback clock — at 0.5× the queen arcs gracefully, at
-   * 30× it snaps.
+   * Top-left pixel position of this queen's square inside the board overlay.
+   * The queen travels by tweening `x`/`y` transforms (GPU-composited) —
+   * never `layout`, which would force the browser to re-measure the whole
+   * grid on every step.
    */
-  speed: number;
+  x: number;
+  y: number;
+  /** Square size in px — the queen token fills exactly one square. */
+  size: number;
+  /**
+   * Travel duration in ms. Injected by the parent (already gated by
+   * `useQueenDurationMs`: speed-aware while playing, fixed `QUEEN_STEPPER_MS`
+   * while stepping frame-by-frame, 0 under reduced motion).
+   */
+  durationMs: number;
+  /** `prefers-reduced-motion` — collapse travel to instant, skip the pulse. */
+  reducedMotion: boolean;
 }
 
 export function QueenPiece({
@@ -29,71 +49,106 @@ export function QueenPiece({
   isMoved,
   deltaConflicts,
   boardSize = 8,
-  speed,
+  x,
+  y,
+  size,
+  durationMs,
+  reducedMotion,
 }: QueenPieceProps) {
   const hasConflict = conflictsCount > 0;
   const isDense = boardSize >= 12;
-  // `useReducedMotion` returns `boolean | null` — null on first render and
-  // in jsdom. Coerce to a strict boolean so downstream branches are clean.
-  const reduceMotion = !!useReducedMotion();
 
   // Animation handle for the lift + shadow-grow pulse on the queen token.
   const [scope, animate] = useAnimate();
 
-  // Duration (ms) the queen's move should take, derived from playback
-  // speed. Same value used by <MoveTrajectory /> in the parent.
-  const moveDurationMs = React.useMemo(
-    () => computeStepDuration(speed, reduceMotion),
-    [speed, reduceMotion],
-  );
+  // Explicit travel state. MotionValues are written imperatively and read
+  // only inside effects (never during render — the `react-hooks/refs`
+  // lint rule forbids ref reads in render).
+  const travelX = useMotionValue(x);
+  const travelY = useMotionValue(y);
 
-  // On every move (column or row changes), fire the kinetic pulse:
-  //  - scale 1 → 1.15 → 1 over the move duration ("lift" at start, "land
-  //    with settle" at end)
-  //  - box-shadow grows from `shadow-md` to `shadow-lg` and back (depth
-  //    cue so the moving queen reads as "above" the board momentarily)
-  // Skipped under reduced motion. The wrapping motion.div's `layout`
-  // animation is gated separately, so position updates still happen.
+  // Travel: x goes straight; y arcs upward mid-flight by QUEEN_ARC_LIFT_PX
+  // (tweak it in `@/lib/motion-tokens`) so the move reads as "flying"
+  // rather than "sliding". Fires only when the target square changes;
+  // stopping the previous controls lets a new move cleanly take over
+  // mid-flight (no pile-up at 30×). Under reduced motion (or 0 duration)
+  // the queen snaps to the square instead.
   React.useEffect(() => {
-    if (reduceMotion) return;
-    if (moveDurationMs <= 0) return;
+    if (reducedMotion || durationMs <= 0) {
+      travelX.set(x);
+      travelY.set(y);
+      return;
+    }
+    const seconds = durationMs / 1000;
+    const fromY = travelY.get();
+    const arcing = fromY !== y;
+    // Squares travelled — drives the settle easing. A fixed overshoot
+    // stalls long flights (huge bounce-back), so `easeForTravel` fades it
+    // with distance (see `@/lib/motion-tokens`).
+    const distanceSquares = size > 0 ? Math.abs(y - fromY) / size : 0;
+    const yTarget = arcing ? [fromY, (fromY + y) / 2 - QUEEN_ARC_LIFT_PX, y] : y;
+    const controls = [
+      animateMotionValue(travelX, x, {
+        duration: seconds,
+        ease: motionTokens.easing.overshoot,
+      }),
+      animateMotionValue(travelY, yTarget, {
+        duration: seconds,
+        // Per-segment easings for the 2-segment arc, tuned so velocity
+        // stays CONTINUOUS through the apex at any distance: `easeIn`
+        // accelerates off the origin (no liftoff stall) and is still
+        // steep at the apex, where the fall segment starts steep too —
+        // no brake-then-surge hitch. The fall's overshoot itself is
+        // distance-scaled (`easeForTravel`): full bounce on short hops,
+        // clean settle on long flights. Straight moves (no arc) keep the
+        // plain overshoot curve.
+        ease: arcing
+          ? ['easeIn' as const, easeForTravel(distanceSquares)]
+          : motionTokens.easing.overshoot,
+      }),
+    ];
+    return () => {
+      controls.forEach((c) => c.stop());
+    };
+  }, [x, y, size, durationMs, reducedMotion, travelX, travelY]);
 
-    const seconds = moveDurationMs / 1000;
+  // On every ACTUAL move, fire the kinetic pulse:
+  //  - scale 1 → lift → 1 ("lift" at start, "land with settle" at end)
+  //  - box-shadow grows and back (depth cue: queen reads as "above" the
+  //    board momentarily)
+  // Skipped under reduced motion or when duration is 0. Gated on position
+  // change (not just prop change) so toggling play/pause or re-rendering
+  // for badge updates never replays the pulse. `useAnimate` cancels an
+  // in-flight pulse when a new move fires mid-flight (fast playback).
+  const lastPulsed = React.useRef({ column, row });
+  React.useEffect(() => {
+    const movedNow = lastPulsed.current.column !== column || lastPulsed.current.row !== row;
+    lastPulsed.current = { column, row };
+    if (!movedNow) return;
+    if (reducedMotion) return;
+    if (durationMs <= 0) return;
+
+    const seconds = durationMs / 1000;
 
     // Scale pulse on the queen token.
-    animate(scope.current, { scale: [1, 1.15, 1] }, { duration: seconds, ease: 'easeInOut' });
+    animate(
+      scope.current,
+      { scale: [1, motionTokens.scale.queenLift, 1] },
+      { duration: seconds, ease: motionTokens.easing.smooth },
+    );
 
     // Shadow grow (multi-stop box-shadow interpolation).
     animate(
       scope.current,
-      {
-        boxShadow: [
-          '0 4px 6px -1px rgb(0 0 0 / 0.18), 0 2px 4px -2px rgb(0 0 0 / 0.12)',
-          '0 12px 20px -2px rgb(0 0 0 / 0.32), 0 6px 10px -3px rgb(0 0 0 / 0.18)',
-          '0 4px 6px -1px rgb(0 0 0 / 0.18), 0 2px 4px -2px rgb(0 0 0 / 0.12)',
-        ],
-      },
-      { duration: seconds, ease: 'easeInOut' },
+      { boxShadow: [QUEEN_SHADOW_REST, QUEEN_SHADOW_LIFT, QUEEN_SHADOW_REST] },
+      { duration: seconds, ease: motionTokens.easing.smooth },
     );
-  }, [column, row, moveDurationMs, reduceMotion, animate, scope]);
-
-  // Overshoot cubic-bezier: gentle lift-off + ~20% overshoot + settle.
-  // Matches the curve used by the MoveTrajectory line so queen + line
-  // arrive together.
-  const overshootEase = [0.2, 0.9, 0.3, 1.2] as const;
+  }, [column, row, durationMs, reducedMotion, animate, scope]);
 
   return (
     <motion.div
-      layout={!reduceMotion}
-      transition={
-        reduceMotion
-          ? { duration: 0 }
-          : {
-              duration: moveDurationMs / 1000,
-              ease: overshootEase,
-            }
-      }
-      className="relative flex h-full w-full items-center justify-center select-none"
+      style={{ x: travelX, y: travelY, width: size, height: size, willChange: 'transform' }}
+      className="absolute top-0 left-0 flex items-center justify-center select-none"
       data-testid={`queen-${column}-${row}`}
     >
       {/* Halo / Glow for conflicted queens or moved queens */}
@@ -124,8 +179,8 @@ export function QueenPiece({
         )}
         style={{
           // Equivalent of `shadow-md` from Tailwind, expressed as a
-          // box-shadow string so framer-motion can animate it.
-          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.18), 0 2px 4px -2px rgb(0 0 0 / 0.12)',
+          // box-shadow string so Motion can animate it (see motion-tokens).
+          boxShadow: QUEEN_SHADOW_REST,
         }}
       >
         <Crown className="h-[65%] w-[65%] fill-current drop-shadow-xs" />

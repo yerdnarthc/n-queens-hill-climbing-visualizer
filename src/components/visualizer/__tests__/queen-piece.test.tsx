@@ -7,28 +7,39 @@ import { simulationStore } from '@/store';
 /**
  * Lightweight structural test for QueenPiece — verifies:
  *  - renders the queen with the expected `data-testid`
- *  - accepts the new `speed` prop (the speed-aware duration wiring)
- *  - the wrapping motion.div carries the right transition config
+ *  - accepts the explicit-travel props (x/y/size/durationMs) that replaced
+ *    the old `speed` prop + `layout` animation
  *  - the conflict-count badge is rendered when conflictsCount > 0
  *
- * Animation timing & visual effects (lift pulse, shadow grow) are
- * framer-motion-driven and not tested in jsdom — they require a real
- * browser to verify meaningfully.
+ * Animation timing & visual effects (travel tween, lift pulse, shadow grow)
+ * are Motion-driven and not tested in jsdom — they require a real browser
+ * to verify meaningfully.
  */
+
+const TRAVEL = { x: 50, y: 100, size: 50, durationMs: 300, reducedMotion: false } as const;
 
 describe('QueenPiece', () => {
   it('renders a queen with the expected data-testid', () => {
-    render(<QueenPiece column={2} row={3} conflictsCount={0} isMoved={false} speed={2} />);
+    render(<QueenPiece column={2} row={3} conflictsCount={0} isMoved={false} {...TRAVEL} />);
     expect(screen.getByTestId('queen-2-3')).toBeInTheDocument();
   });
 
+  it('sized itself to exactly one square via inline width/height', () => {
+    render(<QueenPiece column={2} row={3} conflictsCount={0} isMoved={false} {...TRAVEL} />);
+    const queen = screen.getByTestId('queen-2-3');
+    // `size` drives the token footprint — the parent overlay positions it
+    // via x/y transforms, so width/height must match the square size.
+    expect(queen.style.width).toBe('50px');
+    expect(queen.style.height).toBe('50px');
+  });
+
   it('renders a conflict-count badge when conflictsCount > 0', () => {
-    render(<QueenPiece column={2} row={3} conflictsCount={4} isMoved={false} speed={2} />);
+    render(<QueenPiece column={2} row={3} conflictsCount={4} isMoved={false} {...TRAVEL} />);
     expect(screen.getByLabelText(/4 attacking pairs/i)).toBeInTheDocument();
   });
 
   it('does NOT render a conflict-count badge when conflictsCount is 0', () => {
-    render(<QueenPiece column={2} row={3} conflictsCount={0} isMoved={false} speed={2} />);
+    render(<QueenPiece column={2} row={3} conflictsCount={0} isMoved={false} {...TRAVEL} />);
     expect(screen.queryByLabelText(/attacking pairs/i)).not.toBeInTheDocument();
   });
 
@@ -40,21 +51,33 @@ describe('QueenPiece', () => {
         conflictsCount={0}
         isMoved={true}
         deltaConflicts={-1}
-        speed={2}
+        {...TRAVEL}
       />,
     );
     // The delta badge text is the formatted number (with sign for positives).
     expect(screen.getByText('-1')).toBeInTheDocument();
   });
 
-  it('accepts a `speed` prop without throwing (the speed-aware duration wiring)', () => {
-    // Render at the playback speed extremes to exercise the prop plumbing.
-    // (0.5× is the slowest natural feel; 30× is the fastest.)
+  it('accepts travel props without throwing (the explicit x/y wiring)', () => {
+    // Render at the duration extremes to exercise the prop plumbing.
+    // (0 = reduced-motion snap; 400 = slowest graceful arc.)
     expect(() =>
-      render(<QueenPiece column={0} row={0} conflictsCount={0} isMoved={false} speed={0.5} />),
+      render(<QueenPiece column={0} row={0} conflictsCount={0} isMoved={false} {...TRAVEL} />),
     ).not.toThrow();
     expect(() =>
-      render(<QueenPiece column={0} row={0} conflictsCount={0} isMoved={false} speed={30} />),
+      render(
+        <QueenPiece
+          column={0}
+          row={0}
+          conflictsCount={0}
+          isMoved={false}
+          x={0}
+          y={0}
+          size={40}
+          durationMs={0}
+          reducedMotion={true}
+        />,
+      ),
     ).not.toThrow();
   });
 
@@ -62,14 +85,28 @@ describe('QueenPiece', () => {
     // Two queens, one on each density bracket, to confirm the
     // `isDense = boardSize >= 12` branch affects the badge sizing.
     const { rerender } = render(
-      <QueenPiece column={0} row={0} conflictsCount={2} isMoved={false} boardSize={8} speed={2} />,
+      <QueenPiece
+        column={0}
+        row={0}
+        conflictsCount={2}
+        isMoved={false}
+        boardSize={8}
+        {...TRAVEL}
+      />,
     );
     // h-4 w-4 for the non-dense badge
     const badge8 = screen.getByLabelText(/2 attacking pairs/i);
     expect(badge8.className).toMatch(/h-4 w-4/);
 
     rerender(
-      <QueenPiece column={0} row={0} conflictsCount={2} isMoved={false} boardSize={12} speed={2} />,
+      <QueenPiece
+        column={0}
+        row={0}
+        conflictsCount={2}
+        isMoved={false}
+        boardSize={12}
+        {...TRAVEL}
+      />,
     );
     // h-3 w-3 for the dense badge
     const badge12 = screen.getByLabelText(/2 attacking pairs/i);
@@ -83,10 +120,10 @@ describe('QueenPiece', () => {
     //   keeps working unchanged.
     simulationStore.getState().setConfig({ boardSize: 8, seed: 27, strategy: 'steepest-ascent' });
     const { rerender } = render(
-      <QueenPiece column={1} row={4} conflictsCount={0} isMoved={false} speed={2} />,
+      <QueenPiece column={1} row={4} conflictsCount={0} isMoved={false} {...TRAVEL} />,
     );
     expect(screen.getByTestId('queen-1-4')).toBeInTheDocument();
-    rerender(<QueenPiece column={1} row={5} conflictsCount={0} isMoved={false} speed={2} />);
+    rerender(<QueenPiece column={1} row={5} conflictsCount={0} isMoved={false} {...TRAVEL} />);
     expect(screen.getByTestId('queen-1-5')).toBeInTheDocument();
   });
 });
