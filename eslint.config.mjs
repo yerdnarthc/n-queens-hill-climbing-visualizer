@@ -23,6 +23,7 @@ const eslintConfig = [
       // `nextConfig` already covers `.next/**`, `out/**`, `build/**`,
       // and `next-env.d.ts`. We add the project-specific ones.
       'node_modules/**',
+      '.agents/**',
       'e2e/**',
       'playwright-report/**',
       'test-results/**',

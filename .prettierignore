@@ -18,5 +18,8 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 
+# vendored third-party agent skills (not project source)
+.agents
+
 # keep the legacy prototype byte-identical for reference
 legacy
