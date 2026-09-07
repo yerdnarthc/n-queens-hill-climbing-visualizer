@@ -187,16 +187,7 @@ export function QueenPiece({
           boxShadow: QUEEN_SHADOW_REST,
         }}
       >
-        <QueenGlyph
-          className="h-[80%] w-[80%]"
-          strokeClassName={
-            hasConflict
-              ? 'stroke-conflict-deep'
-              : isMoved
-                ? 'stroke-improving-deep'
-                : 'stroke-stone-900'
-          }
-        />
+        <QueenGlyph className="h-[80%] w-[80%]" />
 
         {/* Conflict count badge on the queen if > 0 */}
         {hasConflict && (

@@ -1,67 +1,28 @@
 'use client';
 
 /**
- * QueenGlyph — the classic Staunton queen artwork from
- * `nikfrank/react-chess-pieces` (`src/Q-white.svg`: five coronet balls,
- * zigzag crown, curved body, two collar detail lines), which itself derives
- * from the Wikimedia "Chess Pieces Sprite" standard set by Cburnett
- * (CC BY-SA 3.0 — attribution recorded here and in `memory-bank/
- * DECISIONS.md` D-049).
+ * QueenGlyph — the queen artwork from `src/assets/icons/chess-queen.svg`
+ * (via SVG Repo), inlined as path data so it themes with the token.
  *
- * Adapted for our state system: the source uses fixed `#ffffff` fill +
- * `#000000` stroke, but our queens sit on state-colored discs, so fill is
- * `currentColor` (set the size + ink via `className`, e.g. `h-3/4 w-3/4
- * text-stone-100`) and the outline + detail lines stroke in the tone passed
- * as a Tailwind `stroke-*` class via `strokeClassName` (e.g.
- * `stroke-stone-900`). Same two-tone contract as the source — white ink,
- * dark outline — parameterized instead of hardcoded. Ball circles follow
- * the set's black-queen variant (clean `<circle>` elements rather than the
- * white variant's translated arc paths); crown/body/detail paths follow
- * the white variant.
- *
- * Always `aria-hidden`: state meaning lives in the badges, labels, and
- * rings around the token, never in this decoration.
+ * The source is a single solid silhouette (crown with ball tips, collar
+ * bar, base bar) on a 512×512 grid — no strokes, no detail layer — so this
+ * component is one `<path>` filling `currentColor`. Set size + ink via
+ * `className` (e.g. `"h-4/5 w-4/5 text-stone-100"`); the surrounding disc
+ * and ring carry the state color. Always `aria-hidden`: state meaning
+ * lives in the badges, labels, and rings, never in this decoration.
  */
 interface QueenGlyphProps {
-  /** Size + silhouette ink (e.g. `"h-3/4 w-3/4 text-stone-100"`). */
+  /** Size + silhouette ink (inherits `currentColor`, e.g. from the token disc). */
   className?: string;
-  /** Outline + detail-line tone as a Tailwind stroke class
-   * (e.g. `"stroke-stone-900"`). Required — the design's character comes
-   * from its dark keyline; the echo ghost passes its own ink color for a
-   * one-color dissolve. */
-  strokeClassName: string;
 }
 
-export function QueenGlyph({ className, strokeClassName }: QueenGlyphProps) {
+export function QueenGlyph({ className }: QueenGlyphProps) {
   return (
-    <svg viewBox="0 0 45 45" className={className} aria-hidden="true" data-testid="queen-glyph">
-      <g
+    <svg viewBox="0 0 512 512" className={className} aria-hidden="true" data-testid="queen-glyph">
+      <path
         fill="currentColor"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={strokeClassName}
-      >
-        {/* Coronet balls */}
-        <circle cx="6" cy="12" r="2.75" />
-        <circle cx="14" cy="9" r="2.75" />
-        <circle cx="22.5" cy="8" r="2.75" />
-        <circle cx="31" cy="9" r="2.75" />
-        <circle cx="39" cy="12" r="2.75" />
-        {/* Zigzag crown */}
-        <path
-          d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38,14 L 31,25 L 31,11 L 25.5,24.5 L 22.5,9.5 L 19.5,24.5 L 14,10.5 L 14,25 L 7,14 L 9,26 z"
-          strokeLinecap="butt"
-        />
-        {/* Curved body + base */}
-        <path
-          d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 10.5,36 10.5,36 C 9,37.5 11,38.5 11,38.5 C 17.5,39.5 27.5,39.5 34,38.5 C 34,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"
-          strokeLinecap="butt"
-        />
-        {/* Collar detail lines (fill none, same outline tone as the source) */}
-        <path d="M 11.5,30 C 15,29 30,29 33.5,30" fill="none" />
-        <path d="M 12,33.5 C 18,32.5 27,32.5 33,33.5" fill="none" />
-      </g>
+        d="M477.518 181.966a25 25 0 0 1-34.91 23l-62.29 150.26h-248.92l-62.24-150.19a25 25 0 1 1 9.73-7.29l87 71.2 20.92-126.4a25 25 0 1 1 14.7-1.85l54.31 117 54.42-117.3a25 25 0 1 1 14.58 2.08l20.93 126.42 87.26-71.3a25 25 0 1 1 44.51-15.63zm-71.66 241.25h-300v60h300v-60zm-27.75-52h-244.22v36h244.22v-36z"
+      />
     </svg>
   );
 }
