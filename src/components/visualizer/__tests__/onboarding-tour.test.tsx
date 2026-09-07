@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import * as React from 'react';
 import {
@@ -67,6 +67,8 @@ describe('placeTourTooltip', () => {
 describe('OnboardingTour', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    // The tour restores scrollY on close — stub the viewport-less jsdom API.
+    window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
     simulationStore.getState().setConfig({ strategy: 'steepest-ascent' });
   });
 
@@ -193,5 +195,16 @@ describe('OnboardingTour', () => {
       await screen.findByText(ONBOARDING_TOUR_STEPS[1]?.title ?? '', {}, { timeout: 3000 }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/drag me aside/i)).not.toBeInTheDocument();
+  });
+
+  it('locks body scroll while open and restores it on close', () => {
+    renderOpenTour();
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.body.style.position).toBe('fixed');
+    fireEvent.keyDown(screen.getByTestId('onboarding-tour'), { key: 'Escape' });
+    expect(screen.queryByTestId('onboarding-tour')).not.toBeInTheDocument();
+    expect(document.body.style.overflow).toBe('');
+    expect(document.body.style.position).toBe('');
+    expect(window.scrollTo).toHaveBeenCalled();
   });
 });

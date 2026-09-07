@@ -39,6 +39,7 @@ import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'moti
 import { GripVertical, Move, X } from 'lucide-react';
 import { simulationStore } from '@/store';
 import type { StrategyId } from '@/lib/engine';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import { motionTokens, TOUR_TOOLTIP_DRAG_GLIDE } from '@/lib/motion-tokens';
 import { cn } from '@/lib/utils';
 
@@ -220,6 +221,12 @@ export function OnboardingTour() {
   // Steps whose targets actually exist in this layout (missing ones are
   // skipped — e.g. cooling when SA isn't selected, context rail on odd widths).
   const [activeSteps, setActiveSteps] = React.useState<TourStepDef[]>(ONBOARDING_TOUR_STEPS);
+  // Hard scroll lock while the tour is open: the page must not move under
+  // the spotlight (user scrolls fought the rect tracking and could strand
+  // it off-screen). The tour's own `scrollIntoView` calls below stay the
+  // single source of scroll truth; Esc/close restores the exact scrollY.
+  // (Placed after state so `open` is initialized — no TDZ.)
+  useScrollLock(open);
   const nextButtonRef = React.useRef<HTMLButtonElement>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   // Drag controls for the tooltip. `dragListener={false}` below means Motion
@@ -331,13 +338,19 @@ export function OnboardingTour() {
       }
     }
     // `scrollIntoView` doesn't exist in jsdom — optional-call it.
-    el.scrollIntoView?.({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+    // `block: 'center'` (not 'nearest'): with user scrolling locked out,
+    // the tour owns positioning, so every target lands deterministically
+    // mid-viewport where the tooltip gap math expects it.
+    el.scrollIntoView?.({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
     const measure = () => {
       const target = resolveStepElement(step);
       if (target) setRect(measureElement(target));
     };
     // Measure now + next frame (lets the collapsible toggle settle), then
-    // track resize/scroll/size changes while this step is active.
+    // track resize/scroll/size changes while this step is active. The
+    // scroll listener stays deliberately: with user scrolling locked out,
+    // the only scrolls are the tour's own smooth `scrollIntoView`s, and
+    // the spotlight must follow each frame until they settle.
     measure();
     const raf = requestAnimationFrame(measure);
     const onViewportChange = () => measure();
@@ -440,7 +453,7 @@ export function OnboardingTour() {
         className={backdropClass}
         style={{ top: rect.top, left: rect.left + rect.width, right: 0, height: rect.height }}
       />
-      {/* Rounded-rect spotlight ring (instant cut — no layout animation). */}
+      {/* Rect spotlight ring (instant cut — no layout animation). */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed z-50 rounded-xs shadow-2xl ring-white/90 ring-offset-2 ring-offset-transparent"
@@ -475,7 +488,7 @@ export function OnboardingTour() {
             dragControls.start(e);
           }}
           whileDrag={reduceMotion ? { cursor: 'grabbing' } : { cursor: 'grabbing', scale: 1.02 }}
-          className="fixed z-50 flex cursor-grab touch-none flex-col gap-2.5 rounded-xl border border-border bg-card p-4 shadow-xl"
+          className="fixed z-50 flex cursor-grab touch-none flex-col gap-2.5 rounded-xs border border-border bg-card p-4 shadow-xl"
           style={{ top: tip.top, left: tip.left, width: Math.min(TOOLTIP_WIDTH, vw - 24) }}
           initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
           animate={{ opacity: 1 }}

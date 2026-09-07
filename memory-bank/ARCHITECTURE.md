@@ -58,7 +58,9 @@ N-Queens Visualizer/            ← task workspace root
     │   │   └── theme-provider.tsx
     │   ├── hooks/               ← useSimulationDriver (the app's only timer),
     │   │                          useKeyboardShortcuts (Phase 5, page-scoped keydown),
-    │   │                          useUrlConfigSync (Phase 6, URL ⇆ store bridge)
+    │   │                          useUrlConfigSync (Phase 6, URL ⇆ store bridge),
+    │   │                          useScrollLock (tour scroll lock — body fixed
+    │   │                          while open, exact scrollY restored on close)
     │   ├── lib/
     │   │   ├── engine/         ← ★ pure algorithm core (zero React deps)
     │   │   ├── motion-tokens.ts← NEW Phase 11 — durations, easings, queen knobs
@@ -326,6 +328,12 @@ onboarding-tour.tsx`, mounted once in `src/app/page.tsx`,
   every step target exists) and auto-opens the Advanced collapsible
   for policy steps; exit restores the user's strategy AND the
   collapsible's prior open state.
+- **Scroll lock** (D-052) — `useScrollLock(open)` pins the body
+  (`fixed` + `-top` + `100%` width) while open and restores the exact
+  `scrollY` on close; the tour's own `scrollIntoView`
+  (`block: 'center'`) is the single scroll authority, and the scroll
+  listener is kept so the spotlight tracks the tour's smooth scrolls.
+  Tooltip drag is transform-only, unaffected by the lock.
 - **Motion** — spotlight cuts instantly (foundations Rule 4 bans
   layout props in `animate`); only the tooltip fades (opacity,
   `motionTokens.duration.fast`), wrapped in `AnimatePresence
@@ -337,14 +345,18 @@ onboarding-tour.tsx`, mounted once in `src/app/page.tsx`,
   suppresses it via `addInitScript` (share URLs untouched), and
   `e2e/tour.spec.ts` (base client, 3 specs) covers first-show,
   advance, Skip-persists-across-reload, and Replay.
-- **Tests** — `__tests__/onboarding-tour.test.tsx` (11 tests: 3 pure
-  `placeTourTooltip` placement, 8 behavior). jest-dom jsdom ships
-  storage stubs WITHOUT the Storage API, so `src/test/setup.ts` gains
-  an in-memory `MemoryStorage` mock (D-023 precedent).
+- **Tests** — `__tests__/onboarding-tour.test.tsx` (16 tests: 3 pure
+  `placeTourTooltip` placement, 13 behavior incl. drag affordance,
+  grip + first-step hint, Esc-restores-scroll) +
+  `src/hooks/__tests__/useScrollLock.test.ts` (3 tests: no-op when
+  unlocked, lock/restore incl. scrollY, pre-existing inline styles
+  preserved). jest-dom jsdom ships storage stubs WITHOUT the Storage
+  API, so `src/test/setup.ts` gains an in-memory `MemoryStorage` mock
+  (D-023 precedent).
 
 ## Testing architecture
 
-- **Unit (Vitest, jsdom, globals)**: 30 suites, **349 tests passing**.
+- **Unit (Vitest, jsdom, globals)**: 31 suites, **357 tests passing**.
   - `src/lib/engine/__tests__/` — config validation, RNG stream/
     statistics, evaluator-vs-oracle (incl. fuzz equivalence), per-
     strategy contracts, orchestration (restarts, budgets, determinism,

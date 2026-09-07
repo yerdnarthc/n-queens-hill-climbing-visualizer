@@ -801,3 +801,28 @@ Keyboard users unaffected (drag is pointer-only enhancement).
 Validation: lint + typecheck clean, 351/351 (2 new drag tests),
 build clean. Status: accepted.
 
+**D-052 · Hard scroll lock during the onboarding tour (`useScrollLock`)** *(2026-09-06)*
+Why: two scroll bugs the user hit every run — (a) the spotlight/
+tooltip lagged a frame behind fast scrolls (rect → React state →
+re-render pipeline can't keep up), and (b) scrolling the target out
+of view stranded the spotlight at viewport top because
+`measureElement` clamps negative rects to 0. The user's pitch was
+right and matches the skill-canonical modal pattern
+(`motion-patterns` Rule 6 lists scroll lock alongside role/Escape/
+focus-trap — we had 3/4): NEW `src/hooks/useScrollLock.ts` pins the
+body (`position: fixed` + negative `top` + `width: 100%`, not just
+`overflow: hidden`, so iOS rubber-banding and scrollbar-shift die
+too) while `open`, restoring inline styles + exact `scrollY` on
+close (Esc path included). The tour's own `scrollIntoView` calls
+(block flipped `'nearest'` → `'center'` for deterministic placement)
+stay the single scroll authority; tooltip drag is transform-only so
+the lock doesn't affect it. Deviation from the plan worth noting:
+the scroll listener was KEPT (the plan said remove it) — with user
+scrolling locked out, the only scrolls left are the tour's own
+smooth ones, and the spotlight must track each frame until they
+settle; removing it would have frozen the spotlight mid-flight.
+Validation: lint + typecheck clean, **357/357 across 31 suites**
+(+3 hook, +1 tour integration incl. Esc-restores-scroll), build
+clean; e2e not re-run (no selector/layout change to existing specs
+— tour specs unaffected). Status: accepted.
+
