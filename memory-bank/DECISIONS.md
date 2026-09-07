@@ -715,3 +715,31 @@ strict-mode duplicate-text violations, re-proven pre-existing by
 rebuilding stashed clean HEAD and rerunning (identical 4 failures).
 Status: accepted.
 
+**D-048 · Queen restyle: own flat Staunton glyph, solid discs, crisp halo — no gradients** *(Phase 13 | 2026-09-06)*
+Why: the old token was a generic lucide `Crown` icon centered in a
+gradient bubble with a blurred, pulsing glow — the textbook AI-slop
+look. The `ui-ux-pro-max` skill's style search confirmed the fix
+direction (minimalism: "avoid shadows and gradients", flat fills,
+high contrast, single accent). New `src/components/visualizer/
+queen-glyph.tsx` draws its OWN queen silhouette (45×45 viewBox: five
+coronet balls → straight-geometry zigzag crown → collar bar →
+tapered stem → base bar, proportions eyeballed against the Cburnett
+standard set but no path data copied) in `currentColor`, with two
+inner detail lines + a stem jewel stroking a second tone passed as a
+Tailwind `stroke-*` class — theme-aware with zero color plumbing, and
+`aria-hidden` throughout (state meaning already lives in badges/
+labels/rings). The disc goes fully flat: espresso `bg-stone-900`
+(normal — the warm-wood squares never change across themes, so one
+dark disc reads everywhere) or solid semantic fills
+(`bg-conflict`/`bg-improving`) with deeper-shade rings; the blurred
+pulse halo becomes a crisp `border-2` ring and goes static (calmer at
+30×, reduced-motion-safe by default). `OriginEcho`'s ghost swaps to
+the same glyph, detail-less, so the dissolve matches the board.
+Animation, travel, badges, testids, and e2e selectors are untouched —
+purely a paint change. Verified the custom-token utilities
+(`stroke-*-deep`, `ring-*-deep`) actually emit CSS by grepping the
+production bundle (Tailwind silently drops unknown classes, so this
+was load-bearing). Validation: lint + typecheck clean, **349/349
+across 30 suites** (+3 glyph, +2 queen-piece incl. a no-gradients-in-
+any-state regression guard), build clean. Status: accepted.
+

@@ -38,7 +38,10 @@ N-Queens Visualizer/            ← task workspace root
     │   │   ├── visualizer/     ← chessboard (queen overlay + shared grid measurement),
     │   │   │                      playback-controls, stats-header (slim, page-level);
     │   │   │                      stats-rail.tsx (NEW Phase 9 — rail/compact/context);
-    │   │   │                      queen-piece.tsx (explicit x/y travel, Phase 11);
+    │   │   │                      queen-piece.tsx (explicit x/y travel, Phase 11;
+    │   │   │                      flat Staunton glyph + solid discs, Phase 13);
+    │   │   │                      queen-glyph.tsx (NEW Phase 13 — flat queen
+    │   │   │                      silhouette SVG, currentColor + stroke class);
     │   │   │                      origin-echo.tsx (ghost departure marker, Phase 11);
     │   │   │                      useQueenDuration.ts (NEW Phase 11 — playback-gated duration);
     │   │   │                      onboarding-tour.tsx (NEW Phase 12 — first-visit
@@ -341,7 +344,7 @@ onboarding-tour.tsx`, mounted once in `src/app/page.tsx`,
 
 ## Testing architecture
 
-- **Unit (Vitest, jsdom, globals)**: 29 suites, **344 tests passing**.
+- **Unit (Vitest, jsdom, globals)**: 30 suites, **349 tests passing**.
   - `src/lib/engine/__tests__/` — config validation, RNG stream/
     statistics, evaluator-vs-oracle (incl. fuzz equivalence), per-
     strategy contracts, orchestration (restarts, budgets, determinism,
@@ -363,14 +366,17 @@ onboarding-tour.tsx`, mounted once in `src/app/page.tsx`,
     Phase 7), chart-wrapper (+433), analytics-panel (+149), stats-rail
     (+145, new file), stats-header (+25, mostly moved-out tests),
     config-panel (+25, compact variant), use-follow-current-step (+337,
-    new file), queen-piece (+8, Phase 11: incl. square-size test),
+    new file), queen-piece (+10, Phase 11 + Phase 13 no-gradients guard),
     origin-echo (+6, Phase 11: ghost + label), useQueenDuration (+4,
-    Phase 11: play/step gate contract).
+    Phase 11: play/step gate contract), queen-glyph (+3, Phase 13).
     (`move-trajectory.tsx` + its 4 tests were DELETED in Phase 11.)
   - `src/components/visualizer/__tests__/onboarding-tour.test.tsx` —
     Phase 12 (+11: pure tooltip-placement ×3, storage gate, step flow,
     backdrop advance, Esc, permanent opt-out, strategy force/restore,
     replay, full 10-step walk).
+  - `src/components/visualizer/__tests__/queen-glyph.test.tsx` —
+    Phase 13 (+3: silhouette structure, currentColor + no gradients,
+    conditional details).
   - `src/test/setup.ts` — Phase 12 adds an in-memory `MemoryStorage`
     mock (this jsdom exposes storage stubs without the Storage API).
   - Fixtures are machine-harvested — never hand-computed (D-014).

@@ -56,6 +56,7 @@ deterministic, fully-tested algorithm engine plus a modern Next.js frontend.
 | Kinetic Queen move animation (speed-aware duration, overshoot, lift, shadow grow, origin echo, trajectory line) | ✅ complete (Phase 10 — D-044; mechanism replaced in Phase 11 — see below) |
 | Explicit queen travel (absolute overlay, x/arced-y tween, ghost echo, playback-gated duration, `motion`) | ✅ complete (Phase 11 — D-046) |
 | "Plateau" naming (display-only rename of sideways moves) + first-visit spotlight onboarding tour | ✅ complete (Phase 12 — D-047) |
+| Flat minimal queen design (own Staunton glyph, solid discs, crisp halo) | ✅ complete (Phase 13 — D-048) |
 
 ## Stack (verified in `n-queens-visualizer/package.json`)
 
@@ -63,7 +64,7 @@ deterministic, fully-tested algorithm engine plus a modern Next.js frontend.
 - **Styling**: Tailwind CSS v4 (CSS-first `@theme inline`), shadcn/ui (new-york), tw-animate-css; Motion (`motion/react` v13 — migrated from `framer-motion` in Phase 11; queen x/y travel + lift/shadow pulse + ghost echo + `prefers-reduced-motion`, Phase 10/11); **KaTeX** for inline math via `src/components/ui/math.tsx` (Phase 9)
 - **State**: Zustand 5 — integrated in Phase 2 (store + playback driver) · **Charts**: ECharts 6 (integrated in Phase 4) · **URL state**: nuqs 2 (integrated in Phase 6 — config projection, `history: 'replace'`)
 - **Fonts**: **Sora + Chivo Mono** variable TTFs self-hosted via `next/font/local` in `src/assets/fonts/` (Phase 9; replaced Geist/Geist Mono; same offline-safe invariant from D-029)
-- **Testing**: Vitest 4 + jsdom + Testing Library (29 unit suites, **344 tests passing**);
+- **Testing**: Vitest 4 + jsdom + Testing Library (30 unit suites, **349 tests passing**);
   Playwright E2E (chromium, 8 specs) against the production build
 - **Quality**: ESLint flat config (`eslint-config-next@16` direct import, Phase 9), Prettier (+ tailwindcss plugin), Husky/lint-staged pre-commit
 
