@@ -170,15 +170,19 @@ export function QueenPiece({
           lift + shadow-grow pulse above. Flat solid fills only (no
           gradients): the warm-wood squares never change across themes, so
           one dark espresso disc reads everywhere; state discs use the
-          semantic tokens as solids. */}
+          semantic tokens as solids. In dark mode the state discs drop one
+          step to their `*-deep` shade — the base tokens are light-300s
+          (rose-300/sky-300) that wash out under a white glyph — and the
+          ring flips to a light keyline so the edge stays defined (same
+          treatment as the normal disc's `ring-white/30`). */}
       <div
         ref={scope}
         className={cn(
           'relative z-10 flex h-[82%] w-[82%] items-center justify-center rounded-full transition-colors duration-200',
           hasConflict
-            ? 'bg-conflict text-white ring-2 ring-conflict-deep'
+            ? 'bg-conflict text-white ring-2 ring-conflict-deep dark:bg-conflict-deep dark:ring-white/30'
             : isMoved
-              ? 'bg-improving text-white ring-2 ring-improving-deep'
+              ? 'bg-improving text-white ring-2 ring-improving-deep dark:bg-improving-deep dark:ring-white/30'
               : 'bg-stone-900 text-stone-100 ring-1 ring-white/30',
         )}
         style={{
