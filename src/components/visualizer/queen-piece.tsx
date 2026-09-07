@@ -188,8 +188,8 @@ export function QueenPiece({
         }}
       >
         <QueenGlyph
-          className="h-[68%] w-[68%]"
-          detailClassName={
+          className="h-[80%] w-[80%]"
+          strokeClassName={
             hasConflict
               ? 'stroke-conflict-deep'
               : isMoved

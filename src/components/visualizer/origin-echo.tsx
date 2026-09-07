@@ -13,9 +13,9 @@ import { motionTokens } from '@/lib/motion-tokens';
  *     light (`#f0d9b5`) and dark (`#b88f6e`) warm-wood squares, in both
  *     themes. It blooms outward (scale 1 → 1.22) while fading.
  *  2. Ghost — a dissolving flat queen silhouette (same `QueenGlyph` as the
- *     board, one color, no details) that shrinks and fades. Shape (not
- *     just color) carries the meaning, so it stays legible for colorblind
- *     users and at a glance during fast play.
+ *     board, stroked in its own ink for a one-color dissolve) that shrinks
+ *     and fades. Shape (not just color) carries the meaning, so it stays
+ *     legible for colorblind users and at a glance during fast play.
  *  3. Label pill — a tiny `R{row}` tag pinned to the square's corner naming
  *     the origin row, for first-time users.
  *
@@ -51,7 +51,10 @@ export function OriginEcho({ move, durationMs, reducedMotion }: OriginEchoProps)
           className="absolute inset-1 rounded-md bg-improving/25 ring-2 ring-improving-deep/80 ring-offset-1 ring-offset-background"
           aria-hidden="true"
         />
-        <QueenGlyph className="relative h-1/2 w-1/2 text-improving-deep opacity-40" />
+        <QueenGlyph
+          className="relative h-1/2 w-1/2 text-improving-deep opacity-40"
+          strokeClassName="stroke-improving-deep"
+        />
         <span className="absolute right-0.5 bottom-0.5 rounded-sm bg-card px-1 font-mono text-[8px] leading-4 font-bold text-improving-deep ring-1 ring-improving-deep/60">
           R{move.fromRow + 1}
         </span>
@@ -78,7 +81,7 @@ export function OriginEcho({ move, durationMs, reducedMotion }: OriginEchoProps)
         animate={{ scale: 1.22 }}
         transition={{ duration: seconds, ease: 'easeOut' }}
       />
-      {/* Dissolving crown ghost */}
+      {/* Dissolving queen ghost */}
       <motion.div
         className="relative flex h-full w-full items-center justify-center"
         aria-hidden="true"
@@ -86,7 +89,10 @@ export function OriginEcho({ move, durationMs, reducedMotion }: OriginEchoProps)
         animate={{ scale: 0.88, opacity: 0.15 }}
         transition={{ duration: seconds, ease: 'easeOut' }}
       >
-        <QueenGlyph className="h-1/2 w-1/2 text-improving-deep" />
+        <QueenGlyph
+          className="h-1/2 w-1/2 text-improving-deep"
+          strokeClassName="stroke-improving-deep"
+        />
       </motion.div>
       {/* Origin-row label */}
       <span className="absolute right-0.5 bottom-0.5 rounded-sm bg-card px-1 font-mono text-[8px] leading-4 font-bold text-improving-deep ring-1 ring-improving-deep/60">

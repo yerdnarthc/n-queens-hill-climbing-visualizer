@@ -4,37 +4,45 @@ import * as React from 'react';
 import { QueenGlyph } from '../queen-glyph';
 
 /**
- * Structural test for QueenGlyph — verifies the flat Staunton silhouette:
- *  - one <svg> landmark (decorative ⇒ aria-hidden)
- *  - 5 coronet balls + crown/stem/base shapes, all filling currentColor
- *  - detail lines render ONLY when a detailClassName is given (the echo
- *    ghost omits them for a pure one-color dissolve)
+ * Structural test for QueenGlyph — verifies the classic queen artwork
+ * (nikfrank/react-chess-pieces Q-white paths, Cburnett-derived):
+ *  - one decorative <svg> landmark (aria-hidden)
+ *  - 5 coronet balls + crown + body + 2 collar detail lines
+ *  - silhouette fills currentColor, outline/details stroke the passed class
+ *  - no gradient definitions anywhere (flat by design)
  */
 describe('QueenGlyph', () => {
   it('renders a decorative svg with the five-ball coronet', () => {
-    const { container } = render(<QueenGlyph className="text-stone-100" />);
+    const { container } = render(
+      <QueenGlyph className="text-stone-100" strokeClassName="stroke-stone-900" />,
+    );
     const svg = screen.getByTestId('queen-glyph');
     expect(svg.tagName.toLowerCase()).toBe('svg');
     expect(svg.getAttribute('aria-hidden')).toBe('true');
-    expect(container.querySelectorAll('circle').length).toBeGreaterThanOrEqual(5);
+    expect(svg.getAttribute('viewBox')).toBe('0 0 45 45');
+    expect(container.querySelectorAll('circle').length).toBe(5);
   });
 
-  it('fills the silhouette with currentColor and no gradients', () => {
-    const { container } = render(<QueenGlyph className="text-stone-100" />);
-    const filled = container.querySelectorAll('[fill="currentColor"]');
-    expect(filled.length).toBeGreaterThan(0);
+  it('fills the silhouette with currentColor and strokes the outline class', () => {
+    const { container } = render(
+      <QueenGlyph className="text-stone-100" strokeClassName="stroke-stone-900" />,
+    );
+    const group = container.querySelector('g');
+    expect(group?.getAttribute('fill')).toBe('currentColor');
+    expect(group?.getAttribute('class')).toContain('stroke-stone-900');
+    // Crown + body + 2 detail paths, all stroked (no fill on the details).
+    const paths = container.querySelectorAll('path');
+    expect(paths.length).toBe(4);
+    const detailLines = container.querySelectorAll('path[fill="none"]');
+    expect(detailLines.length).toBe(2);
+  });
+
+  it('contains no gradient definitions (flat by design)', () => {
+    const { container } = render(
+      <QueenGlyph className="text-stone-100" strokeClassName="stroke-stone-900" />,
+    );
     expect(container.innerHTML).not.toContain('linearGradient');
     expect(container.innerHTML).not.toContain('radialGradient');
-  });
-
-  it('renders detail lines only when detailClassName is provided', () => {
-    const bare = render(<QueenGlyph />);
-    expect(bare.container.querySelectorAll('g[fill="none"]').length).toBe(0);
-    bare.unmount();
-
-    const detailed = render(<QueenGlyph detailClassName="stroke-stone-900" />);
-    const details = detailed.container.querySelectorAll('g[fill="none"]');
-    expect(details.length).toBe(1);
-    expect(details[0]?.getAttribute('class')).toContain('stroke-stone-900');
+    expect(container.innerHTML).not.toMatch(/gradient/i);
   });
 });
