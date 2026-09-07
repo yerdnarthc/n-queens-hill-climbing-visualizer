@@ -518,9 +518,9 @@ export function OnboardingTour() {
           {/* First-step-only drag hint (progressive disclosure: teach the
               gesture once, then stay out of the way). */}
           {stepIndex === 0 && (
-            <p className="flex items-center gap-1.5 text-[0.65rem] text-muted-foreground">
+            <p className="mt-2 flex items-center gap-1.5 text-[0.65rem] text-muted-foreground">
               <Move className="h-3 w-3 shrink-0" aria-hidden="true" />
-              Drag me aside if I’m in the way.
+              <i>Drag me aside if I’m in the way.</i>
             </p>
           )}
           {/* Progress dots — shape + position, not color alone. */}
