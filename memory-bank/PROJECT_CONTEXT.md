@@ -56,7 +56,8 @@ deterministic, fully-tested algorithm engine plus a modern Next.js frontend.
 | Kinetic Queen move animation (speed-aware duration, overshoot, lift, shadow grow, origin echo, trajectory line) | ✅ complete (Phase 10 — D-044; mechanism replaced in Phase 11 — see below) |
 | Explicit queen travel (absolute overlay, x/arced-y tween, ghost echo, playback-gated duration, `motion`) | ✅ complete (Phase 11 — D-046) |
 | "Plateau" naming (display-only rename of sideways moves) + first-visit spotlight onboarding tour | ✅ complete (Phase 12 — D-047) |
-| Flat minimal queen design (own Staunton glyph, solid discs, crisp halo) | ✅ complete (Phase 13 — D-048) |
+| Flat minimal queen design (own Staunton glyph, solid discs, crisp halo) | ✅ complete (Phase 13 — D-048; glyph artwork replaced in Phase 14 — see below) |
+| nikfrank/react-chess-pieces queen artwork (Cburnett-derived, inlined + attributed) | ✅ complete (Phase 14 — D-049) |
 
 ## Stack (verified in `n-queens-visualizer/package.json`)
 

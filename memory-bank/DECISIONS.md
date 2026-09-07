@@ -743,3 +743,28 @@ was load-bearing). Validation: lint + typecheck clean, **349/349
 across 30 suites** (+3 glyph, +2 queen-piece incl. a no-gradients-in-
 any-state regression guard), build clean. Status: accepted.
 
+**D-049 · Queen artwork replaced with the nikfrank/react-chess-pieces queen (Cburnett-derived, attributed)** *(Phase 14 | 2026-09-06)*
+Why: two restyles in (geometric glyph, Phase 13), the user still
+disliked the look and pointed at a concrete reference:
+`nikfrank/react-chess-pieces` — a thin wrapper over the Wikimedia
+"Chess Pieces Sprite" standard set (Cburnett), CC BY-SA 3.0. Fetched
+`src/Q-white.svg` + `src/q-black.svg` raw and confirmed the design is
+the classic queen (five balls, zigzag crown, curved body, two collar
+lines; white fill + 1.5 black stroke). Decision: INLINE the artwork,
+don't add the dependency — one SVG is needed, and a new package for
+it would violate the user's no-surprise-dependency rule; the
+adaptation (fixed `#fff`/`#000` → `currentColor` fill + Tailwind
+`stroke-*` class) is six changed attributes. So `queen-glyph.tsx`
+now carries the Q-white crown/body/detail paths + clean ball
+`<circle>`s (q-black form), with `detailClassName` renamed to
+`strokeClassName` since it now outlines the whole silhouette, not
+just details. Call sites: glyph grows 68% → 80% of the disc (real
+pieces fill their box), echo ghost passes its own ink as the stroke
+for a one-color dissolve. Discs, halo, badges, animation, testids,
+and e2e selectors untouched — artwork swap only. Attribution lives in
+the component docstring and here (CC BY-SA 3.0, © Cburnett via the
+Wikimedia sprite). Validation: lint + typecheck clean, **349/349
+across 30 suites** (glyph tests rewritten for the new structure),
+build clean; e2e not re-run (no selector/motion/layout touched —
+Phase 12's 29/33 stands). Status: accepted.
+

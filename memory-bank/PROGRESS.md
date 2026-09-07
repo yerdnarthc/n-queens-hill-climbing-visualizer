@@ -1,6 +1,6 @@
 # Progress — Where are we now?
 
-> Update at the end of **every** task. Last updated: **2026-09-06** (Phase 13 flat queen restyle, uncommitted; 45 commits total).
+> Update at the end of **every** task. Last updated: **2026-09-06** (Phase 14 nikfrank queen artwork, uncommitted; 47 commits total).
 
 ## TL;DR
 
@@ -25,19 +25,20 @@ Phases 1–10 are **complete and verified**; **Phase 11 (queen-travel overhaul +
 | 10    | Queen-move animation overhaul (Option B / kinetic — speed-aware duration, overshoot, lift, shadow, origin echo, trajectory line) | ✅ done — commits `e59f548..1bb1ebb` (D-044) |
 | 11    | Queen-travel overhaul + `motion` migration (explicit x/y overlay travel with arc, ghost echo, playback-gated duration, distance-scaled easing) | ✅ done — commit `0887221` (D-046) |
 | 12    | "Sideways" → "Plateau" display rename + first-visit spotlight onboarding tour (localStorage v1, force-steepest, e2e suppression + tour.spec) | ✅ done — commits `9d6a033` + `ab02fca` (D-047) |
-| 13    | Flat queen restyle (own Staunton glyph, solid discs, crisp halo, ghost swap) | ✅ implemented + verified, uncommitted (D-048) |
+| 13    | Flat queen restyle (own Staunton glyph, solid discs, crisp halo, ghost swap) | ✅ done — commits `76ca22c` + `a708f13` (D-048) |
+| 14    | nikfrank queen artwork (Q-white paths inlined, parameterized fill/stroke, attributed) | ✅ implemented + verified, uncommitted (D-049) |
 
-## Verified status snapshot — 2026-09-06 (Phase 13)
+## Verified status snapshot — 2026-09-06 (Phase 14)
 
 Run inside `n-queens-visualizer/`:
 
-- `npm run test:run` → **349/349 passed** (30 suites; +3 `queen-glyph`, +2 `queen-piece` incl. a no-gradients-in-any-state regression guard)
-- `npm run test:e2e` → not re-run in Phase 13 (paint-only change: no animation, motion, testid, or selector touched; Phase 12's 29/33 result with stash-proven pre-existing failures stands)
+- `npm run test:run` → **349/349 passed** (30 suites; glyph tests rewritten for the nikfrank structure — 5 balls, 4 paths, 2 detail lines, no gradients)
+- `npm run test:e2e` → not re-run in Phase 14 (artwork-only swap: same testids, layout, motion, and selectors; Phase 12's 29/33 with stash-proven pre-existing failures stands)
 - `npm run typecheck` → **clean** (exit 0)
 - `npm run lint` → **clean** (0 warnings, 0 errors)
-- `npm run build` → **passes** against Next 16.3.4; 5 static routes; custom-token utilities (`stroke-*-deep`, `ring-*-deep`) confirmed present in the emitted production CSS via grep
-- pre-commit (lint-staged: prettier + eslint) status: Phase 13 not yet committed
-- `HEAD` (local) = `ab02fca` (D-047 docs); Phase 13 work is uncommitted on top (awaiting commit + push).
+- `npm run build` → **passes** against Next 16.3.4; 5 static routes
+- pre-commit (lint-staged: prettier + eslint) status: Phase 14 not yet committed
+- `HEAD` (local) = `a708f13` (D-048 docs); Phase 14 work is uncommitted on top (awaiting commit + push).
 
 ## Known issues / housekeeping
 
@@ -104,4 +105,5 @@ The roadmap is complete. Reasonable follow-ups (not committed to):
 | 2026-09-05 | **Cline → OpenCode migration (AGENTS.md + skills)** | `.clinerules/` (`memory-bank.md`, `nextjs-conventions.md`) deleted; content preserved in root `AGENTS.md` (pure move per `git diff`). 6 project-specific skills added under `.agents/skills/` + `skills-lock.json`. First commit attempt failed in the lint-staged hook (vendored `utility-types.ts` uses intentional `any` → 11 `no-explicit-any` errors); fixed by excluding vendored `.agents/` in `eslint.config.mjs`, `.prettierignore`, `tsconfig.json` — commit `04e0cb4`, lint + typecheck clean. See **D-045** |
 | 2026-09-06 | **Phase 11 · Queen-travel overhaul + `motion` migration** | Commit `0887221`. `framer-motion@13` → `motion@13.2.0` (`motion/react`); tokens in `src/lib/motion-tokens.ts`; queens moved to an absolute overlay with `x`/arced-`y` MotionValue tween (replaces `layout` FLIP); `MoveTrajectory` + test + keyframes deleted per user; `OriginEcho` redesigned (halo + Crown ghost + `R{row}` pill, 2× linger); `useQueenDurationMs` gates speed-awareness to playing (fixed 220 ms stepper otherwise); `easeForTravel` scales overshoot with distance after the user's long-flight stiffness discovery. Validation: lint + typecheck clean, **333/333 across 28 suites**, build clean, e2e 25/30 (5 pre-existing strict-mode failures, proven on clean HEAD). See **D-046** |
 | 2026-09-06 | **Phase 12 · "Plateau" rename + spotlight onboarding tour** | Display-only rename (`config-panel` label/subtitle, `POLICY_INFO[0].name`, layout metadata, how-it-works prose; engine field + URL key untouched for back-compat) + new `src/components/visualizer/onboarding-tour.tsx` (localStorage `nqueens-tour:v1`, rounded-rect spotlight, force-steepest-ascent + restore, Advanced auto-open + restore, `?tour=1`/`0` hatches, footer Replay button), `data-tour` anchors on ConfigPanel/PlaybackControls, `MemoryStorage` mock in `src/test/setup.ts` (jsdom ships storage stubs without the Storage API), `e2e` fixture suppression + new `e2e/tour.spec.ts` (3 specs). Validation: lint + typecheck clean, **344/344 across 29 suites**, build clean, e2e 29/33 (4 pre-existing failures re-proven on stashed clean HEAD). Commits `9d6a033` + `ab02fca`. See **D-047** |
-| 2026-09-06 | **Phase 13 · Flat queen restyle** | New `src/components/visualizer/queen-glyph.tsx` (own Staunton silhouette: 5-ball coronet, zigzag crown, collar, stem, base; currentColor + stroke-class two-tone, aria-hidden) replaces the lucide `Crown` in `QueenPiece` and the `OriginEcho` ghost; discs go solid (`bg-stone-900` / semantic solids, deeper-shade rings), halo becomes a crisp static `border-2` ring (blur + pulse removed). Animation/travel/badges/testids untouched — paint only. Validation: lint + typecheck clean, **349/349 across 30 suites** (+3 glyph, +2 queen-piece with no-gradients guard), build clean, token utilities confirmed in emitted CSS. See **D-048** |
+| 2026-09-06 | **Phase 13 · Flat queen restyle** | New `src/components/visualizer/queen-glyph.tsx` (own Staunton silhouette: 5-ball coronet, zigzag crown, collar, stem, base; currentColor + stroke-class two-tone, aria-hidden) replaces the lucide `Crown` in `QueenPiece` and the `OriginEcho` ghost; discs go solid (`bg-stone-900` / semantic solids, deeper-shade rings), halo becomes a crisp static `border-2` ring (blur + pulse removed). Animation/travel/badges/testids untouched — paint only. Validation: lint + typecheck clean, **349/349 across 30 suites** (+3 glyph, +2 queen-piece with no-gradients guard), build clean, token utilities confirmed in emitted CSS. Commits `76ca22c` + `a708f13`. See **D-048** |
+| 2026-09-06 | **Phase 14 · nikfrank queen artwork** | Fetched `Q-white.svg`/`q-black.svg` raw from `nikfrank/react-chess-pieces` (Cburnett-derived, CC BY-SA 3.0, attributed in code + D-049); inlined the artwork into `queen-glyph.tsx` instead of adding the dependency (fixed `#fff`/`#000` → `currentColor` + `strokeClassName`; `detailClassName` renamed since it now outlines everything). Glyph 68% → 80% of disc; ghost passes same-color stroke. Discs/halo/badges/animation/testids untouched. Validation: lint + typecheck clean, **349/349 across 30 suites**, build clean. See **D-049** |

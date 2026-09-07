@@ -16,8 +16,9 @@ alongside the code it describes (this supersedes D-016 — see **D-043** in
 > flat config), Phase 10 (kinetic Queen move animation), Phase 11
 > (explicit x/y queen travel with arc, ghost echo, playback-gated
 > duration, `motion` migration), Phase 12 ("Plateau" rename +
-> first-visit spotlight onboarding tour), and Phase 13 (flat minimal
-> queen restyle — own Staunton glyph, solid discs, crisp halo)
+> first-visit spotlight onboarding tour), Phase 13 (flat minimal
+> queen restyle — solid discs, crisp halo), and Phase 14
+> (nikfrank/react-chess-pieces queen artwork, inlined + attributed)
 > shipped.** 349/349 unit tests passing across 30 suites, typecheck +
 > lint + production build clean, Playwright E2E 29/33 (4 pre-existing
 > strict-mode failures, re-proven on clean HEAD). See `PROGRESS.md`
