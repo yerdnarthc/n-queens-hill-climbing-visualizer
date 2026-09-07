@@ -177,4 +177,21 @@ describe('OnboardingTour', () => {
       await screen.findByText(ONBOARDING_TOUR_STEPS[1]?.title ?? '', {}, { timeout: 3000 }),
     ).toBeInTheDocument();
   });
+
+  it('shows a grip handle advertising draggability', () => {
+    renderOpenTour();
+    const grip = screen.getByTestId('tour-drag-handle');
+    expect(grip).toBeInTheDocument();
+    expect(grip.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('hints at dragging on the first step only (progressive disclosure)', async () => {
+    renderOpenTour();
+    expect(screen.getByText(/drag me aside/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^Next$/ }));
+    expect(
+      await screen.findByText(ONBOARDING_TOUR_STEPS[1]?.title ?? '', {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/drag me aside/i)).not.toBeInTheDocument();
+  });
 });

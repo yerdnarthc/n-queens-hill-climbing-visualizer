@@ -36,7 +36,7 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'motion/react';
-import { X } from 'lucide-react';
+import { GripVertical, Move, X } from 'lucide-react';
 import { simulationStore } from '@/store';
 import type { StrategyId } from '@/lib/engine';
 import { motionTokens, TOUR_TOOLTIP_DRAG_GLIDE } from '@/lib/motion-tokens';
@@ -443,7 +443,7 @@ export function OnboardingTour() {
       {/* Rounded-rect spotlight ring (instant cut — no layout animation). */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed z-50 rounded-xs shadow-2xl ring-2 ring-white/90 ring-offset-2 ring-offset-transparent"
+        className="pointer-events-none fixed z-50 rounded-xs shadow-2xl ring-white/90 ring-offset-2 ring-offset-transparent"
         style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
       />
       {/* Tooltip — the ONLY AnimatePresence child, keyed per step with
@@ -486,9 +486,20 @@ export function OnboardingTour() {
           }}
         >
           <div className="flex items-center justify-between gap-2">
-            <p className="font-mono text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
-              Step {stepIndex + 1} of {activeSteps.length}
-            </p>
+            {/* Grip handle — the universal "you can drag this" signifier.
+                Decorative (the whole tooltip body already drags; buttons are
+                excluded), so aria-hidden: screen-reader and keyboard users
+                get the same outcome via buttons + auto-placement. */}
+            <div className="flex items-center gap-1.5">
+              <GripVertical
+                className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70"
+                aria-hidden="true"
+                data-testid="tour-drag-handle"
+              />
+              <p className="font-mono text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                Step {stepIndex + 1} of {activeSteps.length}
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => close('1')}
@@ -504,6 +515,14 @@ export function OnboardingTour() {
           <p id="onboarding-tour-body" className="text-xs leading-relaxed text-muted-foreground">
             {step.body}
           </p>
+          {/* First-step-only drag hint (progressive disclosure: teach the
+              gesture once, then stay out of the way). */}
+          {stepIndex === 0 && (
+            <p className="flex items-center gap-1.5 text-[0.65rem] text-muted-foreground">
+              <Move className="h-3 w-3 shrink-0" aria-hidden="true" />
+              Drag me aside if I’m in the way.
+            </p>
+          )}
           {/* Progress dots — shape + position, not color alone. */}
           <div className="flex items-center gap-1.5" aria-hidden="true">
             {activeSteps.map((s, i) => (
