@@ -51,8 +51,8 @@ describe('OriginEcho', () => {
         reducedMotion={false}
       />,
     );
-    // The ghost is a lucide Crown (an <svg>); the label names the 1-indexed
-    // origin row (0-indexed row 2 ⇒ "R3").
+    // The ghost is the flat QueenGlyph (an <svg>); the label names the
+    // 1-indexed origin row (0-indexed row 2 ⇒ "R3").
     expect(container.querySelector('svg')).not.toBeNull();
     expect(screen.getByText('R3')).toBeInTheDocument();
   });

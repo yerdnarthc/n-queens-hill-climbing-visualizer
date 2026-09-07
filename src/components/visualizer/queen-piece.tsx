@@ -5,7 +5,7 @@ import * as React from 'react';
 // MotionValues); `animate` below (from `useAnimate`) drives DOM nodes.
 // Different targets, hence the alias.
 import { animate as animateMotionValue, motion, useAnimate, useMotionValue } from 'motion/react';
-import { Crown } from 'lucide-react';
+import { QueenGlyph } from './queen-glyph';
 import { cn } from '@/lib/utils';
 import {
   easeForTravel,
@@ -151,31 +151,35 @@ export function QueenPiece({
       className="absolute top-0 left-0 flex items-center justify-center select-none"
       data-testid={`queen-${column}-${row}`}
     >
-      {/* Halo / Glow for conflicted queens or moved queens */}
+      {/* State halo — a crisp flat ring hugging the token (no blur glow,
+          no pulse: the ring + disc color already carry the state, and static
+          is calmer at 30× playback). */}
       {hasConflict ? (
         <div
-          className="absolute inset-0.5 rounded-full bg-conflict/25 blur-[2px] motion-safe:animate-pulse"
+          className="absolute inset-0 rounded-full border-2 border-conflict/70"
           aria-hidden="true"
         />
       ) : isMoved ? (
         <div
-          className="absolute inset-0.5 rounded-full bg-improving/20 blur-[2px]"
+          className="absolute inset-0 rounded-full border-2 border-improving/70"
           aria-hidden="true"
         />
       ) : null}
 
       {/* Main Queen Token — `ref={scope}` is the animation target for the
-          lift + shadow-grow pulse above. Initial box-shadow matches the
-          prior `shadow-md` so the first render looks unchanged. */}
+          lift + shadow-grow pulse above. Flat solid fills only (no
+          gradients): the warm-wood squares never change across themes, so
+          one dark espresso disc reads everywhere; state discs use the
+          semantic tokens as solids. */}
       <div
         ref={scope}
         className={cn(
           'relative z-10 flex h-[82%] w-[82%] items-center justify-center rounded-full transition-colors duration-200',
           hasConflict
-            ? 'bg-gradient-to-b from-conflict to-conflict-deep text-primary-foreground ring-2 ring-conflict'
+            ? 'bg-conflict text-white ring-2 ring-conflict-deep'
             : isMoved
-              ? 'bg-gradient-to-b from-improving to-improving-deep text-primary-foreground ring-2 ring-improving'
-              : 'bg-gradient-to-b from-slate-800 to-slate-950 text-amber-300 ring-1 ring-amber-400/40 dark:from-slate-900 dark:to-black dark:text-amber-400',
+              ? 'bg-improving text-white ring-2 ring-improving-deep'
+              : 'bg-stone-900 text-stone-100 ring-1 ring-white/30',
         )}
         style={{
           // Equivalent of `shadow-md` from Tailwind, expressed as a
@@ -183,7 +187,16 @@ export function QueenPiece({
           boxShadow: QUEEN_SHADOW_REST,
         }}
       >
-        <Crown className="h-[65%] w-[65%] fill-current drop-shadow-xs" />
+        <QueenGlyph
+          className="h-[68%] w-[68%]"
+          detailClassName={
+            hasConflict
+              ? 'stroke-conflict-deep'
+              : isMoved
+                ? 'stroke-improving-deep'
+                : 'stroke-stone-900'
+          }
+        />
 
         {/* Conflict count badge on the queen if > 0 */}
         {hasConflict && (

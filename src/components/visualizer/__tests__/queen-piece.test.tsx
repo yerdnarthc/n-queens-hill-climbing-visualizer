@@ -113,6 +113,40 @@ describe('QueenPiece', () => {
     expect(badge12.className).toMatch(/h-3 w-3/);
   });
 
+  it('uses flat fills (no gradients) in every state', () => {
+    // Regression guard for the minimal flat restyle: neither the halo,
+    // the token disc, nor the badges may use gradient fills.
+    const { rerender } = render(
+      <QueenPiece column={2} row={3} conflictsCount={0} isMoved={false} {...TRAVEL} />,
+    );
+    const queen = screen.getByTestId('queen-2-3');
+    const hasGradient = () =>
+      [...queen.querySelectorAll('div, span')].some((el) => el.className.includes('gradient'));
+    expect(hasGradient()).toBe(false);
+
+    rerender(<QueenPiece column={2} row={3} conflictsCount={4} isMoved={false} {...TRAVEL} />);
+    expect(hasGradient()).toBe(false);
+
+    rerender(
+      <QueenPiece
+        column={2}
+        row={3}
+        conflictsCount={0}
+        isMoved={true}
+        deltaConflicts={-1}
+        {...TRAVEL}
+      />,
+    );
+    expect(hasGradient()).toBe(false);
+  });
+
+  it('renders the flat queen glyph inside the token', () => {
+    const { container } = render(
+      <QueenPiece column={2} row={3} conflictsCount={0} isMoved={false} {...TRAVEL} />,
+    );
+    expect(container.querySelector('[data-testid="queen-glyph"]')).not.toBeNull();
+  });
+
   it('uses a deterministic data-testid that depends on (col, row)', () => {
     // The testid must encode the queen`s current position so that
     // - tests can locate any queen uniquely
