@@ -26,10 +26,16 @@
  *   tooltip fades with opacity only. Reduced motion collapses even that.
  * - Dialog pattern per `motion-patterns` Rule 6: role="dialog", aria-modal,
  *   Escape to close. AnimatePresence + key + exit per Rules 1–2.
+ * - Drag per `motion-advanced`: the tooltip is free-draggable with
+ *   `dragControls` started from non-button areas only, so button clicks
+ *   never turn into drags. Release uses Motion's default inertia
+ *   (`dragMomentum`) — physics on release always beats duration tweens
+ *   for direct manipulation. Drag offsets are transforms; a step change
+ *   remounts the tooltip (key={step.id}) and re-anchors it.
  */
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'motion/react';
 import { X } from 'lucide-react';
 import { simulationStore } from '@/store';
 import type { StrategyId } from '@/lib/engine';
@@ -197,7 +203,7 @@ function resolveStepElement(step: TourStepDef): HTMLElement | null {
 
 function measureElement(el: HTMLElement): SpotRect {
   const r = el.getBoundingClientRect();
-  const pad = 6;
+  const pad = 12;
   return {
     top: Math.max(0, r.top - pad),
     left: Math.max(0, r.left - pad),
@@ -216,6 +222,13 @@ export function OnboardingTour() {
   const [activeSteps, setActiveSteps] = React.useState<TourStepDef[]>(ONBOARDING_TOUR_STEPS);
   const nextButtonRef = React.useRef<HTMLButtonElement>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
+  // Drag controls for the tooltip. `dragListener={false}` below means Motion
+  // only starts a drag when `controls.start(e)` is called — the root
+  // pointerdown handler calls it for presses that did NOT land on a button,
+  // so Next/Back/Skip/Don't-show-again always click cleanly and every other
+  // press grabs the tooltip. Keyboard users are unaffected (all actions
+  // stay on buttons; auto-placement is the fallback position).
+  const dragControls = useDragControls();
   // Restore bookkeeping: the tour must leave no trace in the user's UI.
   const prevStrategyRef = React.useRef<StrategyId | null>(null);
   const openedAdvancedRef = React.useRef(false);
@@ -430,7 +443,7 @@ export function OnboardingTour() {
       {/* Rounded-rect spotlight ring (instant cut — no layout animation). */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed z-50 rounded-xl shadow-2xl ring-2 ring-white/90 ring-offset-2 ring-offset-transparent"
+        className="pointer-events-none fixed z-50 rounded-xs shadow-2xl ring-2 ring-white/90 ring-offset-2 ring-offset-transparent"
         style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
       />
       {/* Tooltip — the ONLY AnimatePresence child, keyed per step with
@@ -446,7 +459,20 @@ export function OnboardingTour() {
           aria-describedby="onboarding-tour-body"
           data-testid="onboarding-tour"
           onKeyDown={onTooltipKeyDown}
-          className="fixed z-50 flex flex-col gap-2.5 rounded-xl border border-border bg-card p-4 shadow-xl"
+          // Free drag with inertia on release (default `dragMomentum` —
+          // physics, not a duration tween). Transforms compose with the
+          // fixed top/left anchor, so dragging is GPU-cheap 1:1 tracking.
+          // `touch-none`: the tooltip has no scrollable content, so the
+          // browser must not steal the gesture on touch screens.
+          drag
+          dragControls={dragControls}
+          dragListener={false}
+          onPointerDown={(e) => {
+            if ((e.target as HTMLElement).closest('button')) return;
+            dragControls.start(e);
+          }}
+          whileDrag={reduceMotion ? { cursor: 'grabbing' } : { cursor: 'grabbing', scale: 1.02 }}
+          className="fixed z-50 flex cursor-grab touch-none flex-col gap-2.5 rounded-xl border border-border bg-card p-4 shadow-xl"
           style={{ top: tip.top, left: tip.left, width: Math.min(TOOLTIP_WIDTH, vw - 24) }}
           initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
           animate={{ opacity: 1 }}

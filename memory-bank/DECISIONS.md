@@ -786,3 +786,18 @@ testids, and e2e untouched. Validation: lint + typecheck clean,
 **349/349 across 30 suites**, build clean; e2e not re-run
 (artwork-only, same rationale as D-049). Status: accepted.
 
+**D-051 · Tour tooltip drag uses Motion built-in (`drag` + `dragControls`), no new library** *(2026-09-06)*
+Why: the user asked for a silky draggable tooltip "using the most
+recommended libraries/approach". `motion/react` (already installed)
+IS that approach per the vendored `motion-advanced` skill ("drag
+with physics on release"); adding dnd-kit/react-draggable would be a
+redundant dependency for one dialog. Pattern: `drag` +
+`dragControls` with `dragListener={false}`, started from a root
+pointerdown that ignores presses landing on buttons — so button
+clicks never become drags and no click-suppression hacks are needed.
+Release uses Motion's default inertia (physics beats duration tweens
+for direct manipulation); remount-per-step re-anchors the tooltip.
+Keyboard users unaffected (drag is pointer-only enhancement).
+Validation: lint + typecheck clean, 351/351 (2 new drag tests),
+build clean. Status: accepted.
+

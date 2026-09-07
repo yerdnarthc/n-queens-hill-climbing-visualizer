@@ -155,4 +155,26 @@ describe('OnboardingTour', () => {
     expect(screen.queryByTestId('onboarding-tour')).not.toBeInTheDocument();
     expect(window.localStorage.getItem(TOUR_STORAGE_KEY)).toBe('1');
   });
+
+  it('advertises the tooltip as draggable (grab cursor, touch-ready)', () => {
+    renderOpenTour();
+    const dialog = screen.getByTestId('onboarding-tour');
+    expect(dialog.className).toMatch(/cursor-grab/);
+    expect(dialog.className).toMatch(/touch-none/);
+  });
+
+  it('a press on non-button area starts a drag without breaking button clicks', async () => {
+    renderOpenTour();
+    const dialog = screen.getByTestId('onboarding-tour');
+    // Press on the tooltip body (not a button): routes to dragControls.
+    // Motion attaches move/up listeners; with no movement nothing changes
+    // and — critically — nothing throws in jsdom.
+    fireEvent.pointerDown(dialog);
+    fireEvent.pointerUp(dialog);
+    // Buttons still work afterwards: Next advances to step 2.
+    fireEvent.click(screen.getByRole('button', { name: /^Next$/ }));
+    expect(
+      await screen.findByText(ONBOARDING_TOUR_STEPS[1]?.title ?? '', {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
+  });
 });
