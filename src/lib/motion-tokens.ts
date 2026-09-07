@@ -109,3 +109,24 @@ export const QUEEN_SHADOW_REST =
 /** Aloft shadow at lift peak (= Tailwind `shadow-lg`, grown). */
 export const QUEEN_SHADOW_LIFT =
   '0 12px 20px -2px rgb(0 0 0 / 0.32), 0 6px 10px -3px rgb(0 0 0 / 0.18)';
+
+/**
+ * Release glide for the draggable tour tooltip (`dragTransition`).
+ *
+ * Motion's defaults (`power: 0.8`, `timeConstant: 700`) make a fast flick
+ * drift a long way with a floaty "less gravity" feel — wrong for a dialog
+ * whose whole job is staying where the user put it (usually: off the
+ * spotlight). These minimized values keep a hint of physical settle
+ * instead of a dead stop, roughly: flick it and it glides a few dozen px,
+ * not a few hundred.
+ *
+ * ★ Change these numbers to tune the drift (`power` scales how much of
+ * the release velocity carries over, `timeConstant` in ms sets how fast
+ * it decays). To kill inertia ENTIRELY, set `dragMomentum={false}` on
+ * the tooltip in `onboarding-tour.tsx` instead — the tooltip then stops
+ * dead on release. ★
+ */
+export const TOUR_TOOLTIP_DRAG_GLIDE = {
+  power: 0.2,
+  timeConstant: 150,
+} as const;

@@ -28,10 +28,10 @@
  *   Escape to close. AnimatePresence + key + exit per Rules 1–2.
  * - Drag per `motion-advanced`: the tooltip is free-draggable with
  *   `dragControls` started from non-button areas only, so button clicks
- *   never turn into drags. Release uses Motion's default inertia
- *   (`dragMomentum`) — physics on release always beats duration tweens
- *   for direct manipulation. Drag offsets are transforms; a step change
- *   remounts the tooltip (key={step.id}) and re-anchors it.
+ *   never turn into drags. Release uses a minimized glide
+ *   (`TOUR_TOOLTIP_DRAG_GLIDE`) instead of Motion's floaty defaults — a
+ *   dialog must stay where the user put it. Drag offsets are transforms;
+ *   a step change remounts the tooltip (key={step.id}) and re-anchors it.
  */
 import * as React from 'react';
 import { createPortal } from 'react-dom';
@@ -39,7 +39,7 @@ import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'moti
 import { X } from 'lucide-react';
 import { simulationStore } from '@/store';
 import type { StrategyId } from '@/lib/engine';
-import { motionTokens } from '@/lib/motion-tokens';
+import { motionTokens, TOUR_TOOLTIP_DRAG_GLIDE } from '@/lib/motion-tokens';
 import { cn } from '@/lib/utils';
 
 /** Versioned so a future tour redesign can re-show once (`:v2`). */
@@ -459,14 +459,17 @@ export function OnboardingTour() {
           aria-describedby="onboarding-tour-body"
           data-testid="onboarding-tour"
           onKeyDown={onTooltipKeyDown}
-          // Free drag with inertia on release (default `dragMomentum` —
-          // physics, not a duration tween). Transforms compose with the
-          // fixed top/left anchor, so dragging is GPU-cheap 1:1 tracking.
+          // Free drag with a MINIMIZED release glide (`TOUR_TOOLTIP_DRAG_GLIDE`):
+          // the tooltip tracks 1:1 while held, then settles almost dead
+          // instead of drifting (a dialog must stay where the user put it —
+          // usually off the spotlight). Transforms compose with the fixed
+          // top/left anchor, so dragging stays GPU-cheap.
           // `touch-none`: the tooltip has no scrollable content, so the
           // browser must not steal the gesture on touch screens.
           drag
           dragControls={dragControls}
           dragListener={false}
+          dragTransition={TOUR_TOOLTIP_DRAG_GLIDE}
           onPointerDown={(e) => {
             if ((e.target as HTMLElement).closest('button')) return;
             dragControls.start(e);
