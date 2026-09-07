@@ -18,7 +18,8 @@ alongside the code it describes (this supersedes D-016 — see **D-043** in
 > duration, `motion` migration), Phase 12 ("Plateau" rename +
 > first-visit spotlight onboarding tour), Phase 13 (flat minimal
 > queen restyle — solid discs, crisp halo), and Phase 14
-> (nikfrank/react-chess-pieces queen artwork, inlined + attributed)
+> (nikfrank/react-chess-pieces queen artwork, inlined + attributed),
+> and Phase 15 (user-supplied queen SVG from `src/assets/icons/`)
 > shipped.** 349/349 unit tests passing across 30 suites, typecheck +
 > lint + production build clean, Playwright E2E 29/33 (4 pre-existing
 > strict-mode failures, re-proven on clean HEAD). See `PROGRESS.md`

@@ -57,7 +57,8 @@ deterministic, fully-tested algorithm engine plus a modern Next.js frontend.
 | Explicit queen travel (absolute overlay, x/arced-y tween, ghost echo, playback-gated duration, `motion`) | ✅ complete (Phase 11 — D-046) |
 | "Plateau" naming (display-only rename of sideways moves) + first-visit spotlight onboarding tour | ✅ complete (Phase 12 — D-047) |
 | Flat minimal queen design (own Staunton glyph, solid discs, crisp halo) | ✅ complete (Phase 13 — D-048; glyph artwork replaced in Phase 14 — see below) |
-| nikfrank/react-chess-pieces queen artwork (Cburnett-derived, inlined + attributed) | ✅ complete (Phase 14 — D-049) |
+| nikfrank/react-chess-pieces queen artwork (Cburnett-derived, inlined + attributed) | ✅ superseded (Phase 14 — D-049; replaced by the user's own SVG in Phase 15) |
+| User-supplied queen SVG (`src/assets/icons/chess-queen.svg`, single-path silhouette) | ✅ complete (Phase 15 — D-050) |
 
 ## Stack (verified in `n-queens-visualizer/package.json`)
 

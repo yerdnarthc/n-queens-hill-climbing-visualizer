@@ -768,3 +768,21 @@ across 30 suites** (glyph tests rewritten for the new structure),
 build clean; e2e not re-run (no selector/motion/layout touched —
 Phase 12's 29/33 stands). Status: accepted.
 
+**D-050 · Queen artwork swapped to the user's own SVG (`src/assets/icons/chess-queen.svg`)** *(Phase 15 | 2026-09-06)*
+Why: after two glyph iterations (geometric, then nikfrank/Cburnett),
+the user supplied the exact artwork they want — an SVG Repo queen
+icon (single solid silhouette: crown with ball tips, collar bar,
+base bar, 512 grid). The file lives untracked-added at
+`src/assets/icons/chess-queen.svg` and is now versioned with the
+repo; `queen-glyph.tsx` inlines its path data (verbatim `d`, only
+`fill` retargeted to `currentColor`) instead of importing the file,
+so the glyph keeps theming with the token discs and needs no loader.
+Consequence of the source having no stroke layer: the
+`strokeClassName` prop is deleted (single-tone silhouette now), and
+all three call sites simplify to size-only classes — ink inherits
+from the disc via `currentColor`. Glyph tests rewritten (one path,
+512 viewBox, no strokes/gradients); discs, halo, badges, animation,
+testids, and e2e untouched. Validation: lint + typecheck clean,
+**349/349 across 30 suites**, build clean; e2e not re-run
+(artwork-only, same rationale as D-049). Status: accepted.
+
