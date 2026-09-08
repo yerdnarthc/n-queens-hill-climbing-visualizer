@@ -22,6 +22,14 @@ interface QueenPieceProps {
   isMoved: boolean;
   deltaConflicts?: number;
   boardSize?: number;
+  /** Whether THIS queen is the currently inspected (hovered/pinned) queen. */
+  isInspected?: boolean;
+  /** Native-title payload on hit queens: "Attacked by Qc3 along row". */
+  hitTitle?: string;
+  /** Hover/focus/tap wiring from the parent (transient UI — not the store). */
+  onInspectStart?: () => void;
+  onInspectEnd?: () => void;
+  onTogglePin?: () => void;
   /**
    * Top-left pixel position of this queen's square inside the board overlay.
    * The queen travels by tweening `x`/`y` transforms (GPU-composited) —
@@ -49,6 +57,11 @@ export function QueenPiece({
   isMoved,
   deltaConflicts,
   boardSize = 8,
+  isInspected = false,
+  hitTitle,
+  onInspectStart,
+  onInspectEnd,
+  onTogglePin,
   x,
   y,
   size,
@@ -148,7 +161,7 @@ export function QueenPiece({
   return (
     <motion.div
       style={{ x: travelX, y: travelY, width: size, height: size, willChange: 'transform' }}
-      className="absolute top-0 left-0 flex items-center justify-center select-none"
+      className="absolute top-0 left-0 flex touch-manipulation items-center justify-center select-none"
       data-testid={`queen-${column}-${row}`}
     >
       {/* State halo — a crisp flat ring hugging the token (no blur glow,
@@ -175,10 +188,21 @@ export function QueenPiece({
           (rose-300/sky-300) that wash out under a white glyph — and the
           ring flips to a light keyline so the edge stays defined (same
           treatment as the normal disc's `ring-white/30`). */}
-      <div
+      <button
+        type="button"
         ref={scope}
+        tabIndex={0}
+        role="button"
+        aria-label={`Queen at ${String.fromCharCode(97 + column)}${boardSize - row}, ${conflictsCount} attacker${conflictsCount === 1 ? '' : 's'}`}
+        aria-pressed={isInspected}
+        title={hitTitle}
+        onMouseEnter={onInspectStart}
+        onMouseLeave={onInspectEnd}
+        onFocus={onInspectStart}
+        onBlur={onInspectEnd}
+        onClick={onTogglePin}
         className={cn(
-          'relative z-10 flex h-[82%] w-[82%] items-center justify-center rounded-full transition-colors duration-200',
+          'relative z-10 flex h-[82%] w-[82%] cursor-pointer items-center justify-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card focus-visible:outline-none',
           hasConflict
             ? 'bg-conflict text-white ring-2 ring-conflict-deep dark:bg-conflict-deep dark:ring-white/30'
             : isMoved
@@ -226,7 +250,7 @@ export function QueenPiece({
             {deltaConflicts > 0 ? `+${deltaConflicts}` : deltaConflicts}
           </span>
         )}
-      </div>
+      </button>
     </motion.div>
   );
 }

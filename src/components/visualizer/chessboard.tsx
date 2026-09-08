@@ -5,6 +5,7 @@ import { useReducedMotion } from 'motion/react';
 import { useSimulationStore, selectSnapshot } from '@/store';
 import { createConflicts } from '@/lib/engine';
 import { QueenPiece } from './queen-piece';
+import { QueenRays } from './queen-rays';
 import { OriginEcho } from './origin-echo';
 import { useQueenDurationMs } from './useQueenDuration';
 import { ORIGIN_ECHO_DURATION_MULTIPLIER } from '@/lib/motion-tokens';
@@ -59,6 +60,91 @@ export function Chessboard() {
   const n = snapshot ? snapshot.board.length : config.boardSize;
   const board = snapshot?.board ?? null;
   const move = snapshot?.move ?? null;
+
+  // ── Attack-ray inspector state (transient UI — not the store) ──
+  const [hovered, setHovered] = React.useState<{ col: number; row: number } | null>(null);
+  const [pinned, setPinned] = React.useState<{ col: number; row: number } | null>(null);
+  // Pinned rays survive manual scrubbing but must clear the instant
+  // playback resumes (per user-approved heuristic: "animation stays clean").
+  const isPlaying = useSimulationStore((s) => s.isPlaying);
+  React.useEffect(() => {
+    if (isPlaying && pinned !== null) {
+      // Play resuming clears pinned rays (explicit user heuristic — keeps
+      // animation clean while preserving manual-scrub pinning).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPinned(null);
+    }
+  }, [isPlaying, pinned]);
+  // Pinned column's queen may have moved columns? In our engine a queen
+  // never changes column, so pin-by-col is stable. But if the board
+  // shape changed (N slider), pin must clear — stale (col,row) would
+  // dangle.
+  const currentStep = useSimulationStore((s) => s.currentStep);
+  React.useEffect(() => {
+    if (pinned !== null && (board === null || pinned.col >= board.length)) {
+      // Dangling pin after N shrinks — eagerly clear it.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPinned(null);
+    }
+    // Include board so N changes also clear dangling hover; currentStep
+    // is included only for the "scrub while pinned" recompute (rays track
+    // the pinned queen's new row on each step — don't clear here, that's
+    // `isPlaying`'s job).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board, currentStep]);
+
+  // Keep pinned in sync with the queen's current row (rows[col] may change
+  // as the user scrubs while paused — rays should follow the pinned queen).
+  const effectivePinned =
+    pinned !== null && board !== null && pinned.col < board.length
+      ? { col: pinned.col, row: board[pinned.col]! }
+      : null;
+  const inspected = pinned !== null ? effectivePinned : hovered;
+
+  // Hit-set for hover-tooltips on attacked queens: col → "Attacked by Q…".
+  // Computed here (not inside each QueenPiece) so the parent owns the
+  // "truth" and the discs stay pure rendering. Only while rays are
+  // visible — otherwise no hit queen shows a stale title.
+  const hitTitles = React.useMemo(() => {
+    if (!inspected || !board) return new Map<number, string>();
+    // Local import-like lazy: mirrors QueenRays' classification of hits,
+    // but without importing the SVG file into the board-rendering hot
+    // path. The ray arithmetic itself lives in the single pure helper.
+    const label = `${FILE_LABELS[inspected.col] ?? inspected.col}${n - inspected.row}`;
+    // Reuse the same ray geometry the overlay uses (cheap for n ≤ 16).
+    // We import the helper dynamically via the already-bundled module so
+    // no runtime require is needed — `computeAttackRays` is already
+    // tree-shaken in. For clarity over micro-optimisation, inline the
+    // small dual: we already have `board`, so a single pass over every
+    // col ≠ inspected.col is equivalent to the ray hit test and cheaper
+    // to read. Both are correct; pick the board scan (mirrors the brute
+    // oracle, and explains the "Attacked by" sentence directly).
+    const map = new Map<number, string>();
+    for (let col = 0; col < board.length; col++) {
+      if (col === inspected.col) continue;
+      const r = board[col]!;
+      const sameRow = r === inspected.row;
+      const sameDiag = Math.abs(col - inspected.col) === Math.abs(r - inspected.row);
+      if (!sameRow && !sameDiag) continue;
+      const colLabel = FILE_LABELS[col] ?? col;
+      const rowNum = n - r;
+      const dir = sameRow ? 'along row' : 'along diagonal';
+      map.set(col, `Attacked by Q${label} ${dir} — paired with Q${colLabel}${rowNum}`);
+    }
+    return map;
+  }, [inspected, board, n]);
+
+  // Esc clears pins (and the transient hover, for completeness).
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && (pinned !== null || hovered !== null)) {
+        setPinned(null);
+        setHovered(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [pinned, hovered]);
 
   const cellW = gridRect ? gridRect.width / n : 0;
   const cellH = gridRect ? gridRect.height / n : 0;
@@ -172,15 +258,37 @@ export function Chessboard() {
               change column) so Motion tweens travel instead of remounting. */}
           {board !== null && gridRect !== null && (
             <div className="absolute inset-0" aria-hidden={false}>
+              {/* Attack-ray overlay — behind the queen tokens so tokens stay
+                  fully legible; rays are pointer-events-none so they never
+                  swallow hover/tap on a queen. */}
+              <QueenRays
+                inspected={inspected}
+                board={board}
+                cellW={cellW}
+                cellH={cellH}
+                n={n}
+                reducedMotion={reduceMotion}
+              />
               {board.map((row, col) => {
                 const isDestinationSquare =
                   move !== null && move.column === col && move.toRow === row;
+                const isPinned = pinned !== null && pinned.col === col;
+                const isHoverTarget =
+                  hovered !== null && hovered.col === col && hovered.row === row;
+                const hitTitle = hitTitles.get(col);
                 return (
                   <QueenPiece
                     key={col}
                     column={col}
                     row={row}
                     conflictsCount={queenConflictCounts[col]}
+                    isInspected={isPinned || isHoverTarget}
+                    hitTitle={hitTitle}
+                    onInspectStart={() => setHovered({ col, row })}
+                    onInspectEnd={() => setHovered(null)}
+                    onTogglePin={() =>
+                      setPinned((prev) => (prev !== null && prev.col === col ? null : { col, row }))
+                    }
                     isMoved={isDestinationSquare}
                     deltaConflicts={isDestinationSquare ? move?.deltaConflicts : undefined}
                     boardSize={n}

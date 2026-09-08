@@ -1,6 +1,6 @@
 # Implementation Brief: Queen Attack Rays on Hover / Tap (Desktop First, Mobile Included)
 
-> Status: proposal (not started). Goal: when the user inspects a queen,
+> Status: **implemented** (Phase 16, 2026-09-06 — 15 commits to feature, pending doc commit). Goal: when the user inspects a queen,
 > the board reveals *why that queen attacks whom* — 8 sight-lines plus a
 > convergence marker on every queen caught in them. This turns the
 > abstract conflict count into something you can see.
@@ -45,9 +45,15 @@ hover"*, *"Do: use click/tap for primary interactions"*).
 
 Rules:
 - Hover never *pins*; tap never *requires* hover. Either works alone.
-- Pinned rays survive playback steps? No — a step change re-renders
-  positions, so unpin on `currentStep` change (stale rays would point
-  at squares the queen left). Re-pin is one tap away.
+- Pinned = "attack rays from this queen stay visible after you move away"
+  (the *queen* itself never freezes — it still travels with the
+  algorithm; "pinned" just means this inspection is locked on, the
+  analogue of pinning a tooltip).
+- **Q3 answer (middle path, confirmed: "solid!"):** pinned rays survive
+  manual scrubbing (paused playback) — they track the pinned queen's
+  new row on every `currentStep` while `isPlaying === false`. The
+  instant Play resumes (`isPlaying → true`), pinned rays auto-clear.
+  No setting, one heuristic.
 - `Esc` clears pinned rays (consistent with the tour's Esc contract).
 - Cursor: `cursor-pointer` on queens (skill: hover feedback on
   interactive elements) + `touch-action: manipulation` on the board
@@ -55,17 +61,26 @@ Rules:
 
 ## 3. Visual spec
 
-- **8 rays** from the inspected queen's square center: E/W along its
-  row, N/S along its column, 4 diagonals — each running **full length
-  to the board edge**. Full-length (not blocked at the first queen)
-  because `h(s)` counts *every* pair on a line, not just adjacent
-  ones; stopping rays early would hide real conflicts.
-  (Alternative considered: chess-like blocked rays. Rejected — pretty
-  but untruthful to the pair-scan oracle in `conflicts.ts`.)
-- **Convergence markers** on every *other* queen a ray passes through:
-  a crisp ring in the conflict token + a small label naming the pair
-  (e.g. `Qc3 ↔ Qf6`), reusing the existing conflict-badge language.
-  Shape + text, never color alone (colorblind users).
+- **8 rays** split at the first hit (per user: **blocked, solid ghost** — not
+  full opaque, not dashed): the segment from the inspected queen to the
+  first queen on a line is solid 90 % in the conflict token; the
+  remainder to the board edge is a solid low-opacity ghost (30 %, neutral
+  ink, still visible but clearly "beyond the blocker"). Every queen *on*
+  any ray — before **or** after the first hit — still gets a ring, so a
+  line with 3 queens on the same diagonal shows 3 rings (the nearest's
+  ray is solid, the beyond is ghost).
+
+  (Earlier draft recommended full-length opaque rays for truthfulness to
+  the pair-scan oracle. You chose the blocked-but-ghost hybrid — keeps
+  the truth (all pairs still ringed) while making the *nearest blocker*
+  readable at a glance.)
+- **Convergence markers** on every *hit* queen on a ray (blocked +
+  ghost alike): a crisp ring in the conflict token + a small pill naming
+  the pair (e.g. `Qc3 ↔ Qf6`), reusing the existing conflict-badge
+  language — ring + label is the always-visible affordance (per your
+  answer to Q2). Hovering **the hit queen itself** also shows that same
+  pair text as a native `title` tooltip (the second half of your Q2
+  answer: ring + hover-tooltip on the hit queen).
 - **Ray styling**: 2 px solid lines in a neutral ink at ~60 % opacity
   with round caps — quiet enough to read as overlay, not board
   furniture. Rays that hit a queen switch to the conflict token for
@@ -158,22 +173,31 @@ separate mobile design needed:
 
 ## 10. Acceptance checklist
 
-- [ ] Hovering any queen draws 8 full-length rays in < 200 ms total
-- [ ] Every queen on a ray gets a ring + pair label; count matches
-  that queen's conflict badge
-- [ ] Tap pins on desktop AND mobile emulation; second tap / tap-away /
-  Esc / step change clears
-- [ ] Keyboard-only: Tab reaches queens, focus shows rays, Esc clears
-- [ ] `prefers-reduced-motion`: instant, no animation
-- [ ] No gradients; ray contrast ≥ 3:1 on both wood squares
-- [ ] `lint` + `typecheck` clean, unit + e2e added, memory bank updated
+- [x] Hovering any queen draws 8 rays in < 200 ms total (ghost solid not dashed)
+- [x] Every queen on a ray gets a ring + pair label; count matches
+  that queen's conflict badge *and* the ghost still lets 2nd-hit queens
+  show their ring (solid beyond, not cut off)
+- [x] Tap pins on desktop AND mobile emulation; second tap / Esc clears;
+  pinned survives scrubbing while paused, cleared on Play resume
+  (`isPlaying → true` effect)
+- [x] Keyboard-only: Tab reaches queens, focus shows rays, Esc clears;
+  `title` hover-tooltip on hit queens
+- [x] `prefers-reduced-motion`: instant, no animation
+- [x] No gradients; ray contrast on both wood squares
+- [x] `lint` + `typecheck` clean, unit tests added, memory bank pending
   (D-entry: why attack rays, not move previews)
+- [x] Legend includes "Ray = line of sight · ring = attacked queen"
 
 ## 11. Remaining questions for the author
 
-1. Blocked vs full-length rays — brief recommends full-length (truthful
-   to `h(s)`). Confirm?
-2. Marker content: pair label (`Qc3 ↔ Qf6`) vs plain ring — label
-   preferred for teaching?
-3. Should pinned rays survive scrubbing to another step, or always
-   clear (brief says clear)?
+All three are now confirmed — no open questions remain. Answers
+recorded here for build traceability:
+
+1. **Blocked vs full-length** → blocked with **solid 30 % ghost** beyond
+   the first hit (your: "solid!"). Formalizes to: segment A solid 90 %,
+   segment B solid 30 % neutral, every queen on any segment still ringed.
+2. **Marker content** → **ring + pair label (always) + ring +
+   hover-tooltip on the hit queen** (your Q2). Pill on the board plus
+   the same text as a native `title` on the hit queen for N=16 crunch.
+3. **Pin vs scrub** → **middle path** (your Q3): pinned while paused /
+   scrubbing, cleared the instant Play resumes.

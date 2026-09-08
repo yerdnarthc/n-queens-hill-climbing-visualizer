@@ -118,6 +118,10 @@ function HomeContent() {
                   <span className="h-2 w-2 rounded-full bg-local-max" />
                   <span>Plateau / Shoulder</span>
                 </div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground/60 ring-1 ring-conflict" />
+                  <span>Ray = line of sight · ring = attacked queen</span>
+                </div>
               </div>
             </div>
           </div>
