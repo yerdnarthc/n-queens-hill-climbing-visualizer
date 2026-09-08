@@ -1,10 +1,10 @@
 # Progress — Where are we now?
 
-> Update at the end of **every** task. Last updated: **2026-09-06** (Phase 16 attack-tint refactor, uncommitted).
+> Update at the end of **every** task. Last updated: **2026-09-06** (Phase 17 queen interaction polish, uncommitted).
 
 ## TL;DR
 
-Phases 1–10 are **complete and verified**; **Phase 11 (queen-travel overhaul + `motion` migration — explicit x/y travel with arc, ghost echo redesign, playback-gated duration, D-046) shipped on 2026-09-06** with commit `0887221`. **Phase 12 ("Sideways" → "Plateau" display rename + first-visit spotlight onboarding tour, D-047) is implemented, verified, and uncommitted.** Current status: **344/344 unit tests passing** (29 suites), typecheck clean, lint clean, production build passing, **Playwright E2E 29/33** (4 failures are the same pre-existing strict-mode duplicate-text violations in StatsRail/StatsHeader specs — smoke ×2, solve-flow, url-state — re-proven on clean HEAD via `git stash` in Phase 12; the 3 new `tour.spec.ts` specs all pass). The home page now renders a full `StatsHeader` + a `<StatsRail variant="rail">` aside inside the chessboard card on `lg+`, a horizontal `<StatsRail variant="compact">` strip on `<lg`, an `AnalyticsPanel` with **shared X-axis dataZoom that auto-scrolls to follow the current-step marker**, a `<StatsRail variant="context">` dashboard under the analytics panel, and **explicit queen travel** (absolute overlay, `x` straight + arced `y` tween with distance-scaled settle, ghost departure echo with 2× linger, speed-aware duration only while playing — all respecting `prefers-reduced-motion`).
+Phases 1–10 are **complete and verified**; **Phase 11 (queen-travel overhaul + `motion` migration — explicit x/y travel with arc, ghost echo redesign, playback-gated duration, D-046) shipped on 2026-09-06** with commit `0887221`. **Phase 12 ("Sideways" → "Plateau" display rename + first-visit spotlight onboarding tour, D-047) is implemented, verified, and uncommitted.** Current status: **369/369 unit tests passing** (33 suites), typecheck clean, lint clean, production build passing, **Playwright E2E 29/33** (4 failures are the same pre-existing strict-mode duplicate-text violations in StatsRail/StatsHeader specs — smoke ×2, solve-flow, url-state — re-proven on clean HEAD via `git stash` in Phase 12; the 3 new `tour.spec.ts` specs all pass). The home page now renders a full `StatsHeader` + a `<StatsRail variant="rail">` aside inside the chessboard card on `lg+`, a horizontal `<StatsRail variant="compact">` strip on `<lg`, an `AnalyticsPanel` with **shared X-axis dataZoom that auto-scrolls to follow the current-step marker**, a `<StatsRail variant="context">` dashboard under the analytics panel, and **explicit queen travel** (absolute overlay, `x` straight + arced `y` tween with distance-scaled settle, ghost departure echo with 2× linger, speed-aware duration only while playing — all respecting `prefers-reduced-motion`).
 
 ## Phase roadmap
 
@@ -28,19 +28,20 @@ Phases 1–10 are **complete and verified**; **Phase 11 (queen-travel overhaul +
 | 13    | Flat queen restyle (own Staunton glyph, solid discs, crisp halo, ghost swap) | ✅ done — commits `76ca22c` + `a708f13` (D-048) |
 | 14    | nikfrank queen artwork (Q-white paths inlined, parameterized fill/stroke, attributed) | ✅ done — commits `6661519` + `eb0c7fc` (D-049) |
 | 15    | User-supplied queen SVG (`src/assets/icons/chess-queen.svg` inlined, stroke prop deleted) | ✅ done — commits `ca38734` + `e0060e9` (D-050) |
-| 16    | Attack visuals refactor (Option 2: transparent queen + square-tint rays + state glows) | ✅ implemented + verified, uncommitted (D-053) |
+| 16    | Attack visuals refactor (Option 2: transparent queen + square-tint rays + state glows) | ✅ done — commit `50ea028` (D-053) |
+| 17    | Queen interaction polish (glow crossfade, hover/pinned emphasis, reverse-scrub trail+ghost, tint rays, badge readability) | ✅ implemented + verified, uncommitted (D-054) |
 
-## Verified status snapshot — 2026-09-06 (Phase 16)
+## Verified status snapshot — 2026-09-06 (Phase 17)
 
 Run inside `n-queens-visualizer/`:
 
-- `npm run test:run` → **362/362 passed** (33 suites; no new tests — existing ray/piece suites cover the refactor via stable testids)
-- `npm run test:e2e` → not re-run in Phase 16 (no selector/layout change to existing specs)
+- `npm run test:run` → **369/369 passed** (33 suites; +7: glow overlay contract, hover/pinned emphasis ×3, reverse-scrub ghost + negated badge)
+- `npm run test:e2e` → not re-run in Phase 17 (no selector/layout change to existing specs)
 - `npm run typecheck` → **clean** (exit 0)
 - `npm run lint` → **clean** (0 warnings, 0 errors)
-- `npm run build` → **passes** against Next 16.3.4; 5 static routes; all new utilities (`fill-conflict/25`, `stroke-conflict/40`, glow `shadow-[...color-mix...]`, stacked `drop-shadow-*`) confirmed present in emitted production CSS via grep
-- pre-commit (lint-staged: prettier + eslint) status: Phase 16 not yet committed
-- `HEAD` (local) = `e0060e9` (D-050 docs); Phase 16 work is uncommitted on top (awaiting commit + push).
+- `npm run build` → **passes** against Next 16.3.4; 5 static routes
+- pre-commit (lint-staged: prettier + eslint) status: Phase 17 not yet committed
+- `HEAD` (local) = `d31eccf` (theme tokens); only this memory-bank update is uncommitted on top.
 
 ## Known issues / housekeeping
 
@@ -117,3 +118,4 @@ The roadmap is complete. Reasonable follow-ups (not committed to):
 | 2026-09-06 | **Hard scroll lock during tour (`useScrollLock`)** | User-reported lag (rect→state→render can't track fast scrolls) + stranded spotlight (clamp pins off-screen targets to 0,0). New hook pins body (`fixed` + `-top` + `100%` width) while open, restores styles + exact scrollY on close; tour `scrollIntoView` flipped to `block: 'center'`; scroll listener KEPT (only tour-initiated smooth scrolls remain, spotlight must track them). Per user: hard lock, click-only backdrop, Esc closes + restores. Validation: lint + typecheck clean, **357/357 across 31 suites** (+3 hook, +1 integration), build clean. Committed (`3220391`). See **D-052**. |
 | 2026-09-06 | **Rewrote + versioned the queen attack-rays brief** | `instructions/queen_path_over_hover_implementation_instructions.md` was a 21-line draft with a false premise (rays as move-set); rewrote it into an 11-section brief whose key correction is attack-rays-not-move-previews (engine truth, D-003), with hover+tap+focus triggers, motion/token spec, no-new-libraries, mobile answer (tap-to-pin), tests, touch-points, and acceptance checklist. Versioned per user request (directory was untracked). |
 | 2026-09-06 | **Phase 16 · Attack visuals refactor (Option 2)** | Per user pick (bolder tints, pure-tint, blue moved / red attacked, legends matched): `queen-piece.tsx` drops solid discs + halo rings for a transparent glyph (`text-stone-900` + stacked drop-shadow keyline) with state glow halos (conflict red / improving blue via `color-mix` arbitrary shadows); `queen-rays.tsx` rewritten to tint-first rendering (solid `fill-conflict/25` + inset edge, ghost `fill-conflict/10`; beams/hatch/defs deleted); legend swatch + copy updated. Badges/a11y/travel/testids untouched. Validation: lint + typecheck clean, **362/362 across 33 suites**, build clean, new utilities confirmed in emitted CSS. See **D-053**. |
+| 2026-09-06 | **Phase 17 · Queen interaction polish (glow crossfade, hover/pinned, reverse trail+ghost, tints, badges)** | queen-glyph.tsx: glow is a crossfading overlay copy keyed by color (opacity-only animation — Motion interpolates filter colors in straight RGBA, which flashed black); black outline stroke. queen-piece.tsx: isHovered/isInspected split with scale+brightness emphasis + persistent white pinned ring; larger min-width badges with nowrap + delta aria-label. chessboard.tsx/origin-echo.tsx: trail tints only the travelled path with staggered draw, landing outline animates after arrival, ghost + moved glow follow displayedMove with row-swap and negated delta in reverse (regression test pins it). queen-rays.tsx: pure square tints, pair pills dropped. globals.css: punchier conflict/improving tokens (authored by user). Validation: lint + typecheck clean, **369/369 across 33 suites**, build clean. Commits 74362a2 + 68847d + 881731d + d31eccf. See **D-054**. |
