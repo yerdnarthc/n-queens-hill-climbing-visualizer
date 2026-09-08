@@ -5,25 +5,6 @@ import { motion, useReducedMotion } from 'motion/react';
 import { computeAttackRays, partitionRayByBoard } from '@/lib/attack-rays';
 import { motionTokens } from '@/lib/motion-tokens';
 
-const FILE_LABELS = [
-  'a',
-  'b',
-  'c',
-  'd',
-  'e',
-  'f',
-  'g',
-  'h',
-  'i',
-  'j',
-  'k',
-  'l',
-  'm',
-  'n',
-  'o',
-  'p',
-];
-
 interface QueenRaysProps {
   /** Hovered queen in board coords, or null (hidden). */
   inspected: { col: number; row: number } | null;
@@ -45,8 +26,8 @@ interface QueenRaysProps {
  * conflict tint (`fill-conflict/25`, `dark:fill-conflict/30`) with a
  * crisp inset edge; squares beyond the first queen hit on a line drop
  * to a lighter ghost tint (`fill-conflict/10`, `dark:fill-conflict/15`).
- * Hit queens keep a crisp ring + `Qc3 ↔ Qf6` pair pill (names the
- * relationship for colorblind users and dense boards).
+ * Hit queens keep a crisp double ring (inner + outer) — no pill, to
+ * keep the board uncluttered.
  *
  * Chess.com-style language: the tint IS the ray. No beams, no hatch, no
  * gradients — flat fills only. Uses the shared grid→pixel math from
@@ -108,8 +89,8 @@ export function QueenRays({ inspected, board, cellW, cellH, n, reducedMotion }: 
           width={cellW - 2}
           height={cellH - 2}
           rx={cellW * 0.14}
-          className="fill-conflict/25 stroke-conflict/40 dark:fill-conflict/30"
-          style={{ strokeWidth: 1 } as React.CSSProperties}
+          className="fill-red-500/40 stroke-red-500/20 dark:fill-conflict/20 dark:fill-red-500/40"
+          style={{ strokeWidth: 0.5 } as React.CSSProperties}
           initial={motionOff ? { opacity: 1 } : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{
@@ -139,13 +120,10 @@ export function QueenRays({ inspected, board, cellW, cellH, n, reducedMotion }: 
         />
       ))}
 
-      {/* Convergence markers on every hit queen: ring + pair label. */}
+      {/* Convergence markers on every hit queen: double ring only. */}
       {hits.map((cell) => {
         const x = cell.col * cellW + cellW / 2;
         const y = cell.row * cellH + cellH / 2;
-        const targetLabel = `${FILE_LABELS[cell.col] ?? cell.col}${n - cell.row}`;
-        const sourceLabel = `${FILE_LABELS[inspected.col] ?? inspected.col}${n - inspected.row}`;
-        const pill = `${sourceLabel} ↔ ${targetLabel}`;
         return (
           <g
             key={`hit-${cell.col}-${cell.row}`}
@@ -154,11 +132,11 @@ export function QueenRays({ inspected, board, cellW, cellH, n, reducedMotion }: 
             <motion.circle
               cx={x}
               cy={y}
-              r={cellW * 0.42}
+              r={cellW * 0.48}
               fill="none"
-              strokeWidth={2.7}
-              className="stroke-conflict"
-              style={{ opacity: 0.96 }}
+              strokeWidth={5}
+              className="stroke-red-600"
+              style={{ opacity: 1 }}
               initial={motionOff ? { scale: 1, opacity: 0.96 } : { scale: 0.82, opacity: 0 }}
               animate={{ scale: 1, opacity: 0.96 }}
               transition={{
@@ -182,34 +160,6 @@ export function QueenRays({ inspected, board, cellW, cellH, n, reducedMotion }: 
                 delay: motionOff ? 0 : 0.2,
               }}
             />
-            <motion.g
-              transform={`translate(${x} ${y + cellH * 0.54})`}
-              initial={motionOff ? { opacity: 1, y: 0 } : { opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: motionTokens.duration.fast,
-                ease: motionTokens.easing.smooth,
-                delay: motionOff ? 0 : 0.18,
-              }}
-            >
-              <rect
-                x={-Math.max(36, pill.length * 3.5)}
-                y={-7}
-                width={Math.max(72, pill.length * 7)}
-                height={14}
-                rx={7}
-                className="fill-card stroke-conflict shadow-sm"
-                strokeWidth={1}
-              />
-              <text
-                textAnchor="middle"
-                dominantBaseline="central"
-                className="fill-conflict font-mono text-[7px] font-bold"
-                style={{ fontSize: '7px' }}
-              >
-                {pill}
-              </text>
-            </motion.g>
           </g>
         );
       })}
