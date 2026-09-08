@@ -44,6 +44,10 @@ export const motionTokens = {
     pop: 1.04,
     /** Queen lift pulse peak (was hardcoded `1.15` in queen-piece). */
     queenLift: 1.5,
+    /** Hovered-queen emphasis — clearly bigger, still below pinned. */
+    queenHover: 1.08,
+    /** Pinned-queen emphasis — the largest resting scale on the board. */
+    queenPinned: 1.14,
   },
 };
 
@@ -82,7 +86,7 @@ export const QUEEN_ARC_LIFT_PX = 12;
  *
  * ★ Change this number to make the ghost linger longer/shorter. ★
  */
-export const ORIGIN_ECHO_DURATION_MULTIPLIER = 3;
+export const ORIGIN_ECHO_DURATION_MULTIPLIER = 1.5;
 
 /**
  * Settle easing scaled by travel distance (in squares).

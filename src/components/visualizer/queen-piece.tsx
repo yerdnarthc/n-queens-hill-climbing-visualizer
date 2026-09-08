@@ -7,13 +7,7 @@ import * as React from 'react';
 import { animate as animateMotionValue, motion, useAnimate, useMotionValue } from 'motion/react';
 import { QueenGlyph } from './queen-glyph';
 import { cn } from '@/lib/utils';
-import {
-  easeForTravel,
-  motionTokens,
-  QUEEN_ARC_LIFT_PX,
-  QUEEN_SHADOW_LIFT,
-  QUEEN_SHADOW_REST,
-} from '@/lib/motion-tokens';
+import { easeForTravel, motionTokens, QUEEN_ARC_LIFT_PX } from '@/lib/motion-tokens';
 
 interface QueenPieceProps {
   column: number;
@@ -22,8 +16,10 @@ interface QueenPieceProps {
   isMoved: boolean;
   deltaConflicts?: number;
   boardSize?: number;
-  /** Whether THIS queen is the currently inspected (hovered/pinned) queen. */
+  /** Whether THIS queen is pinned (tapped/clicked). Drives aria-pressed + pinned visuals. */
   isInspected?: boolean;
+  /** Whether THIS queen is hover/focus-targeted (transient, unpinned). Drives hover visuals. */
+  isHovered?: boolean;
   /** Native-title payload on hit queens: "Attacked by Qc3 along row". */
   hitTitle?: string;
   /** Hover/focus/tap wiring from the parent (transient UI — not the store). */
@@ -58,6 +54,7 @@ export function QueenPiece({
   deltaConflicts,
   boardSize = 8,
   isInspected = false,
+  isHovered = false,
   hitTitle,
   onInspectStart,
   onInspectEnd,
@@ -143,20 +140,29 @@ export function QueenPiece({
 
     const seconds = durationMs / 1000;
 
-    // Scale pulse on the queen token.
+    // Scale pulse on the queen glyph (transparent token — no container to
+    // shadow, so only scale lifts; the glyph's own SVG glow handles state).
     animate(
       scope.current,
       { scale: [1, motionTokens.scale.queenLift, 1] },
       { duration: seconds, ease: motionTokens.easing.smooth },
     );
-
-    // Shadow grow (multi-stop box-shadow interpolation).
-    animate(
-      scope.current,
-      { boxShadow: [QUEEN_SHADOW_REST, QUEEN_SHADOW_LIFT, QUEEN_SHADOW_REST] },
-      { duration: seconds, ease: motionTokens.easing.smooth },
-    );
   }, [column, row, durationMs, reducedMotion, animate, scope]);
+
+  // Glyph-level glow — no container, no halo div, no drop-shadow on the
+  // button. The queen IS the glyph, so conflict/improving glow follows
+  // the silhouette itself via an SVG filter on the path.
+  const glyphGlow = hasConflict ? 'conflict' : isMoved ? 'improving' : 'none';
+
+  // Hover/pinned emphasis — scale + brightness on the glyph wrapper (NOT
+  // the button: the travel lift-pulse owns the button's scale, and nested
+  // transforms compose). Pinned wins over hovered when both are true.
+  const emphasisScale = isInspected
+    ? motionTokens.scale.queenPinned
+    : isHovered
+      ? motionTokens.scale.queenHover
+      : 1;
+  const emphasisBrightness = isInspected ? 'brightness-125' : isHovered ? 'brightness-110' : '';
 
   return (
     <motion.div
@@ -164,30 +170,20 @@ export function QueenPiece({
       className="absolute top-0 left-0 flex touch-manipulation items-center justify-center select-none"
       data-testid={`queen-${column}-${row}`}
     >
-      {/* State glow — soft halo behind the token (no solid disc: the queen
-          is a transparent glyph floating on the square, chess.com-style).
-          Red = attacked, blue = just moved; calm static glow, no pulse, so
-          it stays readable at 30× playback. Lives on this separate layer so
-          it never fights the lift-pulse box-shadow animation on the button. */}
-      {hasConflict ? (
+      {/* Pinned ring — persistent white outline marking the tapped/clicked
+          queen. White reads as "selected" without colliding with the red
+          (conflict) / blue (moved) state language. Sits outside the glyph. */}
+      {isInspected && (
         <div
-          className="absolute inset-[10%] rounded-full shadow-[0_0_16px_6px_color-mix(in_oklab,var(--feature-conflict)_55%,transparent)]"
+          data-testid="queen-pinned-ring"
+          className="absolute -inset-1 rounded-full border-2 border-white/90"
           aria-hidden="true"
         />
-      ) : isMoved ? (
-        <div
-          className="absolute inset-[10%] rounded-full shadow-[0_0_14px_5px_color-mix(in_oklab,var(--feature-improving)_50%,transparent)]"
-          aria-hidden="true"
-        />
-      ) : null}
-
-      {/* Main Queen Token — `ref={scope}` is the animation target for the
-          lift + shadow-grow pulse above. Transparent by design: no disc, no
-          ring fills — just the glyph floating on the square. The glyph is
-          dark espresso (`text-stone-900`, readable on both warm-wood tones
-          in both themes since board colors never change) with a stacked
-          drop-shadow: dark contact depth underneath + soft white keyline on
-          top so it separates from light AND dark squares. */}
+      )}
+      {/* Main Queen Token — transparent container: no disc, no halo div, no
+          box-shadow. The lift animation still targets this button (scale
+          only — see effect above), but the visual glow lives on the glyph
+          itself. */}
       <button
         type="button"
         ref={scope}
@@ -202,27 +198,36 @@ export function QueenPiece({
         onBlur={onInspectEnd}
         onClick={onTogglePin}
         className={cn(
-          'relative z-10 flex h-[82%] w-[82%] cursor-pointer items-center justify-center rounded-full bg-transparent transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card focus-visible:outline-none',
+          'relative z-10 flex h-full w-full cursor-pointer items-center justify-center bg-transparent transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card focus-visible:outline-none',
         )}
-        style={{
-          // Equivalent of `shadow-md` from Tailwind, expressed as a
-          // box-shadow string so Motion can animate it (see motion-tokens).
-          boxShadow: QUEEN_SHADOW_REST,
-        }}
       >
-        <span className="drop-shadow-[0_0_1.5px_rgb(255_255_255/0.85)] drop-shadow-[0_1px_1px_rgb(0_0_0/0.45)]">
-          <QueenGlyph className="h-[80%] w-[80%] text-stone-900" />
-        </span>
+        <motion.span
+          className={cn('flex h-full w-full items-center justify-center', emphasisBrightness)}
+          initial={false}
+          animate={{ scale: emphasisScale }}
+          transition={{
+            duration: reducedMotion ? 0 : motionTokens.duration.fast,
+            ease: motionTokens.easing.smooth,
+          }}
+        >
+          <QueenGlyph
+            className="h-full w-full text-white"
+            glow={glyphGlow as 'conflict' | 'improving' | 'none'}
+          />
+        </motion.span>
 
-        {/* Conflict count badge on the queen if > 0 */}
+        {/* Conflict count badge on the queen if > 0.
+            Sized for legibility: min-width + nowrap so double-digit counts
+            (common at N=16) never clip or wrap; leading-none keeps digits
+            vertically centered. */}
         {hasConflict && (
           <span
             aria-label={`${conflictsCount} attacking pairs on this queen`}
             className={cn(
-              'absolute flex items-center justify-center rounded-full bg-conflict-deep font-mono font-bold text-primary-foreground shadow-xs ring-1 ring-conflict',
+              'absolute flex items-center justify-center rounded-full bg-conflict-deep font-mono font-bold whitespace-nowrap text-primary-foreground tabular-nums shadow-xs ring-1 ring-conflict',
               isDense
-                ? '-top-0.5 -right-0.5 h-3 w-3 text-[7.5px]'
-                : '-top-1 -right-1 h-4 w-4 text-[10px]',
+                ? '-top-0.5 -right-0.5 h-3.5 min-w-3.5 px-1 text-[11px] leading-none'
+                : '-top-1 -right-1 h-5 min-w-5 px-1 text-[13px] leading-none',
             )}
           >
             {conflictsCount}
@@ -232,11 +237,12 @@ export function QueenPiece({
         {/* Delta badge on recently moved queen */}
         {isMoved && deltaConflicts !== undefined && (
           <span
+            aria-label={`Move changed conflicts by ${deltaConflicts}`}
             className={cn(
-              'absolute flex items-center justify-center rounded-full font-mono font-bold text-primary-foreground shadow-xs',
+              'absolute flex items-center justify-center rounded-full font-mono font-bold whitespace-nowrap text-primary-foreground tabular-nums shadow-xs',
               isDense
-                ? '-right-0.5 -bottom-0.5 h-3 min-w-3 px-0.5 text-[7.5px]'
-                : '-right-1 -bottom-1 h-4 min-w-4 px-0.5 text-[9px]',
+                ? '-right-0.5 -bottom-0.5 h-3.5 min-w-3.5 px-1 text-[11px] leading-none'
+                : '-right-1 -bottom-1 h-6 min-w-6 px-1 text-[13px] leading-none',
               deltaConflicts < 0
                 ? 'bg-global-max ring-1 ring-global-max'
                 : deltaConflicts === 0

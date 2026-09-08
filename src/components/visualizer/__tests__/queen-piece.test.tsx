@@ -56,6 +56,8 @@ describe('QueenPiece', () => {
     );
     // The delta badge text is the formatted number (with sign for positives).
     expect(screen.getByText('-1')).toBeInTheDocument();
+    // Delta badge announces its meaning, not just a bare number.
+    expect(screen.getByLabelText(/move changed conflicts by -1/i)).toBeInTheDocument();
   });
 
   it('accepts travel props without throwing (the explicit x/y wiring)', () => {
@@ -94,9 +96,10 @@ describe('QueenPiece', () => {
         {...TRAVEL}
       />,
     );
-    // h-4 w-4 for the non-dense badge
+    // h-5 min-w-5 for the non-dense badge (min-width so double digits never clip)
     const badge8 = screen.getByLabelText(/2 attacking pairs/i);
-    expect(badge8.className).toMatch(/h-4 w-4/);
+    expect(badge8.className).toMatch(/h-5 min-w-5/);
+    expect(badge8.className).toMatch(/whitespace-nowrap/);
 
     rerender(
       <QueenPiece
@@ -108,9 +111,9 @@ describe('QueenPiece', () => {
         {...TRAVEL}
       />,
     );
-    // h-3 w-3 for the dense badge
+    // h-3.5 min-w-3.5 for the dense badge
     const badge12 = screen.getByLabelText(/2 attacking pairs/i);
-    expect(badge12.className).toMatch(/h-3 w-3/);
+    expect(badge12.className).toMatch(/h-3.5 min-w-3.5/);
   });
 
   it('uses flat fills (no gradients) in every state', () => {
@@ -145,6 +148,58 @@ describe('QueenPiece', () => {
       <QueenPiece column={2} row={3} conflictsCount={0} isMoved={false} {...TRAVEL} />,
     );
     expect(container.querySelector('[data-testid="queen-glyph"]')).not.toBeNull();
+  });
+
+  it('shows hover emphasis without a pinned ring when hovered but not pinned', () => {
+    const { container } = render(
+      <QueenPiece
+        column={2}
+        row={3}
+        conflictsCount={0}
+        isMoved={false}
+        isHovered={true}
+        {...TRAVEL}
+      />,
+    );
+    // Brightness lift marks the hover target; no persistent selection ring.
+    // (Brightness sits on the motion.span wrapping the glyph.)
+    const glyph = container.querySelector('[data-testid="queen-glyph"]');
+    expect(glyph?.parentElement?.className).toMatch(/brightness-110/);
+    expect(container.querySelector('[data-testid="queen-pinned-ring"]')).toBeNull();
+    // Hover alone is not a toggle press.
+    expect(screen.getByRole('button', { name: /queen at/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  it('shows pinned emphasis (ring + stronger lift) and aria-pressed when pinned', () => {
+    const { container } = render(
+      <QueenPiece
+        column={2}
+        row={3}
+        conflictsCount={0}
+        isMoved={false}
+        isInspected={true}
+        {...TRAVEL}
+      />,
+    );
+    expect(container.querySelector('[data-testid="queen-pinned-ring"]')).not.toBeNull();
+    const glyph = container.querySelector('[data-testid="queen-glyph"]');
+    expect(glyph?.parentElement?.className).toMatch(/brightness-125/);
+    expect(screen.getByRole('button', { name: /queen at/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('shows neither hover nor pinned emphasis by default', () => {
+    const { container } = render(
+      <QueenPiece column={2} row={3} conflictsCount={0} isMoved={false} {...TRAVEL} />,
+    );
+    const glyph = container.querySelector('[data-testid="queen-glyph"]');
+    expect(glyph?.parentElement?.className).not.toMatch(/brightness-1/);
+    expect(container.querySelector('[data-testid="queen-pinned-ring"]')).toBeNull();
   });
 
   it('uses a deterministic data-testid that depends on (col, row)', () => {
