@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within, act } from '@testing-library/react';
 import * as React from 'react';
 import { Chessboard } from '../chessboard';
 import { simulationStore } from '@/store';
@@ -30,5 +30,46 @@ describe('Chessboard', () => {
       const row = board[col];
       expect(screen.getByTestId(`queen-${col}-${row}`)).toBeInTheDocument();
     }
+  });
+
+  it('ghost + moved glow follow the undone move when scrubbing backwards', () => {
+    const store = simulationStore.getState();
+    store.setConfig({ boardSize: 8, seed: 27, strategy: 'steepest-ascent' });
+    const result = simulationStore.getState().result!;
+    // First real improving move at k >= 2 (non-zero delta so the badge is
+    // observable; k >= 2 so the backward scrub lands on k-1 >= 1, where the
+    // reversed ghost is shown — step 0 intentionally shows no trail/ghost).
+    const k = result.snapshots.findIndex(
+      (s, i) =>
+        i >= 2 && s.move !== null && s.move.fromRow !== s.move.toRow && s.move.deltaConflicts !== 0,
+    );
+    expect(k).toBeGreaterThan(1);
+    const mv = result.snapshots[k]!.move!;
+    render(<Chessboard />);
+
+    act(() => {
+      store.jumpTo(k);
+    });
+    // Forward arrival: ghost marks where the queen came from.
+    expect(screen.getByTestId('origin-echo').getAttribute('title')).toBe(
+      `Moved from row ${mv.fromRow + 1}`,
+    );
+
+    act(() => {
+      store.stepBack();
+    });
+    // Backward scrub to k-1: ghost must mark the UNDONE move's origin
+    // (its toRow — where the queen just left going backward), not the
+    // previous queen's path (move_{k-1}).
+    expect(screen.getByTestId('origin-echo').getAttribute('title')).toBe(
+      `Moved from row ${mv.toRow + 1}`,
+    );
+    expect(screen.getByText(`R${mv.toRow + 1}`)).toBeInTheDocument();
+    // Moved-queen glow follows too, with the negated (truthful reverse) delta.
+    const queen = screen.getByTestId(`queen-${mv.column}-${mv.fromRow}`);
+    const expected = -mv.deltaConflicts;
+    expect(
+      within(queen).getByText(expected > 0 ? `+${expected}` : `${expected}`),
+    ).toBeInTheDocument();
   });
 });

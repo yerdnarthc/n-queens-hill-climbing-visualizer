@@ -40,7 +40,8 @@ export function OriginEcho({ move, durationMs, reducedMotion }: OriginEchoProps)
   const title = `Moved from row ${move.fromRow + 1}`;
 
   if (reducedMotion) {
-    // Static indicator — same visual language, frozen mid-departure.
+    // Static indicator — same transparent glyph language as the live queen,
+    // frozen mid-departure. No disc container — the queen IS the glyph.
     return (
       <div
         data-testid="origin-echo"
@@ -48,11 +49,11 @@ export function OriginEcho({ move, durationMs, reducedMotion }: OriginEchoProps)
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
       >
         <div
-          className="absolute inset-1 rounded-md bg-improving/25 ring-2 ring-improving-deep/80 ring-offset-1 ring-offset-background"
+          className="absolute inset-1 rounded-md ring-2 ring-improving/40 ring-offset-1 ring-offset-background"
           aria-hidden="true"
         />
-        <QueenGlyph className="relative h-1/2 w-1/2 text-improving-deep opacity-40" />
-        <span className="absolute right-0.5 bottom-0.5 rounded-sm bg-card px-1 font-mono text-[8px] leading-4 font-bold text-improving-deep ring-1 ring-improving-deep/60">
+        <QueenGlyph className="relative h-full w-full text-improving opacity-40" glow="improving" />
+        <span className="absolute right-0.5 bottom-0.5 rounded-sm bg-card px-1 font-mono text-[8px] leading-4 font-bold text-improving ring-1 ring-improving/50">
           R{move.fromRow + 1}
         </span>
       </div>
@@ -66,19 +67,20 @@ export function OriginEcho({ move, durationMs, reducedMotion }: OriginEchoProps)
       data-testid="origin-echo"
       title={title}
       className="pointer-events-none absolute inset-0 flex items-center justify-center"
-      initial={{ opacity: 0.95 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: 0 }}
-      transition={{ duration: seconds, ease: motionTokens.easing.smooth }}
+      transition={{ duration: seconds, ease: motionTokens.easing.linear }}
     >
-      {/* Halo bloom */}
+      {/* Halo — no disc, just a soft ring echoing the square itself */}
       <motion.div
-        className="absolute inset-1 rounded-md bg-improving/25 ring-2 ring-improving-deep/80 ring-offset-1 ring-offset-background"
+        className="absolute inset-1 rounded-md ring-2 ring-improving/40 ring-offset-1 ring-offset-background"
         aria-hidden="true"
         initial={{ scale: 1 }}
         animate={{ scale: 1.22 }}
         transition={{ duration: seconds, ease: 'easeOut' }}
       />
-      {/* Dissolving queen ghost */}
+      {/* Dissolving queen ghost — transparent glyph only, no container.
+          Glow follows the silhouette itself, matching the live queen. */}
       <motion.div
         className="relative flex h-full w-full items-center justify-center"
         aria-hidden="true"
@@ -86,10 +88,10 @@ export function OriginEcho({ move, durationMs, reducedMotion }: OriginEchoProps)
         animate={{ scale: 0.88, opacity: 0.15 }}
         transition={{ duration: seconds, ease: 'easeOut' }}
       >
-        <QueenGlyph className="h-1/2 w-1/2 text-improving-deep" />
+        <QueenGlyph className="h-full w-full text-improving" glow="improving" />
       </motion.div>
       {/* Origin-row label */}
-      <span className="absolute right-0.5 bottom-0.5 rounded-sm bg-card px-1 font-mono text-[8px] leading-4 font-bold text-improving-deep ring-1 ring-improving-deep/60">
+      <span className="absolute right-0.5 bottom-0.5 rounded-sm bg-card px-1 font-mono text-[8px] leading-4 font-bold text-improving ring-1 ring-improving/50">
         R{move.fromRow + 1}
       </span>
     </motion.div>

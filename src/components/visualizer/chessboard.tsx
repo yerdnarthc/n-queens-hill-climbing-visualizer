@@ -1,14 +1,15 @@
 'use client';
+/* eslint-disable react-hooks/refs -- synchronous direction latch for gap-free reverse trail (see isReversingRef below) */
 
 import * as React from 'react';
-import { useReducedMotion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useSimulationStore, selectSnapshot } from '@/store';
 import { createConflicts } from '@/lib/engine';
 import { QueenPiece } from './queen-piece';
 import { QueenRays } from './queen-rays';
 import { OriginEcho } from './origin-echo';
 import { useQueenDurationMs } from './useQueenDuration';
-import { ORIGIN_ECHO_DURATION_MULTIPLIER } from '@/lib/motion-tokens';
+import { motionTokens, ORIGIN_ECHO_DURATION_MULTIPLIER } from '@/lib/motion-tokens';
 import { cn } from '@/lib/utils';
 
 const FILE_LABELS = [
@@ -59,7 +60,53 @@ export function Chessboard() {
 
   const n = snapshot ? snapshot.board.length : config.boardSize;
   const board = snapshot?.board ?? null;
-  const move = snapshot?.move ?? null;
+
+  // Reverse-scrub handling: when stepping backwards we show the *undone*
+  // move's path animating in reverse, with origin tint included. This
+  // makes scrubbing feel like a reversible video, not a jump to a
+  // different queen's trail.
+  const currentStep = useSimulationStore((s) => s.currentStep);
+  const result = useSimulationStore((s) => s.result);
+  const nextMove = result?.snapshots[currentStep + 1]?.move ?? null;
+  // Direction-persistent refs: we need the *last scrub direction* to stay
+  // stable across re-renders at the same step, otherwise the trail flicks
+  // back to forward on the next frame. Updating both refs synchronously
+  // during render keeps the reverse trail seamless (no one-frame gap).
+  const prevStepRef = React.useRef(currentStep);
+  const isReversingRef = React.useRef(false);
+  if (prevStepRef.current !== currentStep) {
+    isReversingRef.current = prevStepRef.current > currentStep;
+    prevStepRef.current = currentStep;
+  }
+  const isReversing = isReversingRef.current;
+  // At step 0 there is no trail — initial position never had a move. This
+  // also suppresses the "first queen's trail at reset" bug where a
+  // backward jump to 0 would otherwise show nextMove (move 1) as a trail.
+  const isAtInitial = currentStep === 0;
+  const displayedMove =
+    !isAtInitial && isReversing && nextMove ? nextMove : (snapshot?.move ?? null);
+  // For the trail we include the origin square (where the queen started)
+  // and animate direction-aware. Destination gets an outline, not a tint.
+  const isTrailReversed = !isAtInitial && isReversing && nextMove !== null;
+  // Ghost follows the DISPLAYED move, not the raw snapshot move — this is
+  // the reported bug: on a backward scrub to k-1, snapshot.move is move_{k-1}
+  // (the previous queen's path), while the trail shows the undone move_k in
+  // reverse. Swapping rows when reversed keeps OriginEcho dumb: its
+  // "fromRow" always means "the square the queen just left".
+  const echoMove =
+    displayedMove && displayedMove.fromRow !== displayedMove.toRow
+      ? isTrailReversed
+        ? {
+            column: displayedMove.column,
+            fromRow: displayedMove.toRow,
+            toRow: displayedMove.fromRow,
+          }
+        : {
+            column: displayedMove.column,
+            fromRow: displayedMove.fromRow,
+            toRow: displayedMove.toRow,
+          }
+      : null;
 
   // ── Attack-ray inspector state (transient UI — not the store) ──
   const [hovered, setHovered] = React.useState<{ col: number; row: number } | null>(null);
@@ -79,7 +126,6 @@ export function Chessboard() {
   // never changes column, so pin-by-col is stable. But if the board
   // shape changed (N slider), pin must clear — stale (col,row) would
   // dangle.
-  const currentStep = useSimulationStore((s) => s.currentStep);
   React.useEffect(() => {
     if (pinned !== null && (board === null || pinned.col >= board.length)) {
       // Dangling pin after N shrinks — eagerly clear it.
@@ -163,14 +209,14 @@ export function Chessboard() {
   const totalConflicts = snapshot?.conflicts ?? 0;
   const isSolved = board !== null && totalConflicts === 0;
 
-  const showEcho = move !== null && move.fromRow !== move.toRow;
+  const showEcho = echoMove !== null;
 
   return (
     <div className="relative flex w-full flex-col items-center justify-center">
       {/* Chessboard Outer Container */}
       <div
         className={cn(
-          'relative aspect-square w-full max-w-175 min-w-65 rounded-2xl border-1 p-2 shadow-md transition-all duration-300',
+          'relative aspect-square w-full max-w-175 min-w-65 rounded-xs border-x p-2 shadow-md transition-all duration-300',
           isSolved
             ? // The `border-emerald-500/80` + `ring-emerald-500/20` class
               // strings are deliberately kept as literal Tailwind palette
@@ -179,7 +225,7 @@ export function Chessboard() {
               // `e2e/solve-flow.spec.ts` — which locates the solved wrapper
               // by `.border-emerald-500\/80` — keeps working. The semantic
               // equivalence with `--feature-global-max` is intentional.
-              'border-emerald-500/80 ring-4 shadow-emerald-500/10 ring-emerald-500/20'
+              'border-emerald-500 ring-8 shadow-emerald-500/50 ring-emerald-500/50'
             : totalConflicts > 0
               ? 'border-border/90 bg-card/80 shadow-black/20'
               : 'border-border bg-card/60',
@@ -196,7 +242,7 @@ export function Chessboard() {
               positioned by x/y transforms (never `layout`). */}
           <div
             ref={gridRef}
-            className="grid h-full w-full overflow-hidden rounded-xl border border-black/20 shadow-inner"
+            className="grid h-full w-full overflow-hidden rounded-xs border border-black/20 shadow-inner"
             style={{
               gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
               gridTemplateRows: `repeat(${n}, minmax(0, 1fr))`,
@@ -207,9 +253,36 @@ export function Chessboard() {
               const row = Math.floor(idx / n);
               const col = idx % n;
               const isLightSquare = (row + col) % 2 === 0;
+              // Displayed move respects scrub direction: forward shows the
+              // current snapshot's move, backward shows the undone move in
+              // reverse so the trail rewinds instead of jumping to a
+              // different queen.
+              const dm = displayedMove;
               const isDestinationSquare =
-                move !== null && move.column === col && move.toRow === row;
-              const isMovedCol = move !== null && move.column === col;
+                dm !== null &&
+                dm.column === col &&
+                (isTrailReversed ? dm.fromRow === row : dm.toRow === row);
+              // Trail includes the origin square (where the queen started)
+              // plus intermediates, exclusive of the landing square which
+              // gets an outline instead.
+              const isOnMovePath =
+                dm !== null &&
+                dm.fromRow !== dm.toRow &&
+                col === dm.column &&
+                (isTrailReversed
+                  ? row !== dm.fromRow &&
+                    ((dm.fromRow < dm.toRow && row > dm.fromRow && row <= dm.toRow) ||
+                      (dm.fromRow > dm.toRow && row < dm.fromRow && row >= dm.toRow))
+                  : row !== dm.toRow &&
+                    ((dm.fromRow < dm.toRow && row >= dm.fromRow && row < dm.toRow) ||
+                      (dm.fromRow > dm.toRow && row <= dm.fromRow && row > dm.toRow)));
+              // Order along the trail for staggered animation (0 = nearest source
+              // in the displayed direction; reversed when scrubbing backwards)
+              const trailIndex = isOnMovePath
+                ? isTrailReversed
+                  ? Math.abs(row - dm!.toRow)
+                  : Math.abs(row - dm!.fromRow)
+                : -1;
 
               return (
                 <div
@@ -219,11 +292,44 @@ export function Chessboard() {
                     'relative flex items-center justify-center transition-colors duration-150',
                     isLightSquare
                       ? 'bg-[#f0d9b5] text-[#b58863] dark:bg-[#f0d9b5] dark:text-[#8a6549]'
-                      : 'bg-[#b88f6e] text-[#f0d9b5] dark:bg-[#b88f6e] dark:text-[#d9c3a3]',
-                    isMovedCol && !isDestinationSquare && 'ring-1 ring-improving/30 ring-inset',
-                    isDestinationSquare && 'ring-2 ring-improving/70 ring-inset',
+                      : 'bg-[#c29b7a] text-[#f0d9b5] dark:bg-[#c29b7a] dark:text-[#d9c3a3]',
                   )}
                 >
+                  {/* Trail tint — animated along the queen's vertical path.
+                      Cyan (improving) to match the moved glow + legend, same
+                      opacity light/dark like the conflict glow. Resets every
+                      move via key on the animated div. */}
+                  {isOnMovePath && (
+                    <motion.div
+                      key={`${dm!.column}-${dm!.fromRow}-${dm!.toRow}-${col}-${row}`}
+                      initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{
+                        duration: motionTokens.duration.fast,
+                        ease: motionTokens.easing.smooth,
+                        delay: reduceMotion ? 0 : Math.max(0, trailIndex) * 0.035,
+                      }}
+                      className="pointer-events-none absolute inset-px rounded-[2px] bg-improving/35"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {/* Landing — outline/border, not a fill. Animates only after the queen lands. */}
+                  {isDestinationSquare && (
+                    <motion.div
+                      key={`${dm!.column}-${dm!.fromRow}-${dm!.toRow}-dest`}
+                      initial={
+                        reduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.86 }
+                      }
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{
+                        duration: motionTokens.duration.fast,
+                        ease: motionTokens.easing.smooth,
+                        delay: reduceMotion ? 0 : durationMs / 1000,
+                      }}
+                      className="pointer-events-none absolute inset-0 rounded-[3px] border-2 border-improving shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--feature-improving)_90%,transparent)]"
+                      aria-hidden="true"
+                    />
+                  )}
                   {/* Rank label on left edge */}
                   {col === 0 && (
                     <span
@@ -270,8 +376,14 @@ export function Chessboard() {
                 reducedMotion={reduceMotion}
               />
               {board.map((row, col) => {
+                // Moved-queen glow follows the DISPLAYED move like everything
+                // else: on a backward scrub the undone queen (sitting at the
+                // reversed origin) glows, not the previous step's queen.
+                const dm = displayedMove;
                 const isDestinationSquare =
-                  move !== null && move.column === col && move.toRow === row;
+                  dm !== null &&
+                  dm.column === col &&
+                  (isTrailReversed ? dm.fromRow === row : dm.toRow === row);
                 const isPinned = pinned !== null && pinned.col === col;
                 const isHoverTarget =
                   hovered !== null && hovered.col === col && hovered.row === row;
@@ -282,7 +394,8 @@ export function Chessboard() {
                     column={col}
                     row={row}
                     conflictsCount={queenConflictCounts[col]}
-                    isInspected={isPinned || isHoverTarget}
+                    isInspected={isPinned}
+                    isHovered={isHoverTarget}
                     hitTitle={hitTitle}
                     onInspectStart={() => setHovered({ col, row })}
                     onInspectEnd={() => setHovered(null)}
@@ -290,7 +403,15 @@ export function Chessboard() {
                       setPinned((prev) => (prev !== null && prev.col === col ? null : { col, row }))
                     }
                     isMoved={isDestinationSquare}
-                    deltaConflicts={isDestinationSquare ? move?.deltaConflicts : undefined}
+                    deltaConflicts={
+                      isDestinationSquare && dm
+                        ? // Negated in reverse: undoing a Δ move changes
+                          // conflicts by −Δ from the viewer's perspective.
+                          isTrailReversed
+                          ? -dm.deltaConflicts
+                          : dm.deltaConflicts
+                        : undefined
+                    }
                     boardSize={n}
                     x={col * cellW}
                     y={row * cellH}
@@ -301,22 +422,23 @@ export function Chessboard() {
                 );
               })}
 
-              {/* Origin marker from the last move — "the queen was HERE".
-                  Positioned over the origin square; re-keys per move so each
-                  new move replays the departure animation. */}
-              {showEcho && move !== null && (
+              {/* Origin marker from the displayed move — "the queen was HERE".
+                  Positioned over the displayed origin (fromRow forward,
+                  toRow in reverse); re-keys per move AND direction so each
+                  scrub replays the departure animation. */}
+              {showEcho && echoMove !== null && (
                 <div
                   className="absolute"
                   style={{
-                    left: move.column * cellW,
-                    top: move.fromRow * cellH,
+                    left: echoMove.column * cellW,
+                    top: echoMove.fromRow * cellH,
                     width: cellW,
                     height: cellH,
                   }}
                 >
                   <OriginEcho
-                    key={`${move.column}-${move.fromRow}-${move.toRow}`}
-                    move={move}
+                    key={`${echoMove.column}-${echoMove.fromRow}-${echoMove.toRow}`}
+                    move={echoMove}
                     // The echo lingers LONGER than the queen's flight (see
                     // ORIGIN_ECHO_DURATION_MULTIPLIER in
                     // `@/lib/motion-tokens`) so the departure stays
