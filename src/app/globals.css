@@ -51,11 +51,11 @@
   /* Semantic landscape-feature colors (one accent per concept,
      shared across board, charts, legend, and status badges).
      Re-tuned for AA contrast on the new warm cream surfaces. */
-  --feature-improving: #0369a1; /* sky-700  — deeper than the old sky-600 for AA on cream */
+  --feature-improving: #17aeff; /* sky-700  — deeper than the old sky-600 for AA on cream */
   --feature-shoulder: #ea580c; /* orange-600 — slightly deeper for AA on cream */
   --feature-local-max: #b45309; /* amber-700 — slightly deeper */
   --feature-global-max: #047857; /* emerald-700 — solution */
-  --feature-conflict: #dc2626; /* red-600 — attacking queens (deeper than rose-500) */
+  --feature-conflict: rgb(245, 49, 49); /* red-600 — attacking queens (deeper than rose-500) */
 
   /* "Deep" shade per concept — used as the bottom of a tonal
      gradient (e.g. queen-piece: from-feature to-feature-deep). */
@@ -121,11 +121,11 @@
 
   /* Semantic landscape-feature colors — re-tuned for visibility on
      the new oxblood/ink backgrounds. */
-  --feature-improving: #7dd3fc; /* sky-300  — brighter than the old sky-400 */
+  --feature-improving: #27b5f7; /* sky-300  — brighter than the old sky-400 */
   --feature-shoulder: #fdba74; /* orange-300 */
   --feature-local-max: #fcd34d; /* amber-300 — brighter than the old amber-400 */
   --feature-global-max: #6ee7b7; /* emerald-300 — pops on near-black */
-  --feature-conflict: #fca5a5; /* rose-300 — brighter than the old rose-400 */
+  --feature-conflict: #ff5252; /* rose-300 — brighter than the old rose-400 */
 
   /* Dark-side "deep" shades for gradient bottoms (paired with the
      light-300 values above to keep the same tonal step). */
