@@ -4,7 +4,6 @@ import * as React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { computeAttackRays, partitionRayByBoard } from '@/lib/attack-rays';
 import { motionTokens } from '@/lib/motion-tokens';
-import { cn } from '@/lib/utils';
 
 const FILE_LABELS = [
   'a',
@@ -40,18 +39,18 @@ interface QueenRaysProps {
 }
 
 /**
- * QueenRays — 8 sight-line rays from the inspected queen to every board
- * edge, with a crisp ring on every *other* queen a ray passes through and
- * a small "Qe4 ↔ Qb2" pair-pill naming the attacking relationship.
+ * QueenRays — pure square-tint attack overlay (no lines).
  *
- * Flat ink only (no gradients): rays that hit a queen glow in the conflict
- * token up to the first blocker (`--feature-conflict`), the remainder
- * ghost at ~30 % as a solid low-opacity line (per user: blocked-but-
- * visible, solid not dashed). Beyond-hit markers keep a ring + the pair
- * label even though the underlying ray ghosts.
+ * Every square on the inspected queen's 8 sight-lines gets a bold
+ * conflict tint (`fill-conflict/25`, `dark:fill-conflict/30`) with a
+ * crisp inset edge; squares beyond the first queen hit on a line drop
+ * to a lighter ghost tint (`fill-conflict/10`, `dark:fill-conflict/15`).
+ * Hit queens keep a crisp ring + `Qc3 ↔ Qf6` pair pill (names the
+ * relationship for colorblind users and dense boards).
  *
- * Uses the shared grid→pixel math from Chessboard's overlay, so no new
- * measurement is introduced.
+ * Chess.com-style language: the tint IS the ray. No beams, no hatch, no
+ * gradients — flat fills only. Uses the shared grid→pixel math from
+ * Chessboard's overlay, so no new measurement is introduced.
  */
 export function QueenRays({ inspected, board, cellW, cellH, n, reducedMotion }: QueenRaysProps) {
   const motionOff = !!useReducedMotion() || reducedMotion;
@@ -60,102 +59,88 @@ export function QueenRays({ inspected, board, cellW, cellH, n, reducedMotion }: 
 
   const rays = computeAttackRays(inspected.col, inspected.row, n);
 
-  // Center of the inspected queen in overlay pixels.
-  const cx = inspected.col * cellW + cellW / 2;
-  const cy = inspected.row * cellH + cellH / 2;
+  // Per-ray split: solid cells before the first hit, ghost cells after.
+  // Deduped across rays so shared cells (only the source, excluded) render once.
+  const seen = new Set<string>();
+  const solidCells: { col: number; row: number; delay: number }[] = [];
+  const ghostCells: { col: number; row: number; delay: number }[] = [];
+  rays.forEach((ray, rayIdx) => {
+    const { ghostFrom } = partitionRayByBoard(board, inspected, ray);
+    ray.cells.forEach((cell, idx) => {
+      const key = `${cell.col},${cell.row}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      const entry = { ...cell, delay: rayIdx * 0.03 + idx * 0.008 };
+      if (idx < ghostFrom) solidCells.push(entry);
+      else ghostCells.push(entry);
+    });
+  });
 
-  // Accumulate which queens get hit at all (deduped by col — at most one
-  // queen per column, so hit columns are unique).
-  const hitCols = new Set<number>();
+  // Hit queens, deduped by column (at most one queen per column).
+  const seenHit = new Set<number>();
+  const hits: { col: number; row: number }[] = [];
+  for (const ray of rays) {
+    const { hits: rayHits } = partitionRayByBoard(board, inspected, ray);
+    for (const h of rayHits) {
+      if (!seenHit.has(h.col)) {
+        seenHit.add(h.col);
+        hits.push(h);
+      }
+    }
+  }
 
   return (
     <svg
       data-testid="queen-rays"
       className="pointer-events-none absolute inset-0"
       aria-hidden="true"
-      // Keep svg in sync with the overlay's measured size.
       width={n * cellW}
       height={n * cellH}
       viewBox={`0 0 ${n * cellW} ${n * cellH}`}
       style={{ overflow: 'visible' }}
     >
-      {rays.map((ray, index) => {
-        if (ray.cells.length === 0) return null;
-        const { hits } = partitionRayByBoard(board, inspected, ray);
-
-        // Remember every hit col for the marker pass.
-        hits.forEach((c) => hitCols.add(c.col));
-
-        // Ray endpoint: center of the last cell in the ray.
-        const last = ray.cells[ray.cells.length - 1]!;
-        const ex = last.col * cellW + cellW / 2;
-        const ey = last.row * cellH + cellH / 2;
-
-        // First blocker center (if any): where the ghost segment starts.
-        const blocker = hits[0] ?? null;
-        const bx = blocker ? blocker.col * cellW + cellW / 2 : null;
-        const by = blocker ? blocker.row * cellH + cellH / 2 : null;
-
-        const hasHit = hits.length > 0;
-
-        return (
-          <g key={index}>
-            {/* Segment A: solid — inspected center → blocker (or full ray if no hit). */}
-            <motion.line
-              x1={cx}
-              y1={cy}
-              x2={hasHit ? bx! : ex}
-              y2={hasHit ? by! : ey}
-              strokeLinecap="round"
-              className={hasHit ? 'stroke-conflict' : 'stroke-muted-foreground/55'}
-              strokeWidth={hasHit ? 2.5 : 2}
-              style={{ opacity: hasHit ? 0.9 : 0.6 }}
-              initial={
-                motionOff ? { pathLength: 1, opacity: hasHit ? 0.9 : 0.6 } : { pathLength: 0 }
-              }
-              animate={{ pathLength: 1 }}
-              transition={{
-                duration: motionTokens.duration.fast,
-                ease: motionTokens.easing.smooth,
-                delay: motionOff ? 0 : index * 0.025,
-              }}
-            />
-            {/* Segment B: ghost — blocker → board edge (only when this ray hit something). */}
-            {hasHit && blocker && (
-              <motion.line
-                x1={bx! + (ex - bx!) * 0.01 /* nudge past blocker center */}
-                y1={by! + (ey - by!) * 0.01}
-                x2={ex}
-                y2={ey}
-                strokeLinecap="round"
-                className="stroke-muted-foreground/55"
-                strokeWidth={2}
-                style={{ opacity: 0.3 }}
-                initial={motionOff ? { pathLength: 1, opacity: 0.3 } : { pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{
-                  duration: motionTokens.duration.fast,
-                  ease: motionTokens.easing.smooth,
-                  delay: motionOff ? 0 : index * 0.025 + 0.04,
-                }}
-              />
-            )}
-          </g>
-        );
-      })}
+      {/* Solid attack tint — the ray itself. */}
+      {solidCells.map((cell) => (
+        <motion.rect
+          key={`tint-${cell.col}-${cell.row}`}
+          x={cell.col * cellW + 1}
+          y={cell.row * cellH + 1}
+          width={cellW - 2}
+          height={cellH - 2}
+          rx={cellW * 0.14}
+          className="fill-conflict/25 stroke-conflict/40 dark:fill-conflict/30"
+          style={{ strokeWidth: 1 } as React.CSSProperties}
+          initial={motionOff ? { opacity: 1 } : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            duration: motionTokens.duration.fast,
+            ease: motionTokens.easing.smooth,
+            delay: motionOff ? 0 : cell.delay,
+          }}
+        />
+      ))}
+      {/* Ghost tint beyond the first blocker — same hue, clearly quieter. */}
+      {ghostCells.map((cell) => (
+        <motion.rect
+          key={`ghost-${cell.col}-${cell.row}`}
+          x={cell.col * cellW + 1}
+          y={cell.row * cellH + 1}
+          width={cellW - 2}
+          height={cellH - 2}
+          rx={cellW * 0.14}
+          className="fill-conflict/10 dark:fill-conflict/15"
+          initial={motionOff ? { opacity: 1 } : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            duration: motionTokens.duration.fast,
+            ease: motionTokens.easing.smooth,
+            delay: motionOff ? 0 : cell.delay + 0.05,
+          }}
+        />
+      ))}
 
       {/* Convergence markers on every hit queen: ring + pair label. */}
-      {(() => {
-        const seen = new Set<number>();
-        return rays.flatMap((ray) => {
-          const { hits } = partitionRayByBoard(board, inspected, ray);
-          return hits.filter((c) => {
-            const firstTime = !seen.has(c.col);
-            if (firstTime) seen.add(c.col);
-            return firstTime;
-          });
-        });
-      })().map((cell) => {
+      {hits.map((cell) => {
         const x = cell.col * cellW + cellW / 2;
         const y = cell.row * cellH + cellH / 2;
         const targetLabel = `${FILE_LABELS[cell.col] ?? cell.col}${n - cell.row}`;
@@ -165,30 +150,55 @@ export function QueenRays({ inspected, board, cellW, cellH, n, reducedMotion }: 
           <g
             key={`hit-${cell.col}-${cell.row}`}
             data-testid={`queen-ray-hit-${cell.col}-${cell.row}`}
-            // Ring: crisp, non-animated (calm at 30×).
           >
-            {/* `circle` ring sized to hug the token disc (~82% of a square). */}
-            <circle
+            <motion.circle
               cx={x}
               cy={y}
               r={cellW * 0.42}
               fill="none"
-              strokeWidth={2.5}
-              strokeLinecap="round"
+              strokeWidth={2.7}
               className="stroke-conflict"
-              style={{ opacity: 0.95 }}
+              style={{ opacity: 0.96 }}
+              initial={motionOff ? { scale: 1, opacity: 0.96 } : { scale: 0.82, opacity: 0 }}
+              animate={{ scale: 1, opacity: 0.96 }}
+              transition={{
+                duration: motionTokens.duration.fast,
+                ease: motionTokens.easing.smooth,
+                delay: motionOff ? 0 : 0.16,
+              }}
             />
-            {/* Small pair-pill — centered below the attacked queen, with a
-                hook for the hover-tooltip payload (consumed in Chessboard on
-                the queen token itself). */}
-            <g transform={`translate(${x} ${y + cellH * 0.52})`}>
+            <motion.circle
+              cx={x}
+              cy={y}
+              r={cellW * 0.49}
+              fill="none"
+              strokeWidth={1.2}
+              className="stroke-conflict/30"
+              initial={motionOff ? { opacity: 0.35 } : { opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 0.35, scale: 1 }}
+              transition={{
+                duration: motionTokens.duration.fast,
+                ease: motionTokens.easing.smooth,
+                delay: motionOff ? 0 : 0.2,
+              }}
+            />
+            <motion.g
+              transform={`translate(${x} ${y + cellH * 0.54})`}
+              initial={motionOff ? { opacity: 1, y: 0 } : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: motionTokens.duration.fast,
+                ease: motionTokens.easing.smooth,
+                delay: motionOff ? 0 : 0.18,
+              }}
+            >
               <rect
-                x={-Math.max(34, pill.length * 3.4)}
+                x={-Math.max(36, pill.length * 3.5)}
                 y={-7}
-                width={Math.max(68, pill.length * 6.8)}
+                width={Math.max(72, pill.length * 7)}
                 height={14}
                 rx={7}
-                className="fill-card stroke-conflict"
+                className="fill-card stroke-conflict shadow-sm"
                 strokeWidth={1}
               />
               <text
@@ -199,13 +209,10 @@ export function QueenRays({ inspected, board, cellW, cellH, n, reducedMotion }: 
               >
                 {pill}
               </text>
-            </g>
+            </motion.g>
           </g>
         );
       })}
     </svg>
   );
 }
-
-// Unused import guard (cn retained for future hit-pill variants if needed).
-void cn;

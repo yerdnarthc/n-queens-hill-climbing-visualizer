@@ -39,7 +39,13 @@ N-Queens Visualizer/            ← task workspace root
     │   │   │                      playback-controls, stats-header (slim, page-level);
     │   │   │                      stats-rail.tsx (NEW Phase 9 — rail/compact/context);
     │   │   │                      queen-piece.tsx (explicit x/y travel, Phase 11;
-    │   │   │                      flat Staunton glyph + solid discs, Phase 13);
+    │   │   │                      transparent glyph + state glows, Phase 16 —
+    │   │   │                      solid discs removed per D-053);
+    │   │   │                      queen-glyph.tsx (NEW Phase 13 — flat queen
+    │   │   │                      silhouette SVG, currentColor + stroke class);
+    │   │   │                      queen-rays.tsx + lib/attack-rays.ts (NEW —
+    │   │   │                      attack-ray inspector: pure ray geometry +
+    │   │   │                      square-tint overlay, Phase 16 per D-053);
     │   │   │                      queen-glyph.tsx (NEW Phase 13 — flat queen
     │   │   │                      silhouette SVG, currentColor + stroke class);
     │   │   │                      origin-echo.tsx (ghost departure marker, Phase 11);

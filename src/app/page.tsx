@@ -119,8 +119,8 @@ function HomeContent() {
                   <span>Plateau / Shoulder</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
-                  <span className="h-2 w-2 rounded-full bg-muted-foreground/60 ring-1 ring-conflict" />
-                  <span>Ray = line of sight · ring = attacked queen</span>
+                  <span className="h-2 w-2 rounded-[2px] bg-conflict/25 ring-1 ring-conflict/40 ring-inset" />
+                  <span>Tint = sight line · glow = attacked queen</span>
                 </div>
               </div>
             </div>

@@ -164,30 +164,30 @@ export function QueenPiece({
       className="absolute top-0 left-0 flex touch-manipulation items-center justify-center select-none"
       data-testid={`queen-${column}-${row}`}
     >
-      {/* State halo — a crisp flat ring hugging the token (no blur glow,
-          no pulse: the ring + disc color already carry the state, and static
-          is calmer at 30× playback). */}
+      {/* State glow — soft halo behind the token (no solid disc: the queen
+          is a transparent glyph floating on the square, chess.com-style).
+          Red = attacked, blue = just moved; calm static glow, no pulse, so
+          it stays readable at 30× playback. Lives on this separate layer so
+          it never fights the lift-pulse box-shadow animation on the button. */}
       {hasConflict ? (
         <div
-          className="absolute inset-0 rounded-full border-2 border-conflict/70"
+          className="absolute inset-[10%] rounded-full shadow-[0_0_16px_6px_color-mix(in_oklab,var(--feature-conflict)_55%,transparent)]"
           aria-hidden="true"
         />
       ) : isMoved ? (
         <div
-          className="absolute inset-0 rounded-full border-2 border-improving/70"
+          className="absolute inset-[10%] rounded-full shadow-[0_0_14px_5px_color-mix(in_oklab,var(--feature-improving)_50%,transparent)]"
           aria-hidden="true"
         />
       ) : null}
 
       {/* Main Queen Token — `ref={scope}` is the animation target for the
-          lift + shadow-grow pulse above. Flat solid fills only (no
-          gradients): the warm-wood squares never change across themes, so
-          one dark espresso disc reads everywhere; state discs use the
-          semantic tokens as solids. In dark mode the state discs drop one
-          step to their `*-deep` shade — the base tokens are light-300s
-          (rose-300/sky-300) that wash out under a white glyph — and the
-          ring flips to a light keyline so the edge stays defined (same
-          treatment as the normal disc's `ring-white/30`). */}
+          lift + shadow-grow pulse above. Transparent by design: no disc, no
+          ring fills — just the glyph floating on the square. The glyph is
+          dark espresso (`text-stone-900`, readable on both warm-wood tones
+          in both themes since board colors never change) with a stacked
+          drop-shadow: dark contact depth underneath + soft white keyline on
+          top so it separates from light AND dark squares. */}
       <button
         type="button"
         ref={scope}
@@ -202,12 +202,7 @@ export function QueenPiece({
         onBlur={onInspectEnd}
         onClick={onTogglePin}
         className={cn(
-          'relative z-10 flex h-[82%] w-[82%] cursor-pointer items-center justify-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card focus-visible:outline-none',
-          hasConflict
-            ? 'bg-conflict text-white ring-2 ring-conflict-deep dark:bg-conflict-deep dark:ring-white/30'
-            : isMoved
-              ? 'bg-improving text-white ring-2 ring-improving-deep dark:bg-improving-deep dark:ring-white/30'
-              : 'bg-stone-900 text-stone-100 ring-1 ring-white/30',
+          'relative z-10 flex h-[82%] w-[82%] cursor-pointer items-center justify-center rounded-full bg-transparent transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card focus-visible:outline-none',
         )}
         style={{
           // Equivalent of `shadow-md` from Tailwind, expressed as a
@@ -215,7 +210,9 @@ export function QueenPiece({
           boxShadow: QUEEN_SHADOW_REST,
         }}
       >
-        <QueenGlyph className="h-[80%] w-[80%]" />
+        <span className="drop-shadow-[0_0_1.5px_rgb(255_255_255/0.85)] drop-shadow-[0_1px_1px_rgb(0_0_0/0.45)]">
+          <QueenGlyph className="h-[80%] w-[80%] text-stone-900" />
+        </span>
 
         {/* Conflict count badge on the queen if > 0 */}
         {hasConflict && (
