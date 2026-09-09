@@ -203,7 +203,7 @@ html {
   --radius-xl: calc(var(--radius) + 4px);
 
   /* fonts */
-  --font-sans: var(--font-sora-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dmsans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-chivo-mono), ui-monospace, monospace;
 
   /* Text-size scale — all expressed in rem so they scale with the root

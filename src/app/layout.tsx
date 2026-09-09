@@ -12,15 +12,15 @@ import { SiteNav } from '@/components/site-nav';
  * names match the previous `next/font/google` setup so `globals.css` (and the
  * `--font-*` token consumers) are unchanged.
  */
-const soraSans = localFont({
+const dmsans = localFont({
   src: [
     {
-      path: '../assets/fonts/Sora-VariableFont_wght.ttf',
+      path: '../assets/fonts/DMSans-VariableFont_opsz,wght.ttf',
       weight: '100 900',
       style: 'normal',
     },
   ],
-  variable: '--font-sora-sans',
+  variable: '--font-dmsans',
   display: 'swap',
 });
 
@@ -71,7 +71,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${soraSans.variable} ${chivoMono.variable} antialiased`}>
+      <body className={`${dmsans.variable} ${chivoMono.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
