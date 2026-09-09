@@ -236,13 +236,21 @@ export function Chessboard() {
       >
         {/* Board box — the grid plus the queen overlay stacked on top.
             The overlay is inset-0 over the grid so pixel positions derived
-            from the grid's bounding rect line up exactly with squares. */}
-        <div className="relative h-full w-full">
+            from the grid's bounding rect line up exactly with squares.
+            The 1px border lives on THIS box, not the grid: the overlay
+            math divides the measured rect by N, so any border on the
+            measured element leaks 2px into every cell computation and
+            the tints drift up to ~2px off the true squares at the far
+            edge (relatively worse the larger N gets). Borderless grid ⇒
+            border-box == cells area exactly. */}
+        <div className="relative h-full w-full rounded-xs border border-black/20">
           {/* Inner Grid — squares only. Queens live in the overlay below,
-              positioned by x/y transforms (never `layout`). */}
+              positioned by x/y transforms (never `layout`). Borderless
+              by design (see above) — keep `rounded-xs overflow-hidden`
+              so the corner squares still clip inside the box border. */}
           <div
             ref={gridRef}
-            className="grid h-full w-full overflow-hidden rounded-xs border border-black/20 shadow-inner"
+            className="grid h-full w-full overflow-hidden rounded-xs shadow-inner"
             style={{
               gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
               gridTemplateRows: `repeat(${n}, minmax(0, 1fr))`,

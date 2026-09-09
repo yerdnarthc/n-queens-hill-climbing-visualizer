@@ -13,6 +13,13 @@ describe('Chessboard', () => {
     render(<Chessboard />);
     const grid = screen.getByTestId('chessboard-grid');
     expect(grid).toBeInTheDocument();
+    // Overlay-alignment invariant: the measured grid must be borderless
+    // so its border-box == the cells area exactly (the ray/queen overlay
+    // divides the measured rect by N — a border leaks 2px into every
+    // cell and the tints drift off-square, worse at larger N). The 1px
+    // board border lives on the grid's parent instead.
+    expect(grid.className).not.toMatch(/(^|\s)border(\s|$)/);
+    expect(grid.parentElement?.className).toMatch(/(^|\s)border(\s|$)/);
 
     for (let c = 0; c < 4; c++) {
       for (let r = 0; r < 4; r++) {
