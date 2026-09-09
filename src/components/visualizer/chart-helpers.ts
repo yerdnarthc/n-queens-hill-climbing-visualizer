@@ -985,7 +985,8 @@ export function buildLandscapeChartOption(
               label: {
                 formatter: `Step ${currentStep}`,
                 color: colors.cursor,
-                fontSize: 11,
+                fontSize: 12,
+                fontFamily: 'Chivo Mono, monospace',
                 fontWeight: 'bold' as const,
                 position: 'end' as const,
               },
