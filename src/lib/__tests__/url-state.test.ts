@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   clampCooling,
   configToUrlValues,
+  loadUrlConfigValues,
+  DEFAULT_URL_VALUES,
   parseConfigFromSearch,
   sameUrlConfig,
   sameUrlValues,
+  sanitizeUrlConfigValues,
   serializeConfigToSearch,
 } from '../url-state';
 import { DEFAULT_CONFIG } from '@/store/simulation-store';
@@ -110,5 +113,45 @@ describe('url-state — helpers', () => {
     expect(sameUrlValues(values, { ...values, n: 16 })).toBe(false);
     expect(sameUrlValues(values, { ...values, cooling: 0.951 })).toBe(false);
     expect(sameUrlValues(values, { ...values, strategy: 'steepest-ascent' })).toBe(false);
+  });
+
+  it('DEFAULT_URL_VALUES matches what the parsers produce for a bare query string', () => {
+    // Invariant tying the single defaults definition to nuqs: the
+    // "bare URL?" check in `useUrlConfigSync` compares live values
+    // against this constant, so any drift here breaks share-link
+    // detection (bare URLs would hydrate as explicit, or vice versa).
+    expect(loadUrlConfigValues('')).toEqual(DEFAULT_URL_VALUES);
+  });
+
+  it('sanitizeUrlConfigValues passes valid payloads through clamped', () => {
+    expect(
+      sanitizeUrlConfigValues({
+        n: 99,
+        seed: 7,
+        strategy: 'min-conflicts',
+        sideways: false,
+        streak: 50,
+        restarts: true,
+        maxRestarts: 5,
+        cooling: 0.95,
+      }),
+    ).toEqual({
+      n: 16,
+      seed: 7,
+      strategy: 'min-conflicts',
+      sideways: false,
+      streak: 50,
+      restarts: true,
+      maxRestarts: 5,
+      cooling: 0.95,
+    });
+  });
+
+  it('sanitizeUrlConfigValues degrades hostile payloads to defaults per field', () => {
+    expect(sanitizeUrlConfigValues(null)).toEqual(DEFAULT_URL_VALUES);
+    expect(sanitizeUrlConfigValues('nope')).toEqual(DEFAULT_URL_VALUES);
+    expect(
+      sanitizeUrlConfigValues({ n: '12', strategy: 'nope', sideways: 1, cooling: null }),
+    ).toEqual(DEFAULT_URL_VALUES);
   });
 });

@@ -1,10 +1,15 @@
 import { act, render, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { withNuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { useUrlConfigSync } from '../useUrlConfigSync';
 import { DEFAULT_CONFIG, createSimulationStore } from '../../store/simulation-store';
 import type { SimulationState } from '../../store/simulation-store';
 import type { StoreApi } from 'zustand/vanilla';
+import {
+  clearVisualizerState,
+  loadVisualizerState,
+  saveVisualizerState,
+} from '../../lib/config-persistence';
 
 type Store = StoreApi<SimulationState>;
 
@@ -14,6 +19,12 @@ function Harness({ store }: { store: Store }) {
 }
 
 describe('useUrlConfigSync', () => {
+  // The bridge now reads localStorage on mount — every test starts with
+  // a clean slate so stored state never leaks between cases.
+  beforeEach(() => {
+    clearVisualizerState();
+  });
+
   it('hydrates the store from URL params on mount (and runs the engine)', () => {
     const store = createSimulationStore();
     render(<Harness store={store} />, {
@@ -114,6 +125,83 @@ describe('useUrlConfigSync', () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
     expect(onUrlUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it('restores the persisted config + speed on mount when the URL is bare', async () => {
+    // The back-navigation/reload path: no params in the URL, but a
+    // previous session persisted board 12 / seed 99 / 10x.
+    saveVisualizerState(
+      {
+        boardSize: 12,
+        seed: 99,
+        strategy: 'min-conflicts',
+        allowSideways: false,
+        maxConsecutiveSideways: 50,
+        allowRestarts: true,
+        maxRestarts: 5,
+        saCoolingRate: 0.95,
+      },
+      10,
+    );
+    const onUrlUpdate = vi.fn();
+    const store = createSimulationStore();
+    render(<Harness store={store} />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: '', onUrlUpdate, hasMemory: true }),
+    });
+    const s = store.getState();
+    expect(s.config.boardSize).toBe(12);
+    expect(s.config.seed).toBe(99);
+    expect(s.config.strategy).toBe('min-conflicts');
+    expect(s.speed).toBe(10);
+    expect(s.result).not.toBeNull(); // restored config already executed
+    // The bare URL is healed to the restored config (no more silent
+    // reset-to-base on return navigation).
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    const params = onUrlUpdate.mock.calls.at(-1)![0].searchParams as URLSearchParams;
+    expect(params.get('n')).toBe('12');
+    expect(params.get('seed')).toBe('99');
+  });
+
+  it('explicit URL params win over persisted state (share links stay authoritative)', () => {
+    saveVisualizerState(
+      {
+        boardSize: 12,
+        seed: 99,
+        strategy: 'min-conflicts',
+        allowSideways: false,
+        maxConsecutiveSideways: 50,
+        allowRestarts: true,
+        maxRestarts: 5,
+        saCoolingRate: 0.95,
+      },
+      10,
+    );
+    const store = createSimulationStore();
+    render(<Harness store={store} />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: '?n=14&seed=7' }),
+    });
+    const s = store.getState();
+    expect(s.config.boardSize).toBe(14);
+    expect(s.config.seed).toBe(7);
+    // The URL winner is written back through to storage.
+    expect(loadVisualizerState()?.config.boardSize).toBe(14);
+  });
+
+  it('writes config and speed changes through to storage', async () => {
+    const store = createSimulationStore();
+    render(<Harness store={store} />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: '', hasMemory: true }),
+    });
+    await act(async () => {
+      store.getState().setConfig({ seed: 42, boardSize: 12 });
+    });
+    await act(async () => {
+      store.getState().setSpeed(10);
+    });
+    const stored = loadVisualizerState();
+    expect(stored?.config.seed).toBe(42);
+    expect(stored?.config.boardSize).toBe(12);
+    expect(stored?.speed).toBe(10);
   });
 
   it('stays convergent across rapid successive config changes (scrubbing)', async () => {

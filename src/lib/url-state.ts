@@ -27,16 +27,32 @@ const STREAK_LIMITS = { min: 1, max: 200 } as const;
 const RESTARTS_LIMITS = { min: 1, max: 50 } as const;
 const COOLING_LIMITS = { min: 0.8, max: 0.999 } as const;
 
+/**
+ * Canonical defaults for every URL field, defined once so the parsers
+ * below, the persistence layer, and the "bare URL?" check in
+ * `useUrlConfigSync` all agree on what "no explicit params" means.
+ */
+export const DEFAULT_URL_VALUES: UrlConfigValues = {
+  n: DEFAULT_CONFIG.boardSize,
+  seed: DEFAULT_CONFIG.seed,
+  strategy: DEFAULT_CONFIG.strategy,
+  sideways: true,
+  streak: 100,
+  restarts: false,
+  maxRestarts: 10,
+  cooling: 0.99,
+};
+
 /** Typed query-param schema. Keys are short but unambiguous. */
 export const urlParsers = {
-  n: parseAsInteger.withDefault(DEFAULT_CONFIG.boardSize),
-  seed: parseAsInteger.withDefault(DEFAULT_CONFIG.seed),
-  strategy: parseAsStringLiteral(STRATEGY_IDS).withDefault(DEFAULT_CONFIG.strategy),
-  sideways: parseAsBoolean.withDefault(true),
-  streak: parseAsInteger.withDefault(100),
-  restarts: parseAsBoolean.withDefault(false),
-  maxRestarts: parseAsInteger.withDefault(10),
-  cooling: parseAsFloat.withDefault(0.99),
+  n: parseAsInteger.withDefault(DEFAULT_URL_VALUES.n),
+  seed: parseAsInteger.withDefault(DEFAULT_URL_VALUES.seed),
+  strategy: parseAsStringLiteral(STRATEGY_IDS).withDefault(DEFAULT_URL_VALUES.strategy),
+  sideways: parseAsBoolean.withDefault(DEFAULT_URL_VALUES.sideways),
+  streak: parseAsInteger.withDefault(DEFAULT_URL_VALUES.streak),
+  restarts: parseAsBoolean.withDefault(DEFAULT_URL_VALUES.restarts),
+  maxRestarts: parseAsInteger.withDefault(DEFAULT_URL_VALUES.maxRestarts),
+  cooling: parseAsFloat.withDefault(DEFAULT_URL_VALUES.cooling),
 };
 
 export type UrlConfigValues = {
@@ -50,8 +66,42 @@ export type UrlConfigValues = {
   cooling: number;
 };
 
-const clampRange = (value: number, min: number, max: number, fallback: number): number =>
+/** Finite-number clamp with fallback (shared with the persistence layer). */
+export const clampRange = (value: number, min: number, max: number, fallback: number): number =>
   Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+
+/**
+ * Sanitize an untrusted URL-values-shaped payload (e.g. parsed from
+ * localStorage) field by field: wrong-typed or missing fields fall back
+ * to `DEFAULT_URL_VALUES` individually, numerics run through the same
+ * clamps as `urlValuesToConfig`, so hostile stored data can never
+ * produce an out-of-domain config — it just degrades to defaults.
+ */
+export function sanitizeUrlConfigValues(raw: unknown): UrlConfigValues {
+  const r =
+    typeof raw === 'object' && raw !== null
+      ? (raw as Partial<Record<keyof UrlConfigValues, unknown>>)
+      : {};
+  return {
+    n: typeof r.n === 'number' ? clampBoardSize(r.n) : DEFAULT_URL_VALUES.n,
+    seed: typeof r.seed === 'number' ? clampSeed(r.seed) : DEFAULT_URL_VALUES.seed,
+    strategy:
+      typeof r.strategy === 'string' && (STRATEGY_IDS as readonly string[]).includes(r.strategy)
+        ? (r.strategy as StrategyId)
+        : DEFAULT_URL_VALUES.strategy,
+    sideways: typeof r.sideways === 'boolean' ? r.sideways : DEFAULT_URL_VALUES.sideways,
+    streak:
+      typeof r.streak === 'number'
+        ? Math.round(clampRange(r.streak, STREAK_LIMITS.min, STREAK_LIMITS.max, 100))
+        : DEFAULT_URL_VALUES.streak,
+    restarts: typeof r.restarts === 'boolean' ? r.restarts : DEFAULT_URL_VALUES.restarts,
+    maxRestarts:
+      typeof r.maxRestarts === 'number'
+        ? Math.round(clampRange(r.maxRestarts, RESTARTS_LIMITS.min, RESTARTS_LIMITS.max, 10))
+        : DEFAULT_URL_VALUES.maxRestarts,
+    cooling: typeof r.cooling === 'number' ? clampCooling(r.cooling) : DEFAULT_URL_VALUES.cooling,
+  };
+}
 
 /** Clamp the SA cooling rate into the UI slider domain (the engine throws outside (0,1)). */
 export function clampCooling(cooling: number): number {
