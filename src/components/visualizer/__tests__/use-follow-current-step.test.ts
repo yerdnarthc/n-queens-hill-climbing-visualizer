@@ -134,26 +134,26 @@ describe('computeFollowRange', () => {
   });
 
   describe('scrolls right (marker past right edge)', () => {
-    it('places the marker at 70% of the new window when no clamping is needed', () => {
-      // Window 0–60, marker at step 80 of 0–100 (pct=80 > 60).
-      // width=60. newEnd = min(100, 80 + 60*0.3) = 98.
-      // newStart = max(0, 98 - 60) = 38.
-      // (80 - 38) / 60 = 0.7 ✓
+    it('places the marker at 30% of the new window when no clamping is needed', () => {
+      // Window 0–40, marker at step 50 of 0–100 (pct=50 > 40).
+      // width=40. newEnd = min(100, 50 + 40*0.7) = 78.
+      // newStart = max(0, 78 - 40) = 38.
+      // (50 - 38) / 40 = 0.3 ✓
       const result = computeFollowRange({
-        currentStep: 80,
+        currentStep: 50,
         firstStep: 0,
         lastStep: 100,
         currentStart: 0,
-        currentEnd: 60,
+        currentEnd: 40,
       });
-      expect(result).toEqual({ start: 38, end: 98 });
-      const markerPctOfNewWindow = ((80 - 38) / (98 - 38)) * 100;
-      expect(markerPctOfNewWindow).toBeCloseTo(70, 5);
+      expect(result).toEqual({ start: 38, end: 78 });
+      const markerPctOfNewWindow = ((50 - 38) / (78 - 38)) * 100;
+      expect(markerPctOfNewWindow).toBeCloseTo(30, 5);
     });
 
     it('clamps the new end to 100 when the natural position would exceed the data range', () => {
       // Window 0–80, marker at step 85. width=80.
-      // newEnd = min(100, 85 + 80*0.3) = min(100, 109) = 100.
+      // newEnd = min(100, 85 + 80*0.7) = min(100, 141) = 100.
       // newStart = max(0, 100 - 80) = 20. Width preserved.
       const result = computeFollowRange({
         currentStep: 85,
@@ -167,7 +167,7 @@ describe('computeFollowRange', () => {
 
     it('preserves window width across the scroll', () => {
       // Window 20–70 (width 50). Marker at step 90.
-      // newEnd = min(100, 90 + 50*0.3) = 100. newStart = 50.
+      // newEnd = min(100, 90 + 50*0.7) = 100. newStart = 50.
       const result = computeFollowRange({
         currentStep: 90,
         firstStep: 0,
@@ -181,7 +181,7 @@ describe('computeFollowRange', () => {
 
     it('handles a small window near the right edge', () => {
       // Window 0–4, marker at step 5. width=4.
-      // newEnd = min(100, 5 + 4*0.3) = 6.2. newStart = 2.2.
+      // newEnd = min(100, 5 + 4*0.7) = 7.8. newStart = 3.8.
       const result = computeFollowRange({
         currentStep: 5,
         firstStep: 0,
@@ -189,31 +189,31 @@ describe('computeFollowRange', () => {
         currentStart: 0,
         currentEnd: 4,
       });
-      expect(result).toEqual({ start: 2.2, end: 6.2 });
+      expect(result).toEqual({ start: 3.8, end: 7.8 });
     });
   });
 
   describe('scrolls left (marker before left edge)', () => {
-    it('places the marker at 30% of the new window when no clamping is needed', () => {
-      // Window 30–80 (width 50). Marker at step 20. pct=20 < 30.
-      // newStart = max(0, 20 - 50*0.3) = 5.
-      // newEnd = min(100, 5 + 50) = 55.
-      // (20 - 5) / 50 = 0.3 ✓
+    it('places the marker at 70% of the new window when no clamping is needed', () => {
+      // Window 50–90 (width 40). Marker at step 40. pct=40 < 50.
+      // newStart = max(0, 40 - 40*0.7) = 12.
+      // newEnd = min(100, 12 + 40) = 52.
+      // (40 - 12) / 40 = 0.7 ✓
       const result = computeFollowRange({
-        currentStep: 20,
+        currentStep: 40,
         firstStep: 0,
         lastStep: 100,
-        currentStart: 30,
-        currentEnd: 80,
+        currentStart: 50,
+        currentEnd: 90,
       });
-      expect(result).toEqual({ start: 5, end: 55 });
-      const markerPctOfNewWindow = ((20 - 5) / (55 - 5)) * 100;
-      expect(markerPctOfNewWindow).toBeCloseTo(30, 5);
+      expect(result).toEqual({ start: 12, end: 52 });
+      const markerPctOfNewWindow = ((40 - 12) / (52 - 12)) * 100;
+      expect(markerPctOfNewWindow).toBeCloseTo(70, 5);
     });
 
     it('clamps the new start to 0 when the natural position would go below 0', () => {
       // Window 20–100 (width 80). Marker at step 10. pct=10 < 20.
-      // newStart = max(0, 10 - 80*0.3) = max(0, -14) = 0.
+      // newStart = max(0, 10 - 80*0.7) = max(0, -46) = 0.
       // newEnd = min(100, 0 + 80) = 80.
       const result = computeFollowRange({
         currentStep: 10,
@@ -227,7 +227,7 @@ describe('computeFollowRange', () => {
 
     it('preserves window width across the scroll', () => {
       // Window 50–100 (width 50). Marker at step 20.
-      // newStart = max(0, 20 - 50*0.3) = 5. newEnd = 55.
+      // newStart = max(0, 20 - 50*0.7) = 0. newEnd = 50.
       const result = computeFollowRange({
         currentStep: 20,
         firstStep: 0,
@@ -241,7 +241,7 @@ describe('computeFollowRange', () => {
 
     it('handles a small window near the left edge', () => {
       // Window 1–5 (width 4). Marker at step 0. pct=0 < 1.
-      // newStart = max(0, 0 - 4*0.3) = 0. newEnd = 4.
+      // newStart = max(0, 0 - 4*0.7) = 0. newEnd = 4.
       const result = computeFollowRange({
         currentStep: 0,
         firstStep: 0,
@@ -270,8 +270,8 @@ describe('computeFollowRange', () => {
 
     it('scrolls right when marker is past the right edge of a non-zero-origin range', () => {
       // Range 100–200, window 0–30 (percent). Step 180 → pct=80.
-      // width=30. newEnd = min(100, 80 + 30*0.3) = 89.
-      // newStart = max(0, 89 - 30) = 59.
+      // width=30. newEnd = min(100, 80 + 30*0.7) = 100.
+      // newStart = max(0, 100 - 30) = 70.
       const result = computeFollowRange({
         currentStep: 180,
         firstStep: 100,
@@ -279,7 +279,7 @@ describe('computeFollowRange', () => {
         currentStart: 0,
         currentEnd: 30,
       });
-      expect(result).toEqual({ start: 59, end: 89 });
+      expect(result).toEqual({ start: 70, end: 100 });
     });
   });
 

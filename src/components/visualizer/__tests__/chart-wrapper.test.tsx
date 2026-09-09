@@ -476,8 +476,8 @@ describe('ChartWrapper', () => {
 
   it('dispatches a dataZoom action when the marker scrolls past the right edge', () => {
     // Window 0–60, marker at step 80 of 0–100 (pct=80 > 60).
-    // width=60. newEnd = min(100, 80 + 60*0.3) = 98.
-    // newStart = max(0, 98 - 60) = 38.
+    // width=60. newEnd = min(100, 80 + 60*0.7) = 100.
+    // newStart = max(0, 100 - 60) = 40 (marker lands at 30%).
     mockGetOption.mockReturnValue({
       dataZoom: [
         { start: 0, end: 60 },
@@ -493,8 +493,8 @@ describe('ChartWrapper', () => {
     expect(mockDispatchAction).toHaveBeenCalledWith({
       type: 'dataZoom',
       dataZoomIndex: 1,
-      start: 38,
-      end: 98,
+      start: 40,
+      end: 100,
       // `animation: { duration: 50 }` overrides ECharts' internal
       // dataZoom slider animation so the handle snaps (with a brief
       // 50ms confirmation) to the new range, matching the markLine's
@@ -507,7 +507,8 @@ describe('ChartWrapper', () => {
 
   it('dispatches a dataZoom action when the marker scrolls past the left edge', () => {
     // Window 30–80, marker at step 20 of 0–100 (pct=20 < 30).
-    // newStart = max(0, 20 - 50*0.3) = 5. newEnd = 55.
+    // newStart = max(0, 20 - 50*0.7) = 0. newEnd = 50
+    // (marker lands at 70%).
     mockGetOption.mockReturnValue({
       dataZoom: [
         { start: 30, end: 80 },
@@ -523,8 +524,8 @@ describe('ChartWrapper', () => {
     expect(mockDispatchAction).toHaveBeenCalledWith({
       type: 'dataZoom',
       dataZoomIndex: 1,
-      start: 5,
-      end: 55,
+      start: 0,
+      end: 50,
       // See the scroll-right test for the rationale on
       // `animation: { duration: 50 }`.
       animation: { duration: 50 },
@@ -540,7 +541,7 @@ describe('ChartWrapper', () => {
     });
 
     // Marker at 90 of 0–100, past the right edge of 20–70.
-    // width=50. newEnd = min(100, 90 + 50*0.3) = 100. newStart = 50.
+    // width=50. newEnd = min(100, 90 + 50*0.7) = 100. newStart = 50.
     renderChartWrapper({
       followStep: { currentStep: 90, firstStep: 0, lastStep: 100 },
     });

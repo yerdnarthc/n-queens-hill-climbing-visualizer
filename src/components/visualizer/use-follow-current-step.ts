@@ -17,21 +17,21 @@
  * window. It only **shifts** the window (preserving the user's chosen
  * window width) — it never resizes or zooms in/out.
  *
- * ## Placement strategy (70% / 30%)
+ * ## Placement strategy (30% / 70%)
  *
  * When the marker crosses the right edge, we scroll so the marker sits
- * at ~70% of the new window. That keeps ~30% of the visible window
- * showing the steps the user just saw — they can still see the recent
- * trajectory context to the left of the marker.
+ * at ~30% of the new window — i.e. the window jumps ~70% of its width,
+ * giving maximum lookahead at the steps still ahead. ~30% of the window
+ * still shows the recent trajectory context to the left of the marker.
  *
- * Symmetric for the left edge: marker at ~30%, ~70% context to the
- * right (the steps that are still ahead).
+ * Symmetric for the left edge: marker at ~70%, ~30% context to the
+ * left (the steps just seen) and ~70% to the right.
  *
- * These thresholds are not magic. Common alternatives are 80/20 (more
- * aggressive forward bias) or pure edge-alignment (less context, but
- * the marker is always at the leading edge). We picked 70/30 because
- * it reads as "the chart is following you but you can still see what
- * just happened" — same as a video-player's timeline scrubber.
+ * These thresholds are not magic. The previous 70/30 split (marker near
+ * the leading edge, small jumps) felt like it barely scrolled; 30/70
+ * was picked per user preference for a decisive jump on every
+ * auto-scroll. Pure edge-alignment is the other extreme (less context,
+ * but the marker is always at the leading edge).
  *
  * ## Inputs are percentages
  *
@@ -88,10 +88,10 @@ export interface FollowStepResult {
  */
 
 /** Where the marker sits in the new window when scrolling right (0–1). */
-const TRAILING_FRACTION = 0.7;
+const TRAILING_FRACTION = 0.3;
 
 /** Where the marker sits in the new window when scrolling left (0–1). */
-const LEADING_FRACTION = 0.3;
+const LEADING_FRACTION = 0.7;
 
 /**
  * Computes the dataZoom range the chart should be scrolled to in order
@@ -150,8 +150,9 @@ export function computeFollowRange(input: FollowStepInput): FollowStepResult | n
   // at-edge marker is treated as "in view" — see the JSDoc.
   if (pct > currentEnd) {
     // Scrolling right: marker is past the right edge. Place the
-    // marker at TRAILING_FRACTION (default 70%) of the new window so
-    // ~30% of the window still shows the recent context to the left.
+    // marker at TRAILING_FRACTION (default 30%) of the new window so
+    // ~30% of the window still shows the recent context to the left
+    // while ~70% shows the steps ahead.
     const newEnd = Math.min(100, pct + width * (1 - TRAILING_FRACTION));
     const newStart = Math.max(0, newEnd - width);
     return { start: newStart, end: newEnd };
@@ -159,8 +160,9 @@ export function computeFollowRange(input: FollowStepInput): FollowStepResult | n
 
   if (pct < currentStart) {
     // Scrolling left: marker is before the left edge. Place the marker
-    // at LEADING_FRACTION (default 30%) of the new window so ~70% of
-    // the window shows the steps still ahead.
+    // at LEADING_FRACTION (default 70%) of the new window so ~30% of
+    // the window shows the steps just seen while ~70% shows the steps
+    // still ahead.
     const newStart = Math.max(0, pct - width * LEADING_FRACTION);
     const newEnd = Math.min(100, newStart + width);
     return { start: newStart, end: newEnd };

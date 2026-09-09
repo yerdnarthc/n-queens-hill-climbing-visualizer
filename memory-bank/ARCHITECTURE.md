@@ -231,7 +231,8 @@ initial run if none exists. Tested via `renderHook` + `vi.useFakeTimers()`.
   is a pure function returning `{start, end} | null`; `ChartWrapper`
   reads it and fires `dispatchAction` against slider index 1 when the
   marker crosses an edge, preserving the user's chosen window width
-  (trailing 0.7 when scrolling right, leading 0.3 when scrolling left).
+  (trailing 0.3 when scrolling right, leading 0.7 when scrolling left —
+  the window jumps ~70% of its width per D-056).
 - **Click-in-the-gaps** (D-035): `ChartWrapper` caches the last
   `updateAxisPointer` value; click handler falls back to it when the
   click misses a series element. Convergence chart's line series uses
