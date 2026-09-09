@@ -139,7 +139,7 @@ export function StatsRail({ variant = 'rail' }: StatsRailProps) {
         className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card/60 p-4 shadow-sm backdrop-blur-sm sm:p-5"
       >
         {/* 2×2 grid of small metric cards (Timeline, Phase, Attacks, Restarts) */}
-        <div className="grid grid-cols-2 gap-2.5">
+        <div data-tour="stats-tiles" className="grid grid-cols-2 gap-2.5">
           {/* Timeline Cursor */}
           <div className={cardBase}>
             <span className={labelClass}>Timeline Cursor</span>
@@ -195,7 +195,7 @@ export function StatsRail({ variant = 'rail' }: StatsRailProps) {
         </div>
 
         {/* Full-width Run Status hero card — horizontal layout: badge left, context right */}
-        <div className={cardBase}>
+        <div data-tour="stats-hero" className={cardBase}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-5">
               <span className="font-mono text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase">

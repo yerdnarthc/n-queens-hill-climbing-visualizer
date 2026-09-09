@@ -90,6 +90,7 @@ export function ConfigPanel({ compact = false }: ConfigPanelProps = {}) {
 
   return (
     <div
+      data-tour="config"
       data-compact={compact ? 'true' : 'false'}
       className={
         compact

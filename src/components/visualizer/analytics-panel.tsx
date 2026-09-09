@@ -195,15 +195,27 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
       <Tabs defaultValue="convergence" className="w-full">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <TabsList className="grid grid-cols-3 bg-card/1">
-            <TabsTrigger value="convergence" className="gap-1.5 text-[0.65rem]">
+            <TabsTrigger
+              value="convergence"
+              data-tour="tab-convergence"
+              className="gap-1.5 text-[0.65rem]"
+            >
               <TrendingDown className="h-3 w-3" />
               <span>Convergence</span>
             </TabsTrigger>
-            <TabsTrigger value="landscape" className="gap-1.5 text-[0.65rem]">
+            <TabsTrigger
+              value="landscape"
+              data-tour="tab-landscape"
+              className="gap-1.5 text-[0.65rem]"
+            >
               <Mountain className="h-3 w-3" />
               <span>Landscape</span>
             </TabsTrigger>
-            <TabsTrigger value="diagnostics" className="gap-1.5 text-[0.65rem]">
+            <TabsTrigger
+              value="diagnostics"
+              data-tour="tab-diagnostics"
+              className="gap-1.5 text-[0.65rem]"
+            >
               <Activity className="h-3 w-3" />
               <span>Diagnostics</span>
             </TabsTrigger>

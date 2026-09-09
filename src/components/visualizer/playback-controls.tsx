@@ -72,7 +72,7 @@ export function PlaybackControls() {
       className="flex flex-col gap-3.5 rounded-xl border border-border/20 bg-background/20 p-4 backdrop-blur-sm"
     >
       {/* Timeline Scrubber */}
-      <div className="flex flex-col gap-1.5">
+      <div data-tour="timeline-scrubber" className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-5 font-medium">
             <span>Timeline</span>
@@ -119,7 +119,7 @@ export function PlaybackControls() {
       {/* Main Playback Bar */}
       <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
         {/* Step Navigation Controls */}
-        <div className="flex items-center gap-1.5">
+        <div data-tour="transport" className="flex items-center gap-1.5">
           <Button
             variant="outline"
             size="icon"
@@ -215,7 +215,10 @@ export function PlaybackControls() {
             <span className="hidden font-medium sm:inline">Speed:</span>
           </div>
 
-          <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-0.5">
+          <div
+            data-tour="speed-presets"
+            className="flex items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-0.5"
+          >
             {SPEED_PRESETS.map((p) => {
               const active = speed === p;
               return (
@@ -235,7 +238,7 @@ export function PlaybackControls() {
             })}
           </div>
 
-          <div className="hidden w-24 items-center gap-1.5 lg:flex">
+          <div data-tour="speed-fine" className="hidden w-24 items-center gap-1.5 lg:flex">
             <Slider
               min={SPEED_LIMITS.min}
               max={SPEED_LIMITS.max}
@@ -249,7 +252,10 @@ export function PlaybackControls() {
         </div>
 
         {/* Timeline event legend + keyboard shortcuts */}
-        <div className="flex w-full flex-wrap items-center justify-between border-t border-border/50 px-5 pt-2.5 text-[0.65rem] text-muted-foreground">
+        <div
+          data-tour="shortcuts"
+          className="flex w-full flex-wrap items-center justify-between border-t border-border/50 px-5 pt-2.5 text-[0.65rem] text-muted-foreground"
+        >
           <div className="flex items-center gap-3">
             {restartSteps.length > 0 && (
               <span className="flex items-center gap-1 font-medium">
