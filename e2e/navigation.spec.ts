@@ -43,9 +43,11 @@ test.describe('Navigation — site nav and footer', () => {
     await expect(page.getByRole('link', { name: /open the visualizer/i })).toBeVisible();
   });
 
-  test('the Open Visualizer CTA returns to the home page', async ({ hydratedHowItWorks: page }) => {
+  test('the Open Visualizer CTA returns to the visualizer page', async ({
+    hydratedHowItWorks: page,
+  }) => {
     await page.getByRole('link', { name: /open the visualizer/i }).click();
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/visualizer/);
     await expect(page.getByTestId('chessboard-grid')).toBeVisible();
   });
 });

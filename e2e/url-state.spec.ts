@@ -43,7 +43,7 @@ test.describe('URL state — shareable configuration', () => {
     // The default N=8, seed=27, steepest-ascent run is machine-curated to
     // solve in 5 steps. Loading a URL with those params should produce a
     // result with the same Run Status family.
-    await page.goto('/?n=8&seed=27&strategy=steepest-ascent');
+    await page.goto('/visualizer?n=8&seed=27&strategy=steepest-ascent');
     await expect(page.getByTestId('chessboard-grid')).toBeVisible();
 
     // The status badge must NOT read "Initializing…" — the store was
@@ -59,7 +59,7 @@ test.describe('URL state — shareable configuration', () => {
   }) => {
     // ?n=99 is above the 4–16 board-size clamp; ?seed=-5 is negative; ?cooling=5
     // is ≥ 1 which would otherwise crash the engine.
-    await page.goto('/?n=99&seed=-5&cooling=5');
+    await page.goto('/visualizer?n=99&seed=-5&cooling=5');
     await expect(page.getByTestId('chessboard-grid')).toBeVisible();
 
     // The store must have clamped everything. 16×16 ⇒ 256 squares.
@@ -79,6 +79,50 @@ test.describe('URL state — shareable configuration', () => {
     // The default config produces an empty query string.
     const search = new URL(page.url()).search;
     expect(search).toBe('');
+  });
+
+  test('navigating away and back preserves the visualizer config (persistence)', async ({
+    page,
+  }) => {
+    // Configure a non-default run, leave for /how-it-works, then come
+    // back via the nav: the persisted config (not defaults) must be
+    // restored, in both the URL and the rendered board (12×12 = 144).
+    // Suppress the first-visit tour like the fixtures do — its overlay
+    // would otherwise intercept the nav clicks below.
+    await page.addInitScript(() => {
+      window.localStorage.setItem('nqueens-tour:v1', '1');
+    });
+    await page.goto('/visualizer?n=12&seed=42');
+    await expect(page.getByTestId('chessboard-grid')).toBeVisible();
+    await expect(page.locator('[data-testid^="square-"]')).toHaveCount(144);
+
+    await page
+      .locator('nav')
+      .getByRole('link', { name: /how it works/i })
+      .click();
+    await expect(page).toHaveURL(/\/how-it-works$/);
+
+    await page
+      .locator('nav')
+      .getByRole('link', { name: /visualizer/i })
+      .click();
+    await expect(page).toHaveURL(/\/visualizer/);
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('n'), { timeout: 2_000 })
+      .toBe('12');
+    await expect
+      .poll(() => new URL(page.url()).searchParams.get('seed'), { timeout: 2_000 })
+      .toBe('42');
+    await expect(page.locator('[data-testid^="square-"]')).toHaveCount(144);
+  });
+
+  test('the root path redirects to /visualizer preserving share-link params', async ({ page }) => {
+    // Old share links point at /?n=… — the root redirect must forward
+    // the query so shared configurations keep working.
+    await page.goto('/?n=12&seed=42');
+    await expect(page).toHaveURL(/\/visualizer\?n=12&seed=42/);
+    await expect(page.getByTestId('chessboard-grid')).toBeVisible();
+    await expect(page.locator('[data-testid^="square-"]')).toHaveCount(144);
   });
 
   test('the Copy share link button surfaces feedback after click', async ({

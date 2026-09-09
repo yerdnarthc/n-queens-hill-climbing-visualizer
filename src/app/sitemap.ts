@@ -5,7 +5,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();
   return [
     {
-      url: base,
+      url: `${base}/visualizer`,
       changeFrequency: 'monthly',
       priority: 1,
     },

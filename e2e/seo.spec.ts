@@ -21,9 +21,10 @@ test.describe('SEO & static routes', () => {
     expect(res.status()).toBe(200);
     const body = await res.text();
     // The body is an XML <urlset>; we only check the URL fragments and the
-    // lastmod-less shape Next emits by default.
+    // lastmod-less shape Next emits by default. The visualizer lives at
+    // /visualizer (root redirects there).
     expect(body).toMatch(/<urlset/);
-    expect(body).toContain('http://localhost:3000/');
+    expect(body).toContain('http://localhost:3000/visualizer');
     expect(body).toContain('http://localhost:3000/how-it-works');
   });
 
@@ -38,9 +39,10 @@ test.describe('SEO & static routes', () => {
     await expect(page.getByText('Educational Guide')).toBeVisible();
   });
 
-  test('home page returns 200 and ships the default title', async ({ page }) => {
-    const res = await page.goto('/');
-    expect(res?.status()).toBe(200);
+  test('root path redirects to /visualizer, which ships the default title', async ({ page }) => {
+    await page.goto('/');
+    // Temporary (307) redirect to the visualizer route.
+    await expect(page).toHaveURL(/\/visualizer$/);
     await expect(page).toHaveTitle(/N-Queens/);
   });
 });

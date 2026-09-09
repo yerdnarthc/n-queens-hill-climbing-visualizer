@@ -27,7 +27,7 @@ export const test = base.extend<{
     await page.addInitScript(() => {
       window.localStorage.setItem('nqueens-tour:v1', '1');
     });
-    await page.goto('/');
+    await page.goto('/visualizer');
     // The board grid is mounted by <HomeContent> post-hydration. Waiting for it
     // to be visible guarantees React has finished the first render pass and
     // the store has bootstrapped a result.

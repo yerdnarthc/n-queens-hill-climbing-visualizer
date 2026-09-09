@@ -26,7 +26,9 @@ N-Queens Visualizer/            ← task workspace root
     ├── src/
     │   ├── app/                ← App Router: layout.tsx (SiteNav + NuqsAdapter,
     │   │                          self-hosted Sora/Chivo Mono fonts via next/font/local),
-    │   │                          page.tsx (visualizer, Suspense-wrapped for URL sync),
+    │   │                          page.tsx (307 redirect → /visualizer, forwards
+    │   │                          ?query for old share links), visualizer/page.tsx
+    │   │                          (visualizer, Suspense-wrapped for URL sync),
     │   │                          how-it-works/, robots.ts, sitemap.ts,
     │   │                          globals.css (semantic color tokens + warm-sand/oxblood palette;
     │   │                          the Phase 10 `@keyframes trajectory-draw` was removed in Phase 11
@@ -64,7 +66,8 @@ N-Queens Visualizer/            ← task workspace root
     │   │   └── theme-provider.tsx
     │   ├── hooks/               ← useSimulationDriver (the app's only timer),
     │   │                          useKeyboardShortcuts (Phase 5, page-scoped keydown),
-    │   │                          useUrlConfigSync (Phase 6, URL ⇆ store bridge),
+    │   │                          useUrlConfigSync (Phase 6, URL ⇆ store bridge;
+    │   │                          D-060: + localStorage persistence + speed),
     │   │                          useScrollLock (tour scroll lock — body fixed
     │   │                          while open, exact scrollY restored on close)
     │   ├── lib/
@@ -74,7 +77,11 @@ N-Queens Visualizer/            ← task workspace root
     │   │   │                      ORIGIN_ECHO_DURATION_MULTIPLIER, easeForTravel)
     │   │   ├── strategy-info.ts← Phase 5 shared strategy/policy metadata
     │   │   │                      (Phase 9: `tag` field dropped — descriptions only)
-    │   │   ├── url-state.ts    ← Phase 6 pure URL ⇆ config schema (nuqs parsers, clamping)
+    │   │   ├── url-state.ts    ← Phase 6 pure URL ⇆ config schema (nuqs parsers, clamping;
+    │   │   │                      D-060: + DEFAULT_URL_VALUES, sanitize helper)
+    │   │   ├── config-persistence.ts ← D-060 versioned localStorage bridge
+    │   │   │                      (`nqueens-config:v1`: URL fields + speed;
+    │   │   │                      precedence URL > storage > defaults)
     │   │   ├── csv-export.ts   ← Phase 6 pure RFC-4180 run-CSV builder
     │   │   ├── clipboard.ts    ← Phase 6 copy helper (navigator.clipboard + fallback)
     │   │   ├── animation-timings.ts ← Phase 10 pure speed→duration helper
@@ -208,7 +215,7 @@ initial run if none exists. Tested via `renderHook` + `vi.useFakeTimers()`.
   offline-safe invariant as Phase 5: no `fonts.googleapis.com` request
   at build or runtime. CSS variables renamed from `--font-geist-*` to
   `--font-sora-sans` / `--font-chivo-mono`.
-- Home page (`src/app/page.tsx`): `<StatsHeader />` (slim) at the top;
+- Visualizer page (`src/app/visualizer/page.tsx`; `/` 307-redirects here, forwarding ?query): `<StatsHeader />` (slim) at the top;
   main workspace is a 10-col grid with the chessboard card (containing
   a `<StatsRail variant="rail" />` aside on `lg+` / `<StatsRail
   variant="compact" />` strip on `<lg` around the `<Chessboard />`) on

@@ -12,7 +12,7 @@ import { test, expect } from '@playwright/test';
  */
 test.describe('onboarding tour', () => {
   test('first visit shows the spotlight tour at step 1', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/visualizer');
     const dialog = page.getByTestId('onboarding-tour');
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText('Step 1 of');
@@ -20,7 +20,7 @@ test.describe('onboarding tour', () => {
   });
 
   test('Next advances; closing persists across reload', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/visualizer');
     const dialog = page.getByTestId('onboarding-tour');
     await expect(dialog).toBeVisible();
 
@@ -38,7 +38,7 @@ test.describe('onboarding tour', () => {
   });
 
   test('the footer Replay tour button reopens the tour on demand', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/visualizer');
     const dialog = page.getByTestId('onboarding-tour');
     await expect(dialog).toBeVisible();
     await dialog.getByRole('button', { name: 'Skip tour' }).click();

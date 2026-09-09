@@ -4,7 +4,7 @@ import * as React from 'react';
 import { ThemeProvider } from 'next-themes';
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/',
+  usePathname: () => '/visualizer',
 }));
 
 // next/link requires an app-router context in jsdom — mock it as a plain anchor.
@@ -41,7 +41,7 @@ describe('SiteNav', () => {
     renderNav();
     const visualizer = screen.getByRole('link', { name: /visualizer/i });
     const howItWorks = screen.getByRole('link', { name: /how it works/i });
-    expect(visualizer).toHaveAttribute('href', '/');
+    expect(visualizer).toHaveAttribute('href', '/visualizer');
     expect(howItWorks).toHaveAttribute('href', '/how-it-works');
   });
 

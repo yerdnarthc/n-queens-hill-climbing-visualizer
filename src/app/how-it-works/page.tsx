@@ -289,7 +289,7 @@ export default function HowItWorksPage() {
             a chart to jump to that moment of the run.
           </p>
           <Link
-            href="/"
+            href="/visualizer"
             className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
           >
             Open the Visualizer

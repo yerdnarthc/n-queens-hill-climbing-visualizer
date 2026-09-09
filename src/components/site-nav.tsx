@@ -8,7 +8,7 @@ import { Sun, Moon, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
-  { href: '/', label: 'Visualizer' },
+  { href: '/visualizer', label: 'Visualizer' },
   { href: '/how-it-works', label: 'How It Works' },
 ] as const;
 
@@ -45,7 +45,10 @@ export function SiteNav() {
 
         <div className="flex items-center gap-1.5">
           {NAV_LINKS.map((link) => {
-            const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+            const isActive =
+              link.href === '/visualizer'
+                ? pathname === '/visualizer'
+                : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
