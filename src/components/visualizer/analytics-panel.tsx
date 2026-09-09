@@ -148,10 +148,10 @@ export function AnalyticsPanel({ bare = false }: AnalyticsPanelProps = {}) {
 
       {/* Current State Indicator (only when a result exists) */}
       {currentSnapshot && (
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center">
           <Badge
             variant="outline"
-            className="flex items-center gap-1.5 border-border/80 bg-card/1 px-2.5 py-1 text-[0.65rem]"
+            className="flex w-[40%] justify-start gap-1.5 border-border/80 bg-card/1 py-1 text-[0.65rem]"
           >
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: activePhaseColor }} />
             <span className="font-medium">{activePhaseLabel}</span>
