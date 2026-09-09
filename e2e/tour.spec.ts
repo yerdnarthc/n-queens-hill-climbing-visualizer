@@ -11,22 +11,26 @@ import { test, expect } from '@playwright/test';
  * exit→enter (`mode="wait"`), and `expect` polling absorbs that.
  */
 test.describe('onboarding tour', () => {
-  test('first visit shows the spotlight tour at step 1', async ({ page }) => {
+  test('first visit shows the welcome modal, then step 1 on explore', async ({ page }) => {
     await page.goto('/visualizer');
     const dialog = page.getByTestId('onboarding-tour');
     await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText('Welcome to the N-Queens');
+
+    await dialog.getByRole('button', { name: "Let's explore!" }).click();
     await expect(dialog).toContainText('Step 1 of');
-    await expect(dialog).toContainText('Board size');
+    await expect(dialog).toContainText('The chessboard');
   });
 
-  test('Next advances; closing persists across reload', async ({ page }) => {
+  test('Next advances substeps; closing persists across reload', async ({ page }) => {
     await page.goto('/visualizer');
     const dialog = page.getByTestId('onboarding-tour');
     await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: "Let's explore!" }).click();
+    await expect(dialog).toContainText('Step 1 of');
 
     await dialog.getByRole('button', { name: 'Next' }).click();
-    await expect(dialog).toContainText('Step 2 of');
-    await expect(dialog).toContainText('Hill-climbing variant');
+    await expect(dialog).toContainText('Red glow means attacked');
 
     await dialog.getByRole('button', { name: 'Skip tour' }).click();
     await expect(dialog).toBeHidden();
@@ -46,6 +50,6 @@ test.describe('onboarding tour', () => {
 
     await page.getByRole('button', { name: 'Replay tour' }).click();
     await expect(page.getByTestId('onboarding-tour')).toBeVisible();
-    await expect(page.getByTestId('onboarding-tour')).toContainText('Step 1 of');
+    await expect(page.getByTestId('onboarding-tour')).toContainText('Welcome to the N-Queens');
   });
 });

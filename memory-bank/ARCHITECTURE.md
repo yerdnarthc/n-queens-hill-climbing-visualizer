@@ -330,7 +330,7 @@ with the component (no e2e spec referenced it).
 ## Onboarding tour (Phase 12, D-047)
 
 First-visit spotlight walkthrough (`src/components/visualizer/
-onboarding-tour.tsx`, mounted once in `src/app/page.tsx`,
+onboarding-tour.tsx`, mounted once in `src/app/visualizer/page.tsx`,
 `createPortal` to `document.body`):
 
 - **Persistence** — versioned `localStorage` key `nqueens-tour:v1`
@@ -340,16 +340,22 @@ onboarding-tour.tsx`, mounted once in `src/app/page.tsx`,
   that the tour subscribes to. No such thing as "clear on browser
   close" exists on the web (sessionStorage dies with the tab) — hence
   localStorage + explicit opt-out instead.
-- **Steps** — 10 definitions (`ONBOARDING_TOUR_STEPS`, cooling
-  conditional on simulated-annealing): board N → variant → seed →
-  plateau → restarts → cooling → chessboard → playback → analytics →
-  stats → share/export. Targets resolve via `data-tour` anchors (added
-  to ConfigPanel sections + PlaybackControls root) with fallbacks to
-  existing `data-testid`s; missing targets are skipped via rAF-defer.
+- **Steps** (overhaul, D-061) — welcome modal + 7 guided steps with
+  ordered substeps (`TourSubstepDef`: optional per-substep spotlight
+  override, own title/body): chessboard (10) → timeline (5) → config
+  (10, cooling conditional on simulated-annealing) → analytics (4) →
+  stats (4) → csv (single) → share (2 + sendoff). Next/Back/backdrop/
+  arrows walk substeps first, steps second; every substep has a unique
+  title (test-sync guarantee under `mode="wait"`). Targets resolve via
+  `data-tour` anchors (ConfigPanel, narrow PlaybackControls + stats +
+  tab anchors) with fallbacks to existing `data-testid`s; missing
+  targets are skipped via rAF-defer.
 - **No-trace rule** — entry forces `strategy: 'steepest-ascent'` (so
-  every step target exists) and auto-opens the Advanced collapsible
-  for policy steps; exit restores the user's strategy AND the
-  collapsible's prior open state.
+  every step target exists), snapshots the FULL UI state (config +
+  speed + playback position/state), and auto-opens the Advanced
+  collapsible for the whole config step; exit restores everything
+  (setConfig pauses per D-057, so playback is resumed explicitly when
+  the user was playing) AND the collapsible's prior open state.
 - **Scroll lock** (D-052) — `useScrollLock(open)` pins the body
   (`fixed` + `-top` + `100%` width) while open and restores the exact
   `scrollY` on close; the tour's own `scrollIntoView`
