@@ -143,7 +143,12 @@ export function createSimulationStore() {
         const merged = normalizeConfig({ ...get().config, ...patch });
         if (sameConfig(merged, get().config)) return; // no-op — e.g. already-clamped value
         runWith(merged);
-        set({ config: merged });
+        // A config edit is a clean reset: the fresh run starts PAUSED at
+        // step 0 so the user can inspect the new initial board before
+        // choosing to play (D-057). This deliberately differs from `run()`
+        // (explicit Rerun), which preserves playing state. `newSeed` flows
+        // through here, so reshuffling the seed pauses too.
+        set({ config: merged, isPlaying: false });
       },
 
       run: () => runWith(get().config),

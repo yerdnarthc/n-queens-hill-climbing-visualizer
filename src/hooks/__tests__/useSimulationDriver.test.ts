@@ -112,18 +112,18 @@ describe('useSimulationDriver', () => {
     expect(s.isPlaying).toBe(false);
   });
 
-  it('keeps playing across a config-change rerun, from the new step 0', () => {
+  it('pauses on a config-change rerun, holding the new step 0 (D-057)', () => {
     const { store } = mount();
     act(() => store.getState().play());
     tick(1000); // → step 2 of the seed-27 run
     expect(store.getState().currentStep).toBe(2);
-    act(() => store.getState().setConfig({ seed: 25 })); // auto-rerun
+    act(() => store.getState().setConfig({ seed: 25 })); // auto-rerun + pause
     const mid = store.getState();
-    expect(mid.isPlaying).toBe(true); // rerun preserved playback
+    expect(mid.isPlaying).toBe(false); // clean reset: fresh run starts paused
     expect(mid.currentStep).toBe(0); // restarted at the top
-    tick(1500); // 3 ticks: 2 reach the end of the seed-25 run, the 3rd auto-pauses
+    tick(1500); // driver interval is cleared while paused — no drift
     const s = store.getState();
-    expect(s.currentStep).toBe(2);
+    expect(s.currentStep).toBe(0);
     expect(s.isPlaying).toBe(false);
   });
 

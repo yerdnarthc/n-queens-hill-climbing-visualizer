@@ -144,6 +144,53 @@ describe('createSimulationStore — config changes', () => {
     expect(store.getState().currentStep).toBe(0);
   });
 
+  it('setConfig pauses mid-playback (clean reset to a paused step 0)', () => {
+    // UX rule (D-057): editing any config knob while playing stops
+    // playback and lands on the fresh run's initial board, paused —
+    // the user presses Play when ready instead of having a new run
+    // start under them. This deliberately differs from `run()`
+    // (explicit Rerun), which preserves playing state (see above).
+    const store = createSimulationStore();
+    store.getState().run();
+    store.getState().play();
+    store.getState().stepForward();
+    expect(store.getState().isPlaying).toBe(true);
+    store.getState().setConfig({ seed: 25 });
+    const s = store.getState();
+    expect(s.isPlaying).toBe(false);
+    expect(s.currentStep).toBe(0);
+    expect(s.config.seed).toBe(25);
+  });
+
+  it('a slider burst while playing stays paused with the final config applied', () => {
+    // Sliders fire setConfig per tick while dragging. The first tick
+    // pauses; the rest just rerun paused — no play/pause flicker, and
+    // the last value wins.
+    const store = createSimulationStore();
+    store.getState().run();
+    store.getState().play();
+    for (const streak of [10, 20, 30, 40]) {
+      store.getState().setConfig({ maxConsecutiveSideways: streak });
+    }
+    const s = store.getState();
+    expect(s.isPlaying).toBe(false);
+    expect(s.currentStep).toBe(0);
+    expect(s.config.maxConsecutiveSideways).toBe(40);
+  });
+
+  it('setConfig no-op still changes nothing while playing', () => {
+    // The same-config guard returns before pausing, so re-applying
+    // the current value (or a value that clamps to it) never
+    // interrupts playback.
+    const store = createSimulationStore();
+    store.getState().run();
+    store.getState().play();
+    store.getState().setConfig({ seed: 27 }); // already the default
+    const s = store.getState();
+    expect(s.isPlaying).toBe(true);
+    expect(s.result).not.toBeNull();
+  });
+
   it('newSeed() replaces the seed with a fresh uint32 and reruns', () => {
     const store = createSimulationStore();
     store.getState().run();
