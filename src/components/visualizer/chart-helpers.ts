@@ -481,6 +481,16 @@ export function buildConvergenceChartOption(
     dataZoom: buildDataZoomConfig(colors, zoomRange),
     tooltip: {
       trigger: 'axis',
+      // Escape the chart container: ECharts renders the tooltip div
+      // INSIDE the chart DOM node by default, and ChartWrapper clips
+      // with `overflow-hidden` — wide tooltips get sliced at the
+      // container edge. No z-index can fix that (overflow clipping
+      // applies regardless of z-index); `appendToBody` reparents the
+      // tooltip to <body> instead, where ECharts' baked-in
+      // z-index:9999999 floats it above everything. `confine` keeps
+      // it from spilling past the viewport on narrow screens.
+      appendToBody: true,
+      confine: true,
       backgroundColor: colors.card,
       borderColor: colors.grid,
       textStyle: { color: colors.foreground, fontSize: 14 },
@@ -837,6 +847,12 @@ export function buildLandscapeChartOption(
       // did nothing. This is exactly the UX inconsistency the user
       // flagged against the smoother Convergence chart.
       trigger: 'axis',
+      // Same overflow-escape as the Convergence tooltip above:
+      // `appendToBody` reparents the tooltip to <body> (outside
+      // ChartWrapper's `overflow-hidden`), `confine` keeps it inside
+      // the viewport on narrow screens.
+      appendToBody: true,
+      confine: true,
       backgroundColor: colors.card,
       borderColor: colors.grid,
       textStyle: { color: colors.foreground, fontSize: 12 },

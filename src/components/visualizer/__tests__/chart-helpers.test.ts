@@ -358,6 +358,30 @@ describe('chart-helpers', () => {
       expect(yAxis[1].max).toBe(4.1);
     });
 
+    it('escapes tooltips from the chart container (no overflow clipping)', () => {
+      // Regression guard for the sliced-tooltips bug: ChartWrapper clips
+      // with `overflow-hidden`, and ECharts renders tooltip divs INSIDE
+      // the chart node by default — wide tooltips got cut at the
+      // container edge (no z-index can fix overflow clipping).
+      // `appendToBody` reparents the tooltip to <body> (where ECharts'
+      // baked-in z-index:9999999 floats it above everything) and
+      // `confine` keeps it inside the viewport on narrow screens.
+      // Both charts need it — Landscape showed the bug, Convergence is
+      // proofed the same way.
+      const convergence = buildConvergenceChartOption(
+        sampleSnapshots,
+        2,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const landscape = buildLandscapeChartOption(sampleSnapshots, 2, DEFAULT_DARK_COLORS);
+      for (const option of [convergence, landscape]) {
+        const tooltip = option.tooltip as { appendToBody: boolean; confine: boolean };
+        expect(tooltip.appendToBody).toBe(true);
+        expect(tooltip.confine).toBe(true);
+      }
+    });
+
     it('renders the trajectory line with the same width + opacity as the Landscape chart', () => {
       // The two analytics charts should look like a coherent pair: same
       // primary-color line, same width, same opacity. A regression here
