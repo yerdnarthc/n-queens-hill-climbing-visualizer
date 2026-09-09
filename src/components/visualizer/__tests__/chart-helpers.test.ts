@@ -165,7 +165,11 @@ describe('chart-helpers', () => {
         [3, 5],
         [4, 0],
       ]);
-      expect(option.series).toHaveLength(1);
+      // Two series: the Conflicts trajectory plus the dedicated,
+      // invisible 'Step cursor' host series (see the cursor-isolation
+      // tests below for why the cursor gets its own series).
+      expect(option.series).toHaveLength(2);
+      expect(option.series[1].name).toBe('Step cursor');
       expect(option.yAxis).toHaveLength(1);
     });
 
@@ -181,8 +185,10 @@ describe('chart-helpers', () => {
         'simulated-annealing',
         DEFAULT_DARK_COLORS,
       );
-      expect(option.series).toHaveLength(2);
+      // Conflicts + Temperature + the trailing 'Step cursor' series.
+      expect(option.series).toHaveLength(3);
       expect(option.series[1].name).toBe('Temperature');
+      expect(option.series[2].name).toBe('Step cursor');
       expect(option.yAxis).toHaveLength(2);
     });
 
@@ -373,6 +379,67 @@ describe('chart-helpers', () => {
       expect(convergenceLineStyle.color).toBe(landscapeLineStyle.color);
       expect(convergenceLineStyle.width).toBe(landscapeLineStyle.width);
       expect(convergenceLineStyle.opacity).toBe(landscapeLineStyle.opacity);
+    });
+
+    it('hosts the step cursor on its own single-item markLine series (rotation-bug isolation)', () => {
+      // Regression guard for the rotated-"Step N" label bug: ECharts
+      // recycles markLine graphic elements across data items on
+      // merge-mode setOption updates, and label rotation is sticky
+      // element state. When a zoom dropped an out-of-window restart
+      // item, the step item shifted onto a recycled restart element
+      // and inherited its 90° rotation permanently. Isolating the
+      // cursor as the SOLE markLine item of a dedicated series gives
+      // it a single-element pool (ECharts keys markLine pools per
+      // series), so cross-config reuse is structurally impossible.
+      //
+      // sampleSnapshots has a restart phase at index 3, so the
+      // Conflicts series carries restart lines while the cursor
+      // series must carry exactly the step line — never mixed.
+      const option = buildConvergenceChartOption(
+        sampleSnapshots,
+        2,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const conflicts = option.series[0] as unknown as {
+        markLine: { data: Array<{ label: { formatter: string } }> };
+      };
+      const cursor = option.series.find((s) => s.name === 'Step cursor') as unknown as {
+        markLine: { data: Array<{ xAxis: number; label: { formatter: string } }> };
+      };
+      // Restart lines stay on the trajectory series…
+      expect(conflicts.markLine.data.length).toBeGreaterThan(0);
+      expect(conflicts.markLine.data.every((d) => d.label.formatter.startsWith('Restart #'))).toBe(
+        true,
+      );
+      // …and the cursor series carries ONLY the step line.
+      expect(cursor.markLine.data).toHaveLength(1);
+      expect(cursor.markLine.data[0].xAxis).toBe(2);
+      expect(cursor.markLine.data[0].label.formatter).toBe('Step 2');
+    });
+
+    it('renders the cursor host series invisibly and non-interactively', () => {
+      // The 'Step cursor' series is scaffolding for the markLine, not
+      // data: it must not draw anything, must not intercept clicks or
+      // hover, and must not contribute tooltip entries of its own.
+      const option = buildConvergenceChartOption(
+        sampleSnapshots,
+        2,
+        'steepest-ascent',
+        DEFAULT_DARK_COLORS,
+      );
+      const cursor = option.series.find((s) => s.name === 'Step cursor') as unknown as {
+        data: unknown[];
+        showSymbol: boolean;
+        silent: boolean;
+        lineStyle: { opacity: number };
+        markLine: { silent: boolean };
+      };
+      expect(cursor.data).toEqual([]);
+      expect(cursor.showSymbol).toBe(false);
+      expect(cursor.silent).toBe(true);
+      expect(cursor.lineStyle.opacity).toBe(0);
+      expect(cursor.markLine.silent).toBe(true);
     });
   });
 
@@ -737,21 +804,23 @@ describe('chart-helpers', () => {
     });
 
     it('Convergence: pins the markLine to a short 50ms animation (snappy cursor)', () => {
-      // The mark line is the current-step cursor. The per-series
-      // override (`animation: { duration: 50 }`) keeps the cursor
-      // from feeling laggy on click-to-scrub while still giving it
-      // a brief visual confirmation of movement. Faster than the
-      // top-level 100ms because the mark line is a single
-      // point-position change, not a multi-element update.
+      // The mark line is the current-step cursor, hosted on the
+      // dedicated 'Step cursor' series. The per-series override
+      // (`animation: { duration: 50 }`) keeps the cursor from feeling
+      // laggy on click-to-scrub while still giving it a brief visual
+      // confirmation of movement. Faster than the top-level 100ms
+      // because the mark line is a single point-position change, not
+      // a multi-element update.
       const option = buildConvergenceChartOption(
         sampleSnapshots,
         2,
         'steepest-ascent',
         DEFAULT_DARK_COLORS,
       );
-      const markLine = (option.series[0] as { markLine: { animation: { duration: number } } })
-        .markLine;
-      expect(markLine.animation).toEqual({ duration: 50 });
+      const cursor = option.series.find((s) => s.name === 'Step cursor') as unknown as {
+        markLine: { animation: { duration: number } };
+      };
+      expect(cursor.markLine.animation).toEqual({ duration: 50 });
     });
 
     it('Landscape: uses the playback-friendly animation profile', () => {

@@ -345,7 +345,20 @@ export function buildConvergenceChartOption(
       },
     }));
 
-  // Current step indicator line
+  // Current step indicator line.
+  //
+  // NOTE (label-rotation bug): this item must NOT share a markLine `data`
+  // array with the restart lines above. ECharts recycles markLine graphic
+  // elements across data items on merge-mode setOption updates, pairing by
+  // index — and a zoom that drops an out-of-window restart item shifts this
+  // item onto a recycled restart element. Label rotation is sticky,
+  // element-level state that ECharts only recomputes for non-'start'/'end'
+  // positions, so the stranded rotation (90° from the restart label's
+  // `insideEndTop`) is never cleared and "Step N" renders vertically until
+  // the chart is remounted. Keeping the cursor as the SOLE item of its own
+  // series' markLine gives it a dedicated single-element pool (ECharts keys
+  // markLine element pools per series), making cross-config reuse
+  // structurally impossible. See the cursor series below.
   const currentStepMarkLine = {
     xAxis: currentStep,
     lineStyle: {
@@ -363,8 +376,6 @@ export function buildConvergenceChartOption(
       position: 'end' as const,
     },
   };
-
-  const markLines = [...restartMarkLines, currentStepMarkLine];
 
   // Per-point data with phase-specific shape, size, and glow styling.
   // Mirrors the Landscape chart's `scatterData` so the two charts feel
@@ -674,14 +685,11 @@ export function buildConvergenceChartOption(
         },
         markLine: {
           symbol: ['none', 'none'],
-          data: markLines,
+          // Restart lines ONLY — the step cursor lives on its own series
+          // below (see the note on `currentStepMarkLine` above for why
+          // they must never share a markLine data array).
+          data: restartMarkLines,
           silent: true,
-          // `animation: false` on the markLine specifically — even
-          // though the top-level `animationDurationUpdate: 0` already
-          // kills update animations globally, this is a defensive
-          // override that pins the mark-line cursor to "snap" mode
-          // permanently. The mark line is a UI cursor element, not
-          // a data transition; it should never ease between positions.
           animation: { duration: 50 },
         },
       },
@@ -702,6 +710,34 @@ export function buildConvergenceChartOption(
             },
           ]
         : []),
+      // Dedicated host series for the current-step cursor markLine. It
+      // renders nothing itself (empty data, invisible line, silent) — it
+      // exists so the cursor gets its own markLine element pool. See the
+      // note on `currentStepMarkLine` above for the full rationale.
+      // Listed last so the cursor draws above the trajectory/temperature.
+      {
+        name: 'Step cursor',
+        type: 'line',
+        yAxisIndex: 0,
+        data: [],
+        showSymbol: false,
+        silent: true,
+        lineStyle: {
+          opacity: 0,
+        },
+        markLine: {
+          symbol: ['none', 'none'],
+          data: [currentStepMarkLine],
+          silent: true,
+          // Short fixed duration on the markLine specifically — a
+          // defensive override that pins the mark-line cursor to
+          // near-"snap" mode permanently (50ms vs the top-level
+          // `animationDurationUpdate: 100`). The mark line is a UI
+          // cursor element, not a data transition; it should never
+          // visibly ease between positions.
+          animation: { duration: 50 },
+        },
+      },
     ],
   };
 }

@@ -243,6 +243,14 @@ initial run if none exists. Tested via `renderHook` + `vi.useFakeTimers()`.
   `animationThreshold: 200`. MarkLines and the auto-scroll
   dispatchAction override to `animation: { duration: 50 }` so the
   current-step cursor **snaps** instead of easing.
+- **Cursor isolation** (D-055): the Convergence chart's "Step N" cursor
+  markLine lives alone on an invisible trailing `Step cursor` series —
+  NOT in the Conflicts series' markLine array with the restart lines.
+  ECharts recycles markLine elements across data items on merge
+  updates and label rotation is sticky element state, so a zoom that
+  dropped a restart item shifted the step item onto a recycled restart
+  element and stranded its 90° rotation (the rotated-label bug).
+  Single-item pool per series ⇒ cross-config reuse impossible.
 
 ## Stats display (Phase 9, D-040)
 
