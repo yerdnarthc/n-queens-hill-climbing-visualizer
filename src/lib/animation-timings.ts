@@ -18,8 +18,7 @@
  *   -  1× → step is 1000ms → 60% =  600ms → clamped to MAX 400ms
  *   -  2× → step is  500ms → 60% =  300ms (the natural, recommended speed)
  *   -  5× → step is  200ms → 60% =  120ms
- *   - 20× → step is   50ms → 60% =   30ms → clamped to MIN 50ms
- *   - 30× → step is   33ms → 60% =   20ms → clamped to MIN 50ms
+ *   - 20× → step is   50ms → 60% =   30ms → clamped to MIN 50ms (fastest)
  *
  * Returns **0** when `reducedMotion` is true so callers can collapse the
  * transition to instant (consistent with the existing `useReducedMotion`

@@ -55,7 +55,7 @@ export const motionTokens = {
  * Fixed queen-travel duration in MILLISECONDS used when the user steps
  * frame-by-frame (paused / scrubbing / arrow keys).
  *
- * Deliberately NOT derived from playback `speed`: at 30× the speed-aware
+ * Deliberately NOT derived from playback `speed`: at 20× the speed-aware
  * formula yields 50 ms (a blink), which is unreadable when YOU control the
  * stepping pace. 220 ms sits between the `fast` (180 ms) and `normal`
  * (350 ms) tokens — long enough to read as travel, short enough that rapid
@@ -81,7 +81,7 @@ export const QUEEN_ARC_LIFT_PX = 12;
  * queen's travel, as a multiplier of the shared travel duration.
  *
  * The echo replays on every move, so at high playback speeds a 1× echo
- * (e.g. 50 ms at 30×) is over before you can register it. 2× keeps it
+ * (e.g. 50 ms at 20×) is over before you can register it. 2× keeps it
  * readable without outliving the next step at normal speeds.
  *
  * ★ Change this number to make the ghost linger longer/shorter. ★

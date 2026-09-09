@@ -81,7 +81,7 @@ export function QueenPiece({
   // (tweak it in `@/lib/motion-tokens`) so the move reads as "flying"
   // rather than "sliding". Fires only when the target square changes;
   // stopping the previous controls lets a new move cleanly take over
-  // mid-flight (no pile-up at 30×). Under reduced motion (or 0 duration)
+  // mid-flight (no pile-up at 20×). Under reduced motion (or 0 duration)
   // the queen snaps to the square instead.
   React.useEffect(() => {
     if (reducedMotion || durationMs <= 0) {

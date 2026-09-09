@@ -36,7 +36,7 @@ export type SimulationConfig = Omit<EngineConfigInput, 'initialRows'>;
 const MAX_SEED = 4294967295;
 
 /** Playback speed bounds, in steps per second. */
-export const SPEED_LIMITS = { min: 0.5, max: 30 } as const;
+export const SPEED_LIMITS = { min: 0.5, max: 20 } as const;
 
 /** Default playback speed, in steps per second. */
 export const DEFAULT_SPEED = 2;

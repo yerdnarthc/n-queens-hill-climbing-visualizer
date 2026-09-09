@@ -49,9 +49,9 @@ describe('clamp helpers', () => {
     expect(clampSeed(Number.NaN)).toBe(0);
   });
 
-  it('clampSpeed bounds to 0.5–30 sps and falls back to the default', () => {
+  it('clampSpeed bounds to 0.5–20 sps and falls back to the default', () => {
     expect(clampSpeed(0)).toBe(0.5);
-    expect(clampSpeed(100)).toBe(30);
+    expect(clampSpeed(100)).toBe(20);
     expect(clampSpeed(1.75)).toBe(1.75);
     expect(clampSpeed(Number.NaN)).toBe(DEFAULT_SPEED);
   });
@@ -281,7 +281,7 @@ describe('createSimulationStore — playback', () => {
     expect(store.getState().speed).toBe(10);
     expect(store.getState().isPlaying).toBe(true);
     store.getState().setSpeed(999);
-    expect(store.getState().speed).toBe(30);
+    expect(store.getState().speed).toBe(20);
     store.getState().setSpeed(0.1);
     expect(store.getState().speed).toBe(0.5);
   });

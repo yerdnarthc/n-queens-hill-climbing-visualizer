@@ -13,7 +13,7 @@ import { QUEEN_STEPPER_MS } from '@/lib/motion-tokens';
  * while the simulation is PLAYING. When the user steps frame-by-frame
  * (step buttons, arrow keys, scrubber, jump actions) the sim is paused, so
  * a fixed, readable duration is used no matter what speed is configured —
- * at 30× the speed-aware formula would give 50 ms (an unreadable blink).
+ * at 20× the speed-aware formula would give 50 ms (an unreadable blink).
  *
  * - reduced motion → 0 (instant snap; callers skip pulses too)
  * - playing → `computeStepDuration(speed)` — 50…400 ms speed-aware curve

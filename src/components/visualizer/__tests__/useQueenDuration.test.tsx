@@ -9,7 +9,7 @@ import { QUEEN_STEPPER_MS } from '@/lib/motion-tokens';
  *
  *  - PLAYING  → speed-aware `computeStepDuration(speed)` (50…400 ms)
  *  - PAUSED (stepping / scrubbing / arrow keys) → fixed `QUEEN_STEPPER_MS`
- *    no matter how high the configured speed is (30× stepping must NOT
+ *    no matter how high the configured speed is (20× stepping must NOT
  *    blink at 50 ms)
  *  - reduced motion is covered by `computeStepDuration` returning 0 and by
  *    callers skipping pulses; jsdom reports no reduced-motion preference
@@ -33,12 +33,12 @@ describe('useQueenDurationMs', () => {
   });
 
   it('returns the fixed stepper duration while paused, regardless of speed', () => {
-    // Even at the maximum 30×, single-stepping must stay readable —
+    // Even at the maximum 20×, single-stepping must stay readable —
     // the speed-aware formula would give 50 ms (a blink).
     act(() => {
-      simulationStore.getState().setSpeed(30);
+      simulationStore.getState().setSpeed(20);
     });
-    const { result } = renderHook(() => useQueenDurationMs(30));
+    const { result } = renderHook(() => useQueenDurationMs(20));
     expect(simulationStore.getState().isPlaying).toBe(false);
     expect(result.current).toBe(QUEEN_STEPPER_MS);
   });
@@ -53,12 +53,12 @@ describe('useQueenDurationMs', () => {
     expect(result.current).toBe(300);
   });
 
-  it('clamps to the speed-aware minimum while playing at 30x', () => {
+  it('clamps to the speed-aware minimum while playing at 20x', () => {
     act(() => {
-      simulationStore.getState().setSpeed(30);
+      simulationStore.getState().setSpeed(20);
       simulationStore.getState().play();
     });
-    const { result } = renderHook(() => useQueenDurationMs(30));
+    const { result } = renderHook(() => useQueenDurationMs(20));
     expect(result.current).toBe(50);
   });
 

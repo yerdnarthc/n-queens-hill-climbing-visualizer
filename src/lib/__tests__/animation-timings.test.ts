@@ -29,14 +29,9 @@ describe('computeStepDuration', () => {
     expect(computeStepDuration(20)).toBe(50);
   });
 
-  it('returns 50ms at 30× (clamped to MIN — fastest, snaps but still readable)', () => {
-    // step is 33ms → 60% = 20ms → clamped to 50ms
-    expect(computeStepDuration(30)).toBe(50);
-  });
-
   it('returns 0 when reducedMotion is true (accessibility short-circuit)', () => {
     expect(computeStepDuration(2, true)).toBe(0);
-    expect(computeStepDuration(30, true)).toBe(0);
+    expect(computeStepDuration(20, true)).toBe(0);
   });
 
   it('treats reducedMotion = null as "false" (jsdom default from useReducedMotion)', () => {
@@ -61,9 +56,9 @@ describe('computeStepDuration', () => {
     });
   });
 
-  it('produces a strictly non-increasing sequence from 0.5× to 30×', () => {
+  it('produces a strictly non-increasing sequence from 0.5× to 20×', () => {
     // Sanity check: faster playback ⇒ shorter (or equal) duration.
-    const speeds = [0.5, 1, 2, 3, 5, 10, 15, 20, 30];
+    const speeds = [0.5, 1, 2, 3, 5, 10, 15, 20];
     const durations = speeds.map((s) => computeStepDuration(s));
     for (let i = 1; i < durations.length; i++) {
       const prev = durations[i - 1]!;

@@ -113,7 +113,7 @@ export const ONBOARDING_TOUR_STEPS: TourStepDef[] = [
     id: 'playback',
     selectors: ['[data-tour="playback"]'],
     title: 'Playback & time travel',
-    body: 'Play/pause, step frame-by-frame with ←/→, or scrub the timeline to any step. Jump straight to the best board, and tune speed from 0.5× to 30×. Click anywhere dimmed to continue.',
+    body: 'Play/pause, step frame-by-frame with ←/→, or scrub the timeline to any step. Jump straight to the best board, and tune speed from 0.5× to 20×. Click anywhere dimmed to continue.',
   },
   {
     id: 'analytics',
