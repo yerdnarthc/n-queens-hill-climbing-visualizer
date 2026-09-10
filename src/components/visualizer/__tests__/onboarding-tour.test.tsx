@@ -8,7 +8,7 @@ import {
   placeTourTooltip,
   reopenOnboardingTour,
 } from '../onboarding-tour';
-import { simulationStore } from '@/store';
+import { simulationStore, tourUiStore } from '@/store';
 
 /** Fake page targets so every (non-conditional) step resolves an element. */
 function FakeTargets() {
@@ -100,6 +100,18 @@ describe('OnboardingTour', () => {
     await enterGuide();
     expect(screen.getByText('The chessboard')).toBeInTheDocument();
     expect(screen.getByText(/Step 1 of 7/)).toBeInTheDocument();
+  });
+
+  it('calms queens on the chessboard intro and reveals glow on the conflict beat', async () => {
+    renderOpenTour();
+    await enterGuide();
+    // Intro substep: suppression on so the board opens calm.
+    expect(tourUiStore.getState().calmQueens).toBe(true);
+    // Advancing to "Red glow means attacked" clears it — the glyph
+    // crossfade animates the reveal in the browser.
+    fireEvent.click(screen.getByRole('button', { name: /^Next$/ }));
+    expect(await screen.findByText(/glowing red are conflicted/i)).toBeInTheDocument();
+    expect(tourUiStore.getState().calmQueens).toBe(false);
   });
 
   it('stays closed when the tour was already seen', () => {

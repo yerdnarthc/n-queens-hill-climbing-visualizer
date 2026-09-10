@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { useSimulationStore, selectSnapshot } from '@/store';
+import { useSimulationStore, selectSnapshot, useTourUiStore } from '@/store';
 import { createConflicts } from '@/lib/engine';
 import { QueenPiece } from './queen-piece';
 import { QueenRays } from './queen-rays';
@@ -146,6 +146,11 @@ export function Chessboard() {
       ? { col: pinned.col, row: board[pinned.col]! }
       : null;
   const inspected = pinned !== null ? effectivePinned : hovered;
+
+  // Tour staging: while the tour shows the chessboard intro, conflicted
+  // queens render calm (no red glow); the glow reveals on the "Red Glow
+  // Means Attacked" substep through the glyph crossfade. Badges/rays stay.
+  const calmQueens = useTourUiStore((s) => s.calmQueens);
 
   // Hit-set for hover-tooltips on attacked queens: col → "Attacked by Q…".
   // Computed here (not inside each QueenPiece) so the parent owns the
@@ -411,6 +416,7 @@ export function Chessboard() {
                       setPinned((prev) => (prev !== null && prev.col === col ? null : { col, row }))
                     }
                     isMoved={isDestinationSquare}
+                    suppressGlow={calmQueens}
                     deltaConflicts={
                       isDestinationSquare && dm
                         ? // Negated in reverse: undoing a Δ move changes

@@ -20,6 +20,13 @@ interface QueenPieceProps {
   isInspected?: boolean;
   /** Whether THIS queen is hover/focus-targeted (transient, unpinned). Drives hover visuals. */
   isHovered?: boolean;
+  /**
+   * Force the glyph glow off even when conflicted. The tour sets this
+   * during the chessboard intro so the board opens calm; clearing it on
+   * the "Red Glow Means Attacked" substep reveals the glow through the
+   * existing crossfade. Badges are unaffected.
+   */
+  suppressGlow?: boolean;
   /** Native-title payload on hit queens: "Attacked by Qc3 along row". */
   hitTitle?: string;
   /** Hover/focus/tap wiring from the parent (transient UI — not the store). */
@@ -55,6 +62,7 @@ export function QueenPiece({
   boardSize = 8,
   isInspected = false,
   isHovered = false,
+  suppressGlow = false,
   hitTitle,
   onInspectStart,
   onInspectEnd,
@@ -152,7 +160,13 @@ export function QueenPiece({
   // Glyph-level glow — no container, no halo div, no drop-shadow on the
   // button. The queen IS the glyph, so conflict/improving glow follows
   // the silhouette itself via an SVG filter on the path.
-  const glyphGlow = hasConflict ? 'conflict' : isMoved ? 'improving' : 'none';
+  // Suppression wins over everything (tour intro staging); otherwise
+  // conflict beats moved, exactly as before.
+  let glyphGlow: 'conflict' | 'improving' | 'none' = 'none';
+  if (!suppressGlow) {
+    if (hasConflict) glyphGlow = 'conflict';
+    else if (isMoved) glyphGlow = 'improving';
+  }
 
   // Hover/pinned emphasis — scale + brightness on the glyph wrapper (NOT
   // the button: the travel lift-pulse owns the button's scale, and nested
@@ -210,10 +224,7 @@ export function QueenPiece({
             ease: motionTokens.easing.smooth,
           }}
         >
-          <QueenGlyph
-            className="h-full w-full text-white"
-            glow={glyphGlow as 'conflict' | 'improving' | 'none'}
-          />
+          <QueenGlyph className="h-full w-full text-white" glow={glyphGlow} />
         </motion.span>
 
         {/* Conflict count badge on the queen if > 0.

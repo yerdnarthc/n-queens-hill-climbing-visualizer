@@ -43,6 +43,23 @@ describe('QueenPiece', () => {
     expect(screen.queryByLabelText(/attacking pairs/i)).not.toBeInTheDocument();
   });
 
+  it('renders the glow copy when conflicted (two stacked SVGs)', () => {
+    const { container } = render(
+      <QueenPiece column={2} row={3} conflictsCount={4} isMoved={false} {...TRAVEL} />,
+    );
+    // Base silhouette + glow copy. The glow copy is what crossfades in
+    // on the tour's "Red Glow Means Attacked" beat.
+    expect(container.querySelectorAll('[data-testid="queen-glyph"] svg')).toHaveLength(2);
+  });
+
+  it('suppressGlow hides the glow copy but keeps the badge (tour intro staging)', () => {
+    const { container } = render(
+      <QueenPiece column={2} row={3} conflictsCount={4} isMoved={false} {...TRAVEL} suppressGlow />,
+    );
+    expect(container.querySelectorAll('[data-testid="queen-glyph"] svg')).toHaveLength(1);
+    expect(screen.getByLabelText(/4 attacking pairs/i)).toBeInTheDocument();
+  });
+
   it('renders the deltaConflicts badge when isMoved is true and a delta is provided', () => {
     render(
       <QueenPiece

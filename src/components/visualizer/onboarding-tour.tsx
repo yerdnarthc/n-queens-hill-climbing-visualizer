@@ -41,7 +41,7 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useDragControls, useReducedMotion } from 'motion/react';
 import { GripVertical, Move, X } from 'lucide-react';
-import { simulationStore } from '@/store';
+import { simulationStore, tourUiStore } from '@/store';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { motionTokens, TOUR_TOOLTIP_DRAG_GLIDE } from '@/lib/motion-tokens';
 import { cn } from '@/lib/utils';
@@ -633,6 +633,19 @@ export function OnboardingTour() {
   React.useEffect(() => {
     if (open) nextButtonRef.current?.focus();
   }, [open, stepIndex, subIndex]);
+
+  // Calm-queens staging (tour demo only): while the chessboard INTRO is
+  // showing, suppress the red conflict glow so the board opens calm;
+  // advancing to "Red Glow Means Attacked" clears the flag and the glow
+  // crossfades in through the existing glyph animation. Closing the tour
+  // (open → false) resets it via the same assignment.
+  React.useEffect(() => {
+    tourUiStore.getState().setCalmQueens(open && step?.id === 'chessboard' && subIndex === 0);
+    // Unmount (e.g. navigating away mid-tour) must never strand the flag.
+    return () => {
+      tourUiStore.getState().setCalmQueens(false);
+    };
+  }, [open, step, subIndex]);
 
   const onTooltipKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
