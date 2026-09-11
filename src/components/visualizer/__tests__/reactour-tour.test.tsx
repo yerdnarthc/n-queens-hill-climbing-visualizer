@@ -52,6 +52,28 @@ async function enterGuide() {
   await screen.findByText('The chessboard', {}, { timeout: 3000 });
 }
 
+/**
+ * Drive an interactive demo beat to its Next button (watch → ended →
+ * Continue → satisfy the gate via DOM). No-op for static beats. Injected
+ * gate nodes are removed before returning (RTL won't clean manual appends).
+ */
+async function driveInteractiveIfNeeded(title: string) {
+  const gateAttr =
+    title === 'Try hovering a queen'
+      ? 'queen-rays'
+      : title === 'Red ring = under attack'
+        ? 'queen-ray-hit-0-0'
+        : null;
+  if (gateAttr === null) return;
+  fireEvent.ended(await screen.findByTestId('tour-demo-video', {}, { timeout: 3000 }));
+  fireEvent.click(await screen.findByRole('button', { name: /^Continue$/ }, { timeout: 3000 }));
+  const node = document.createElement('div');
+  node.setAttribute('data-testid', gateAttr);
+  document.body.appendChild(node);
+  await screen.findByRole('button', { name: /^Next$/ }, { timeout: 3000 });
+  node.remove();
+}
+
 function renderOpenTour() {
   window.localStorage.clear();
   return render(
@@ -88,6 +110,10 @@ describe('ReactourTour', () => {
     window.localStorage.clear();
     // The tour restores scrollY on close — stub the viewport-less jsdom API.
     window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
+    // jsdom has no media engine — stub play() so demo replays stay silent.
+    window.HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined) as unknown as (
+      this: HTMLMediaElement,
+    ) => Promise<void>;
     simulationStore.getState().setConfig({ strategy: 'steepest-ascent' });
   });
 
@@ -115,15 +141,21 @@ describe('ReactourTour', () => {
   it('hides the attacker badge until its own beat introduces it', async () => {
     renderOpenTour();
     await enterGuide();
-    // Beats 1–4 (intro, conflict, hover, hit-ring): badge concealed.
-    expect(tourUiStore.getState().hideAttackerBadge).toBe(true);
     const advance = async () => {
       fireEvent.click(await screen.findByRole('button', { name: /^Next$/ }, { timeout: 3000 }));
     };
-    for (let i = 0; i < 3; i++) {
-      await advance();
-      expect(tourUiStore.getState().hideAttackerBadge).toBe(true);
-    }
+    // Beat 1 (intro): badge concealed.
+    expect(tourUiStore.getState().hideAttackerBadge).toBe(true);
+    // Beats 2–4 walk through the conflict beat and both interactive demo
+    // beats (driven watch → perform → done); badge stays concealed.
+    await advance();
+    expect(tourUiStore.getState().hideAttackerBadge).toBe(true);
+    await advance();
+    await driveInteractiveIfNeeded('Try hovering a queen');
+    expect(tourUiStore.getState().hideAttackerBadge).toBe(true);
+    await advance();
+    await driveInteractiveIfNeeded('Red ring = under attack');
+    expect(tourUiStore.getState().hideAttackerBadge).toBe(true);
     // Beat 5 ("Top-right badge: attacker count"): badge reveals.
     await advance();
     expect(await screen.findByText('Top-right badge: attacker count')).toBeInTheDocument();
@@ -185,6 +217,8 @@ describe('ReactourTour', () => {
         'Timeline scrubber',
       ];
       expect(await screen.findByText(titles[i] ?? '', {}, { timeout: 3000 })).toBeInTheDocument();
+      // Interactive demo beats gate Next behind watch + perform.
+      await driveInteractiveIfNeeded(titles[i] ?? '');
     }
     expect(screen.getByText(/Step 2 of 7/)).toBeInTheDocument();
   });
@@ -276,9 +310,10 @@ describe('ReactourTour', () => {
     for (let i = 1; i < expectedTitles.length; i++) {
       const next = await screen.findByRole('button', { name: /^Next$/ }, { timeout: 3000 });
       fireEvent.click(next);
-      expect(
-        await screen.findByText(expectedTitles[i] ?? '', {}, { timeout: 3000 }),
-      ).toBeInTheDocument();
+      const title = expectedTitles[i] ?? '';
+      expect(await screen.findByText(title, {}, { timeout: 3000 })).toBeInTheDocument();
+      // Interactive demo beats gate Next behind watch + perform.
+      await driveInteractiveIfNeeded(title);
     }
     const done = await screen.findByRole('button', { name: /^Done$/ }, { timeout: 3000 });
     fireEvent.click(done);

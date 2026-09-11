@@ -25,12 +25,11 @@
 import * as React from 'react';
 import { TourProvider, useTour, type PopoverContentProps, type StepType } from '@reactour/tour';
 import { motion, useDragControls, useReducedMotion } from 'motion/react';
-import { GripVertical, Move, X } from 'lucide-react';
+import { Move } from 'lucide-react';
 import { simulationStore, tourUiStore } from '@/store';
 import type { SimulationConfig } from '@/store/simulation-store';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { motionTokens, TOUR_TOOLTIP_DRAG_GLIDE } from '@/lib/motion-tokens';
-import { cn } from '@/lib/utils';
 import {
   ONBOARDING_TOUR_STEPS,
   REOPEN_TOUR_EVENT,
@@ -38,6 +37,12 @@ import {
   TOUR_WELCOME,
 } from './tour-steps';
 import { flattenTourSteps, type FlatTourBeat } from './tour-adapter';
+import {
+  BeatDots,
+  BeatHeader,
+  INTERACTIVE_BEAT_KEYS,
+  InteractiveBeat,
+} from './tour-interactive-beat';
 
 /** Dispatch `window.dispatchEvent(new CustomEvent(REOPEN_TOUR_EVENT))` to replay. */
 export function reopenOnboardingTour(): void {
@@ -120,33 +125,14 @@ function TourBeatBody({ beat }: { beat: FlatTourBeat | null }) {
     if (isLast) close('1');
     else setCurrentStep(currentStep + 1);
   };
+  // Interactive demo beats own their body + buttons (gated flow).
+  if (!isWelcome && INTERACTIVE_BEAT_KEYS.has(beat.key)) {
+    const beatId = beat.key === 'chessboard:hit-ring' ? 'hit-ring' : ('hover-invite' as const);
+    return <InteractiveBeat beat={beat} beatId={beatId} />;
+  }
   return (
     <div className="flex flex-col gap-2.5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <GripVertical
-            className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70"
-            aria-hidden="true"
-            data-testid="tour-drag-handle"
-          />
-          <p className="font-mono text-[0.65rem] font-semibold tracking-wide text-muted-foreground uppercase">
-            {isWelcome
-              ? 'Welcome'
-              : `Step ${beat.topIndex + 1} of ${beat.topTotal}` +
-                (beat.subTotal > 1 ? ` · ${beat.subIndex + 1}/${beat.subTotal}` : '')}
-          </p>
-        </div>
-        {!isWelcome && (
-          <button
-            type="button"
-            onClick={() => close('1')}
-            aria-label="Skip tour"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+      <BeatHeader beat={beat} isWelcome={isWelcome} />
       <h2 className="text-sm font-semibold tracking-tight">{beat.title}</h2>
       <p className="text-xs leading-relaxed text-muted-foreground">{beat.body}</p>
       {/* First-guide-beat-only drag hint (progressive disclosure). */}
@@ -157,19 +143,7 @@ function TourBeatBody({ beat }: { beat: FlatTourBeat | null }) {
         </p>
       )}
       {/* Progress dots — one per top-level group (shape + position). */}
-      {!isWelcome && (
-        <div className="flex items-center gap-1.5" aria-hidden="true">
-          {Array.from({ length: beat.topTotal }, (_, i) => (
-            <span
-              key={i}
-              className={cn(
-                'h-1.5 rounded-full transition-all',
-                i === beat.topIndex ? 'w-5 bg-primary' : 'w-1.5 bg-muted-foreground/30',
-              )}
-            />
-          ))}
-        </div>
-      )}
+      {!isWelcome && <BeatDots beat={beat} />}
       <div className="flex items-center justify-between gap-2 pt-1">
         {isWelcome ? (
           <>
@@ -334,16 +308,21 @@ function toStepType(beat: FlatTourBeat, index: number): StepType {
       selector: '[data-testid="stats-header"]',
       bypassElem: true,
       position: 'center',
-      content: <TourBeatBody beat={beat} />,
+      content: <TourBeatBody key={beat.key} beat={beat} />,
     };
   }
   return {
+    // Content keyed by beat: it MUST remount per beat. Without the key,
+    // React reconciles same-type content in place and stateful beats (the
+    // interactive phase machine) leak their phase into the next beat —
+    // hit-ring would open pre-completed on hover's `done`. Rebuilds reuse
+    // the same keys, so settle re-measures never remount (drag-safe).
     selector: beat.selector,
     // Spotlight = live (dimmed = dead is the provider-level
     // `disableInteraction`): hover/pin invites on chessboard beats and the
     // toggle/Play demos on config beats stay operable, as in the old tour.
     stepInteraction: true,
-    content: <TourBeatBody beat={beat} />,
+    content: <TourBeatBody key={beat.key} beat={beat} />,
     ...observablesFor(beat.groupId),
   };
 }
