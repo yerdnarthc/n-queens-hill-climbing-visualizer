@@ -314,10 +314,16 @@ describe('ReactourTour', () => {
     await new Promise((r) => setTimeout(r, 900));
     expect(document.body.style.overflow).toBe('hidden');
     expect(document.body.style.position).toBe('fixed');
+    // Viewport stabilizer: no scrollbar can render mid-tour (kills the
+    // per-beat reflow), and it cleans up on close.
+    expect(document.documentElement.style.overflow).toBe('hidden');
+    expect(document.documentElement.style.getPropertyValue('scrollbar-gutter')).toBe('stable');
     fireEvent.keyDown(screen.getByTestId('onboarding-tour'), { key: 'Escape' });
     expect(screen.queryByTestId('onboarding-tour')).not.toBeInTheDocument();
     expect(document.body.style.overflow).toBe('');
     expect(document.body.style.position).toBe('');
+    expect(document.documentElement.style.overflow).toBe('');
+    expect(document.documentElement.style.getPropertyValue('scrollbar-gutter')).toBe('');
     expect(window.scrollTo).toHaveBeenCalled();
   });
 });

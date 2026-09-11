@@ -362,6 +362,27 @@ function TourBridge() {
   // under the spotlight while the user reads.
   const [scrollSettled, setScrollSettled] = React.useState(true);
   useScrollLock(isOpen && scrollSettled);
+  // Viewport stabilizer (scrollbar-flicker fix): the travel window unlocks
+  // the body so the beat can scroll into view, which briefly restores the
+  // page scrollbar — every appearance/disappearance reflows the layout.
+  // While the tour is open, pin `overflow: hidden` + `scrollbar-gutter:
+  // stable` on <html>: no viewport scrollbar can ever render, so beats
+  // never reflow. `hidden` only blocks *user* scrolling — the bridge's
+  // programmatic `scrollIntoView` keeps working, which is exactly the split
+  // the travel logic needs.
+  React.useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') return;
+    const html = document.documentElement;
+    const prevOverflow = html.style.overflow;
+    const prevGutter = html.style.getPropertyValue('scrollbar-gutter');
+    html.style.overflow = 'hidden';
+    html.style.setProperty('scrollbar-gutter', 'stable');
+    return () => {
+      html.style.overflow = prevOverflow;
+      if (prevGutter) html.style.setProperty('scrollbar-gutter', prevGutter);
+      else html.style.removeProperty('scrollbar-gutter');
+    };
+  }, [isOpen]);
   const snapshotRef = React.useRef<TourSnapshot | null>(null);
   const openedAdvancedRef = React.useRef(false);
   const beatsRef = React.useRef<FlatTourBeat[]>([]);
