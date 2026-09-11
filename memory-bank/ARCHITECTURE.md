@@ -327,11 +327,25 @@ Engine/store/Playwright e2e: **untouched**. The visualizer-side
 `origin-echo`. `MoveTrajectory`'s `move-trajectory` testid is gone
 with the component (no e2e spec referenced it).
 
-## Onboarding tour (Phase 12, D-047)
+## Onboarding tour (Phase 12, D-047; shell ported to Reactour, D-064)
 
-First-visit spotlight walkthrough (`src/components/visualizer/
-onboarding-tour.tsx`, mounted once in `src/app/visualizer/page.tsx`,
-`createPortal` to `document.body`):
+First-visit spotlight walkthrough, mounted once in
+`src/app/visualizer/page.tsx`. The custom ~930-line shell
+(`onboarding-tour.tsx`: manual rect measuring, tooltip placement math,
+focus trap) was replaced by `@reactour/tour@3.8.0` (MIT; mask/popover
+siblings pinned in the lockfile) with zero user-visible change — same
+words, same 35 beats, same storage contract, same e2e selectors. Three
+files: `tour-steps.ts` (content data — `TourStepDef`/`TourSubstepDef`,
+`ONBOARDING_TOUR_STEPS`, `TOUR_WELCOME`, storage key/event, moved
+verbatim), `tour-adapter.ts` (pure flatten to linear beats with
+`topIndex/topTotal/subIndex/subTotal` grouping metadata + first-match
+selector resolution, unresolvable beats dropped), `reactour-tour.tsx`
+(provider + bridge + draggable tooltip card). The library owns
+mask/spotlight rendering, popover positioning, focus lock, and
+skip-if-missing (`disableWhenSelectorFalsy`); all its chrome is off
+(`showBadge/Navigation/Close/PrevNext/Dots` false) — counter
+("Step X of 7" from metadata, never the flat index), 7 progress dots,
+and buttons are ours, as is the `data-testid="onboarding-tour"` card.
 
 - **Persistence** — versioned `localStorage` key `nqueens-tour:v1`
   (`'1'` seen, `'forever'` opted out). Survives tab close AND browser
@@ -340,46 +354,60 @@ onboarding-tour.tsx`, mounted once in `src/app/visualizer/page.tsx`,
   that the tour subscribes to. No such thing as "clear on browser
   close" exists on the web (sessionStorage dies with the tab) — hence
   localStorage + explicit opt-out instead.
-- **Steps** (overhaul, D-061) — welcome modal + 7 guided steps with
-  ordered substeps (`TourSubstepDef`: optional per-substep spotlight
-  override, own title/body): chessboard (10) → timeline (5) → config
-  (10, cooling conditional on simulated-annealing) → analytics (4) →
+- **Steps** (overhaul, D-061) — welcome modal + 7 guided groups with
+  ordered substeps: chessboard (10) → timeline (5) → config (9 live,
+  cooling conditional on simulated-annealing) → analytics (4) →
   stats (4) → csv (single) → share (2 + sendoff). Next/Back/backdrop/
-  arrows walk substeps first, steps second; every substep has a unique
-  title (test-sync guarantee under `mode="wait"`). Targets resolve via
-  `data-tour` anchors (ConfigPanel, narrow PlaybackControls + stats +
-  tab anchors) with fallbacks to existing `data-testid`s; missing
-  targets are skipped via rAF-defer.
+  arrows walk beats in order; every beat keeps its unique title.
+  Targets resolve via `data-tour` anchors with `data-testid` fallbacks
+  at tour start; unresolvable beats are dropped up front (deterministic,
+  not mid-walk). `start()` pre-opens Advanced a frame before resolving
+  — its children are unmounted while closed and would otherwise be
+  dropped as missing.
 - **No-trace rule** — entry forces `strategy: 'steepest-ascent'` (so
   every step target exists), snapshots the FULL UI state (config +
-  speed + playback position/state), and auto-opens the Advanced
-  collapsible for the whole config step; exit restores everything
-  (setConfig pauses per D-057, so playback is resumed explicitly when
-  the user was playing) AND the collapsible's prior open state.
-- **Scroll lock** (D-052) — `useScrollLock(open)` pins the body
-  (`fixed` + `-top` + `100%` width) while open and restores the exact
-  `scrollY` on close; the tour's own `scrollIntoView`
-  (`block: 'center'`) is the single scroll authority, and the scroll
-  listener is kept so the spotlight tracks the tour's smooth scrolls.
+  speed + playback position/state + entry scrollY), and auto-opens the
+  Advanced collapsible for the whole config group; exit restores
+  everything (setConfig pauses per D-057, so playback is resumed
+  explicitly when the user was playing) AND the collapsible's prior
+  open state AND the entry scroll position. The close funnel keys off
+  the `isOpen` true→false transition with the mark riding Reactour's
+  `meta` string — `beforeClose` fires on mount/unmount only, and a
+  custom context can't reach the buttons (they render under
+  Tour/Popover, a sibling subtree of the bridge).
+- **Scroll lock + travel** (D-052, reworked) — `useScrollLock` still
+  pins the body while settled, but the lock blocks ALL scrolling
+  (including the library's), so each beat unlocks → scrolls its target
+  to `block: 'center'` (pure `isRectInView` gate) → rebuilds step
+  objects for a fresh measure → relocks. This also fixes a latent
+  old-tour bug: below-fold beats never worked in a real browser.
   Tooltip drag is transform-only, unaffected by the lock.
+- **Keyboard** — custom `keyboardHandler` owns Esc/arrows/past-the-end;
+  `useKeyboardShortcuts` yields while any tour popover is present
+  (same-node window listeners ignore `stopPropagation`, and focus falls
+  to `<body>` after button unmounts — so the guard is presence-based).
 - **Motion** — spotlight cuts instantly (foundations Rule 4 bans
-  layout props in `animate`); only the tooltip fades (opacity,
-  `motionTokens.duration.fast`), wrapped in `AnimatePresence
-  mode="wait"` keyed per step. `role="dialog"` + `aria-modal`, Esc /
-  arrows / backdrop-click advance, light Tab trap, focus moves to Next
-  per step, reduced-motion collapses the fade.
+  layout props in `animate`); only the tooltip enter-fades (opacity,
+  `motionTokens.duration.fast`) — no exit fade exists (Reactour swaps
+  step content synchronously, so an AnimatePresence exit could never
+  play). `role="dialog"` + `aria-modal`, backdrop-click advances,
+  reduced-motion collapses the fade and the scroll. Welcome is a
+  `bypassElem` beat on an always-mounted header target with a
+  self-centering card (library center math drifts on huge targets).
 - **E2E interplay** — fresh Playwright contexts have empty storage, so
   the tour would intercept every existing spec: `e2e/fixtures/test.ts`
   suppresses it via `addInitScript` (share URLs untouched), and
-  `e2e/tour.spec.ts` (base client, 3 specs) covers first-show,
-  advance, Skip-persists-across-reload, and Replay.
-- **Tests** — `__tests__/onboarding-tour.test.tsx` (16 tests: 3 pure
-  `placeTourTooltip` placement, 13 behavior incl. drag affordance,
-  grip + first-step hint, Esc-restores-scroll) +
-  `src/hooks/__tests__/useScrollLock.test.ts` (3 tests: no-op when
-  unlocked, lock/restore incl. scrollY, pre-existing inline styles
-  preserved). jest-dom jsdom ships storage stubs WITHOUT the Storage
-  API, so `src/test/setup.ts` gains an in-memory `MemoryStorage` mock
+  `e2e/tour.spec.ts` (base client, 3 specs, unchanged by the port)
+  covers first-show, advance, Skip-persists-across-reload, and Replay.
+- **Tests** — `__tests__/tour-adapter.test.tsx` (6: 35-beat census,
+  grouping metadata, title fallback, resolve-and-drop, cooling drop,
+  key uniqueness) + `__tests__/reactour-tour.test.tsx` (20 behavior
+  incl. calm staging, snapshot/resume, replay, Done-walk, drag affordance,
+  grip + first-beat hint, lock-at-rest, `isRectInView` cases) +
+  `useKeyboardShortcuts` tour-guard test +
+  `src/hooks/__tests__/useScrollLock.test.ts` (3 tests, untouched).
+  jest-dom jsdom ships storage stubs WITHOUT the Storage API, so
+  `src/test/setup.ts` gains an in-memory `MemoryStorage` mock
   (D-023 precedent).
 
 ## Testing architecture
