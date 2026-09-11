@@ -390,17 +390,26 @@ function TourBridge() {
     if (entryStrategy !== 'steepest-ascent') {
       simulationStore.getState().setConfig({ strategy: 'steepest-ascent' });
     }
-    const guide = flattenTourSteps(ONBOARDING_TOUR_STEPS, {
-      dropSubstepIds: entryStrategy === 'simulated-annealing' ? undefined : new Set(['cooling']),
-    });
-    const beats = [WELCOME_BEAT, ...guide];
-    beatsRef.current = beats;
-    // Always provided by TourProvider (this bridge only renders inside it).
-    setSteps?.(beats.map(toStepType));
-    setMeta?.('1');
-    setCurrentStep(0);
-    setIsOpen(true);
-  }, [setCurrentStep, setIsOpen, setMeta, setSteps]);
+    // Pre-open Advanced BEFORE resolving: its children (plateau, restarts,
+    // cooling) are unmounted while closed, so resolving first would drop
+    // them as "missing". The click's React update lands async — yield a
+    // frame so the content mounts before flattening. Staging owns the
+    // collapsible from here (welcome closes it since we opened it).
+    setAdvanced(true);
+    void (async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const guide = flattenTourSteps(ONBOARDING_TOUR_STEPS, {
+        dropSubstepIds: entryStrategy === 'simulated-annealing' ? undefined : new Set(['cooling']),
+      });
+      const beats = [WELCOME_BEAT, ...guide];
+      beatsRef.current = beats;
+      // Always provided by TourProvider (this bridge only renders inside it).
+      setSteps?.(beats.map(toStepType));
+      setMeta?.('1');
+      setCurrentStep(0);
+      setIsOpen(true);
+    })();
+  }, [setAdvanced, setCurrentStep, setIsOpen, setMeta, setSteps]);
 
   // Mount: auto-open for first-time visitors; listen for manual replays.
   React.useEffect(() => {

@@ -44,7 +44,10 @@ function FakeTargets() {
 
 /** Dismiss the welcome beat into the guided beats. */
 async function enterGuide() {
-  fireEvent.click(screen.getByRole('button', { name: /let's explore/i }));
+  // The tour opens a frame after mount (start awaits Advanced's mount), so
+  // wait for the button like a real user would.
+  const explore = await screen.findByRole('button', { name: /let's explore/i }, { timeout: 3000 });
+  fireEvent.click(explore);
   await screen.findByText('The chessboard', {}, { timeout: 3000 });
 }
 
