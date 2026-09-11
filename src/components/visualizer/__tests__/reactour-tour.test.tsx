@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import * as React from 'react';
-import { ReactourTour, reopenOnboardingTour } from '../reactour-tour';
+import { ReactourTour, isRectInView, reopenOnboardingTour } from '../reactour-tour';
 import { ONBOARDING_TOUR_STEPS, TOUR_STORAGE_KEY } from '../tour-steps';
 import { simulationStore, tourUiStore } from '@/store';
 
@@ -64,6 +64,20 @@ function clickBackdrop() {
   expect(mask).not.toBeNull();
   fireEvent.click(mask!);
 }
+
+describe('isRectInView', () => {
+  it('accepts comfortably visible rects', () => {
+    expect(isRectInView({ top: 200, bottom: 400 }, 900)).toBe(true);
+  });
+
+  it('rejects above-fold, below-fold, and edge-hugging rects', () => {
+    expect(isRectInView({ top: -50, bottom: 100 }, 900)).toBe(false);
+    expect(isRectInView({ top: 800, bottom: 1000 }, 900)).toBe(false);
+    // Inside the viewport but within the comfort margin → travel anyway.
+    expect(isRectInView({ top: 10, bottom: 100 }, 900)).toBe(false);
+    expect(isRectInView({ top: 700, bottom: 895 }, 900)).toBe(false);
+  });
+});
 
 describe('ReactourTour', () => {
   beforeEach(() => {
@@ -288,9 +302,12 @@ describe('ReactourTour', () => {
     expect(screen.queryByText(/drag me aside/i)).not.toBeInTheDocument();
   });
 
-  it('locks body scroll while open and restores it on close', async () => {
+  it('locks body scroll at rest and restores it on close', async () => {
     renderOpenTour();
     await enterGuide();
+    // Each beat unlocks briefly for its travel scroll, then relocks once
+    // settled — so assert the at-rest state after the window closes.
+    await new Promise((r) => setTimeout(r, 900));
     expect(document.body.style.overflow).toBe('hidden');
     expect(document.body.style.position).toBe('fixed');
     fireEvent.keyDown(screen.getByTestId('onboarding-tour'), { key: 'Escape' });

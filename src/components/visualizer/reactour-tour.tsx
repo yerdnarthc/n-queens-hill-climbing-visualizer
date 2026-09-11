@@ -78,6 +78,20 @@ interface TourSnapshot {
   speed: number;
   isPlaying: boolean;
   currentStep: number;
+  scrollY: number;
+}
+
+/**
+ * Pure in-view check with a comfort margin: is the target's rect already
+ * comfortably inside the viewport (so no travel scroll is needed)?
+ * Kept pure (no DOM) for unit tests; the bridge feeds it live rects.
+ */
+export function isRectInView(
+  rect: { top: number; bottom: number },
+  viewportHeight: number,
+  margin = 80,
+): boolean {
+  return rect.top >= margin && rect.bottom <= viewportHeight - margin;
 }
 
 /** Read the pending mark back out of `meta` (anything but 'forever' means seen). */
@@ -318,7 +332,12 @@ function toStepType(beat: FlatTourBeat, index: number): StepType {
  */
 function TourBridge() {
   const { isOpen, setIsOpen, setCurrentStep, setSteps, setMeta, meta, currentStep } = useTour();
-  useScrollLock(isOpen);
+  const reduceMotion = !!useReducedMotion();
+  // Scroll settles per beat (see the staging effect): unlocked while the
+  // beat travels into view, locked once it lands so the page stays put
+  // under the spotlight while the user reads.
+  const [scrollSettled, setScrollSettled] = React.useState(true);
+  useScrollLock(isOpen && scrollSettled);
   const snapshotRef = React.useRef<TourSnapshot | null>(null);
   const openedAdvancedRef = React.useRef(false);
   const beatsRef = React.useRef<FlatTourBeat[]>([]);
@@ -350,6 +369,9 @@ function TourBridge() {
       st.setSpeed(snap.speed);
       st.jumpTo(snap.currentStep);
       if (snap.isPlaying) st.play();
+      // Land where the user was: per-beat relocks move the page, so the
+      // lock's own restore (last beat's Y) is overridden with entry Y.
+      window.scrollTo(0, snap.scrollY);
     }
   }, [setAdvanced]);
 
@@ -360,6 +382,7 @@ function TourBridge() {
       speed: st.speed,
       isPlaying: st.isPlaying,
       currentStep: st.currentStep,
+      scrollY: window.scrollY,
     };
     // Canonical strategy so every step target exists (cooling only renders
     // under simulated-annealing, so its beat is dropped below).
@@ -397,13 +420,49 @@ function TourBridge() {
   }, [start]);
 
   // Per-beat staging: calm queens only on the chessboard intro; Advanced
-  // open for the whole config group, restored afterwards.
+  // open for the whole config group, restored afterwards. Unlock scheduling
+  // for the travel effect below (deferred: the set-state-in-effect rule
+  // forbids the synchronous form, and a frame's delay is invisible here).
   React.useEffect(() => {
     if (!isOpen) return;
     const beat = beatsRef.current[currentStep] ?? null;
     tourUiStore.getState().setCalmQueens(beat?.groupId === 'chessboard' && beat.subIndex === 0);
     setAdvanced(beat?.groupId === 'config');
+    const unlock = requestAnimationFrame(() => setScrollSettled(false));
+    return () => cancelAnimationFrame(unlock);
   }, [isOpen, currentStep, setAdvanced]);
+
+  // Travel scroll for below-fold targets: the hard lock blocks ALL
+  // scrolling, so each beat unlocks, scrolls, then relocks once settled —
+  // otherwise below-fold spotlights strand off-screen (§1b.6). Runs only on
+  // the unlocked pass (the step-change pass is still locked and returns
+  // early); the settle timer rebuilds step objects so Reactour re-measures
+  // on the SETTLED layout — skipped when nothing traveled, since rebuilding
+  // would remount the tooltip mid-drag for no reason.
+  React.useEffect(() => {
+    if (!isOpen || scrollSettled) return;
+    let traveled = false;
+    const beat = beatsRef.current[currentStep] ?? null;
+    if (beat && beat.groupId !== 'welcome') {
+      const target = document.querySelector(beat.selector);
+      if (target instanceof HTMLElement) {
+        const rect = target.getBoundingClientRect();
+        if (!isRectInView(rect, window.innerHeight)) {
+          traveled = true;
+          target.scrollIntoView?.({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+        }
+      }
+    }
+    const settleMs = reduceMotion ? 80 : 750;
+    const timer = window.setTimeout(() => {
+      if (traveled) {
+        const beats = beatsRef.current;
+        if (beats.length > 0) setSteps?.(beats.map(toStepType));
+      }
+      setScrollSettled(true);
+    }, settleMs);
+    return () => window.clearTimeout(timer);
+  }, [isOpen, currentStep, scrollSettled, reduceMotion, setSteps]);
 
   // The close funnel: every exit path (buttons, Esc, mask-past-end,
   // keyboard) lands on isOpen → false, which persists the pending mark and
@@ -429,7 +488,6 @@ function TourBridge() {
 }
 
 export function ReactourTour() {
-  const reduceMotion = !!useReducedMotion();
   return (
     <TourProvider
       steps={[]}
@@ -440,7 +498,10 @@ export function ReactourTour() {
       // dist) — absent from ProviderProps types, hence the expectation.
       // @ts-expect-error -- upstream type gap, see D-063.
       disableWhenSelectorFalsy
-      scrollSmooth={!reduceMotion}
+      // The bridge owns scrolling (unlock → scrollIntoView → relock): the
+      // library's own attempt would run while locked and go nowhere, and a
+      // second concurrent smoother would fight ours.
+      scrollSmooth={false}
       onClickMask={({ setCurrentStep, currentStep, steps: all, setIsOpen }) => {
         if (currentStep >= (all ?? []).length - 1) setIsOpen(false);
         else setCurrentStep(currentStep + 1);
