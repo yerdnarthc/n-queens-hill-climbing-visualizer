@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "interactive-product-tour": {
+      "source": "rampstackco/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/interactive-product-tour/SKILL.md",
+      "computedHash": "f193112989f7dbaed7025cab600b36fda84f159006b1233c94c5d6115f5c6567"
+    },
     "motion-advanced": {
       "source": "affaan-m/ecc",
       "sourceType": "github",
