@@ -10,4 +10,13 @@ describe('tour-ui-store', () => {
     store.getState().setCalmQueens(false);
     expect(store.getState().calmQueens).toBe(false);
   });
+
+  it('shows the attacker badge by default and hides it on demand', () => {
+    const store = createTourUiStore();
+    expect(store.getState().hideAttackerBadge).toBe(false);
+    store.getState().setHideAttackerBadge(true);
+    expect(store.getState().hideAttackerBadge).toBe(true);
+    store.getState().setHideAttackerBadge(false);
+    expect(store.getState().hideAttackerBadge).toBe(false);
+  });
 });

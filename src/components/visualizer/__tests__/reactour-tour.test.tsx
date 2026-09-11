@@ -112,6 +112,35 @@ describe('ReactourTour', () => {
     expect(tourUiStore.getState().calmQueens).toBe(false);
   });
 
+  it('hides the attacker badge until its own beat introduces it', async () => {
+    renderOpenTour();
+    await enterGuide();
+    // Beats 1–4 (intro, conflict, hover, hit-ring): badge concealed.
+    expect(tourUiStore.getState().hideAttackerBadge).toBe(true);
+    const advance = async () => {
+      fireEvent.click(await screen.findByRole('button', { name: /^Next$/ }, { timeout: 3000 }));
+    };
+    for (let i = 0; i < 3; i++) {
+      await advance();
+      expect(tourUiStore.getState().hideAttackerBadge).toBe(true);
+    }
+    // Beat 5 ("Top-right badge: attacker count"): badge reveals.
+    await advance();
+    expect(await screen.findByText('Top-right badge: attacker count')).toBeInTheDocument();
+    expect(tourUiStore.getState().hideAttackerBadge).toBe(false);
+    // Leaving the chessboard group keeps it revealed (delta, amber,
+    // moved, trail, pin, then the group hop)…
+    for (let i = 0; i < 6; i++) {
+      await advance();
+      expect(tourUiStore.getState().hideAttackerBadge).toBe(false);
+    }
+    expect(await screen.findByText('Timeline scrubber')).toBeInTheDocument();
+    // …and closing the tour restores it.
+    fireEvent.keyDown(screen.getByTestId('onboarding-tour'), { key: 'Escape' });
+    expect(screen.queryByTestId('onboarding-tour')).not.toBeInTheDocument();
+    expect(tourUiStore.getState().hideAttackerBadge).toBe(false);
+  });
+
   it('stays closed when the tour was already seen', async () => {
     window.localStorage.setItem(TOUR_STORAGE_KEY, '1');
     render(

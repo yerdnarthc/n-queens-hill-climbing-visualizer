@@ -24,9 +24,16 @@ interface QueenPieceProps {
    * Force the glyph glow off even when conflicted. The tour sets this
    * during the chessboard intro so the board opens calm; clearing it on
    * the "Red Glow Means Attacked" substep reveals the glow through the
-   * existing crossfade. Badges are unaffected.
+   * existing crossfade. Glow only — see `hideAttackerBadge` for badges.
    */
   suppressGlow?: boolean;
+  /**
+   * Force the top-right attacker count badge off even when conflicted.
+   * The tour sets this for the early chessboard beats and clears it on
+   * the "Top-right badge: attacker count" beat, so the badge appears
+   * exactly when introduced. The delta badge is unaffected.
+   */
+  hideAttackerBadge?: boolean;
   /** Native-title payload on hit queens: "Attacked by Qc3 along row". */
   hitTitle?: string;
   /** Hover/focus/tap wiring from the parent (transient UI — not the store). */
@@ -63,6 +70,7 @@ export function QueenPiece({
   isInspected = false,
   isHovered = false,
   suppressGlow = false,
+  hideAttackerBadge = false,
   hitTitle,
   onInspectStart,
   onInspectEnd,
@@ -203,7 +211,12 @@ export function QueenPiece({
         ref={scope}
         tabIndex={0}
         role="button"
-        aria-label={`Queen at ${String.fromCharCode(97 + column)}${boardSize - row}, ${conflictsCount} attacker${conflictsCount === 1 ? '' : 's'}`}
+        aria-label={
+          hideAttackerBadge
+            ? // Screen-reader parity: don't announce a count sighted users can't see yet.
+              `Queen at ${String.fromCharCode(97 + column)}${boardSize - row}`
+            : `Queen at ${String.fromCharCode(97 + column)}${boardSize - row}, ${conflictsCount} attacker${conflictsCount === 1 ? '' : 's'}`
+        }
         aria-pressed={isInspected}
         title={hitTitle}
         onMouseEnter={onInspectStart}
@@ -231,7 +244,7 @@ export function QueenPiece({
             Sized for legibility: min-width + nowrap so double-digit counts
             (common at N=16) never clip or wrap; leading-none keeps digits
             vertically centered. */}
-        {hasConflict && (
+        {hasConflict && !hideAttackerBadge && (
           <span
             aria-label={`${conflictsCount} attacking pairs on this queen`}
             className={cn(

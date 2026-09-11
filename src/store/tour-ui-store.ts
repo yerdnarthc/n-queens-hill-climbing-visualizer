@@ -18,6 +18,15 @@ export interface TourUiState {
    */
   calmQueens: boolean;
   setCalmQueens: (calm: boolean) => void;
+  /**
+   * When true, conflicted queens render WITHOUT their top-right attacker
+   * count badge (rays, glow, and the delta badge are unaffected). The tour
+   * sets this for the early chessboard beats so the badge appears exactly
+   * when its beat ("Top-right badge: attacker count") introduces it —
+   * progressive disclosure instead of an unexplained number.
+   */
+  hideAttackerBadge: boolean;
+  setHideAttackerBadge: (hide: boolean) => void;
 }
 
 /** Factory — isolated instances for tests. */
@@ -25,5 +34,7 @@ export function createTourUiStore() {
   return createStore<TourUiState>()((set) => ({
     calmQueens: false,
     setCalmQueens: (calmQueens: boolean) => set({ calmQueens }),
+    hideAttackerBadge: false,
+    setHideAttackerBadge: (hideAttackerBadge: boolean) => set({ hideAttackerBadge }),
   }));
 }

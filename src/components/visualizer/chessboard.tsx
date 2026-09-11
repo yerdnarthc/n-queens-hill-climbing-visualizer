@@ -149,8 +149,11 @@ export function Chessboard() {
 
   // Tour staging: while the tour shows the chessboard intro, conflicted
   // queens render calm (no red glow); the glow reveals on the "Red Glow
-  // Means Attacked" substep through the glyph crossfade. Badges/rays stay.
+  // Means Attacked" substep through the glyph crossfade. Rays stay.
   const calmQueens = useTourUiStore((s) => s.calmQueens);
+  // …and the attacker count badge stays hidden until its own beat
+  // ("Top-right badge: attacker count") introduces it. Delta badge stays.
+  const hideAttackerBadge = useTourUiStore((s) => s.hideAttackerBadge);
 
   // Hit-set for hover-tooltips on attacked queens: col → "Attacked by Q…".
   // Computed here (not inside each QueenPiece) so the parent owns the
@@ -417,6 +420,7 @@ export function Chessboard() {
                     }
                     isMoved={isDestinationSquare}
                     suppressGlow={calmQueens}
+                    hideAttackerBadge={hideAttackerBadge}
                     deltaConflicts={
                       isDestinationSquare && dm
                         ? // Negated in reverse: undoing a Δ move changes

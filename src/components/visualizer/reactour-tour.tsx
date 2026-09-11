@@ -403,6 +403,7 @@ function TourBridge() {
 
   const restore = React.useCallback(() => {
     tourUiStore.getState().setCalmQueens(false);
+    tourUiStore.getState().setHideAttackerBadge(false);
     setAdvanced(false);
     const snap = snapshotRef.current;
     snapshotRef.current = null;
@@ -473,7 +474,8 @@ function TourBridge() {
     return () => window.removeEventListener(REOPEN_TOUR_EVENT, onReopen);
   }, [start]);
 
-  // Per-beat staging: calm queens only on the chessboard intro; Advanced
+  // Per-beat staging: calm queens only on the chessboard intro; attacker
+  // badge hidden until its own beat introduces it (subIndex 4); Advanced
   // open for the whole config group, restored afterwards. Unlock scheduling
   // for the travel effect below (deferred: the set-state-in-effect rule
   // forbids the synchronous form, and a frame's delay is invisible here).
@@ -481,6 +483,9 @@ function TourBridge() {
     if (!isOpen) return;
     const beat = beatsRef.current[currentStep] ?? null;
     tourUiStore.getState().setCalmQueens(beat?.groupId === 'chessboard' && beat.subIndex === 0);
+    tourUiStore
+      .getState()
+      .setHideAttackerBadge(beat?.groupId === 'chessboard' && beat.subIndex < 4);
     setAdvanced(beat?.groupId === 'config');
     const unlock = requestAnimationFrame(() => setScrollSettled(false));
     return () => cancelAnimationFrame(unlock);
@@ -534,6 +539,7 @@ function TourBridge() {
   React.useEffect(() => {
     return () => {
       tourUiStore.getState().setCalmQueens(false);
+      tourUiStore.getState().setHideAttackerBadge(false);
     };
   }, []);
 

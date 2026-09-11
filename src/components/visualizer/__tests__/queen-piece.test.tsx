@@ -60,6 +60,22 @@ describe('QueenPiece', () => {
     expect(screen.getByLabelText(/4 attacking pairs/i)).toBeInTheDocument();
   });
 
+  it('hideAttackerBadge hides the badge and its count from the aria-label (tour staging)', () => {
+    render(
+      <QueenPiece
+        column={2}
+        row={3}
+        conflictsCount={4}
+        isMoved={false}
+        {...TRAVEL}
+        hideAttackerBadge
+      />,
+    );
+    expect(screen.queryByLabelText(/attacking pairs/i)).not.toBeInTheDocument();
+    // Screen-reader parity: no announced count that sighted users can't see.
+    expect(screen.getByRole('button', { name: 'Queen at c5' })).toBeInTheDocument();
+  });
+
   it('renders the deltaConflicts badge when isMoved is true and a delta is provided', () => {
     render(
       <QueenPiece
