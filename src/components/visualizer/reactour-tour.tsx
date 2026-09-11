@@ -207,6 +207,13 @@ function TourPopoverCard(props: PopoverContentProps) {
   const step = props.steps[props.currentStep];
   const content = step?.content;
   const isWelcome = props.currentStep === 0;
+  // Interactive demo beats get a wider card so the video reads — detected
+  // from the content element (the beat key rides its props).
+  const contentBeatKey =
+    React.isValidElement<{ beat?: FlatTourBeat }>(content) && content.props.beat
+      ? content.props.beat.key
+      : null;
+  const isInteractive = contentBeatKey !== null && INTERACTIVE_BEAT_KEYS.has(contentBeatKey);
   return (
     <motion.div
       role="dialog"
@@ -242,7 +249,14 @@ function TourPopoverCard(props: PopoverContentProps) {
               transform: 'translate(-50%, -50%)',
               margin: 0,
             }
-          : { width: TOOLTIP_WIDTH }
+          : // Demo videos need room to read — 480px on desktop, clamped
+            // to the viewport so narrow screens never clip.
+            {
+              width:
+                isInteractive && typeof window !== 'undefined'
+                  ? Math.min(480, window.innerWidth - 24)
+                  : TOOLTIP_WIDTH,
+            }
       }
       initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
       animate={{ opacity: 1 }}

@@ -1,6 +1,6 @@
 # Progress — Where are we now?
 
-> Update at the end of **every** task. Last updated: **2026-09-11** (Interactive video-demo beats, D-067).
+> Update at the end of **every** task. Last updated: **2026-09-11** (Demo video size + board lock, D-068).
 
 ## TL;DR
 
@@ -136,3 +136,4 @@ The roadmap is complete. Reasonable follow-ups (not committed to):
 | 2026-09-11 | **Tour scrollbar-flicker fix (D-065)** | User-reported: scrollbar flashed per beat (travel unlock restored it), reflowing the layout each Next. Bridge pins `overflow: hidden` + `scrollbar-gutter: stable` on `<html>` while open — no viewport scrollbar can render, and programmatic scrollIntoView is unaffected by `hidden`. Hard body lock untouched. Validation: unit pins set/cleared; browser walk shows sub-pixel-identical landmark geometry with zero scrollbar in all samples (incl. mid-travel). Suite stays 400/400. |
 | 2026-09-11 | **Attacker-badge reveal staging (D-066)** | User-requested progressive disclosure: attacker badge hidden for chessboard beats 1–4, revealed on beat 5 ("Top-right badge: attacker count"). `hideAttackerBadge` flag in tour-ui-store + piece prop + board wiring + bridge staging (cleared on restore/unmount); button aria-label drops the count while hidden for SR parity. Rays/glow/delta unaffected. Validation: store/piece/bridge-walk unit, browser screenshots (intro clean, beat 5 badged). Suite 403/403. |
 | 2026-09-11 | **Interactive video-demo beats (D-067)** | Beats 3–4 become watch→continue→do→done flows: looping MP4s (moved to `public/tour-demo-vids/`), Continue after first loop, DOM-observed gates (rays / red-ring nodes), per-beat skip, pause-on-watch, coarse-pointer verb switch ("tap" vs "hover"). Shared BeatHeader/BeatDots extracted; content keyed per beat (fixes pre-completed hit-ring). Validation: 8 unit + updated walks, browser run with real hover completing the gate. Suite 411/411. |
+| 2026-09-11 | **Bigger demo videos + board lock (D-068)** | User-requested refinements: interactive cards widened 320→480px (viewport-clamped) so demos read; `lockBoard` flag veils the board (dim + pointer-blocking) during watch/continue, lifting on perform (phase effect + unmount cleanup). Validation: veil rect pixel-equals board box, forced hover blocked / real hover passes, card ≥460px measured. Suite 414/414. |

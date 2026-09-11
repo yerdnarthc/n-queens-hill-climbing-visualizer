@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, within, act } from '@testing-library/react';
 import * as React from 'react';
 import { Chessboard } from '../chessboard';
-import { simulationStore } from '@/store';
+import { simulationStore, tourUiStore } from '@/store';
 
 describe('Chessboard', () => {
   beforeEach(() => {
@@ -26,6 +26,18 @@ describe('Chessboard', () => {
         expect(screen.getByTestId(`square-${c}-${r}`)).toBeInTheDocument();
       }
     }
+  });
+
+  it('veils the board (dim + pointer-blocking) only while the tour locks it', () => {
+    tourUiStore.getState().setLockBoard(true);
+    const { unmount } = render(<Chessboard />);
+    const veil = screen.getByTestId('board-lock-veil');
+    expect(veil).toBeInTheDocument();
+    expect(veil.getAttribute('aria-hidden')).toBe('true');
+    unmount();
+    tourUiStore.getState().setLockBoard(false);
+    render(<Chessboard />);
+    expect(screen.queryByTestId('board-lock-veil')).not.toBeInTheDocument();
   });
 
   it('renders exactly 4 queen pieces on the board for N=4', () => {

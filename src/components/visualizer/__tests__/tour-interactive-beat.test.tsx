@@ -4,7 +4,7 @@ import * as React from 'react';
 import { TourProvider } from '@reactour/tour';
 import { InteractiveBeat } from '../tour-interactive-beat';
 import type { FlatTourBeat } from '../tour-adapter';
-import { simulationStore } from '@/store';
+import { simulationStore, tourUiStore } from '@/store';
 
 /**
  * Interactive demo beats (Step 1, beats 3–4): watch → continue → do → done.
@@ -116,6 +116,18 @@ describe('InteractiveBeat', () => {
     expect(screen.getByText(/now you try/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /skip this demo/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Next$/ })).not.toBeInTheDocument();
+  });
+
+  it('locks the board during watch/continue and unlocks on perform', () => {
+    renderBeat();
+    // Watch phase: veil on.
+    expect(tourUiStore.getState().lockBoard).toBe(true);
+    fireEvent.ended(screen.getByTestId('tour-demo-video'));
+    // Continue phase: still veiled.
+    expect(tourUiStore.getState().lockBoard).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: /^Continue$/ }));
+    // Perform phase: veil lifts so the user can hover.
+    expect(tourUiStore.getState().lockBoard).toBe(false);
   });
 
   it('rays in the DOM complete the hover beat with an ack + Next', async () => {

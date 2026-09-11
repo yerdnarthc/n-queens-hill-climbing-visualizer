@@ -154,6 +154,9 @@ export function Chessboard() {
   // …and the attacker count badge stays hidden until its own beat
   // ("Top-right badge: attacker count") introduces it. Delta badge stays.
   const hideAttackerBadge = useTourUiStore((s) => s.hideAttackerBadge);
+  // …and the whole board veils over (dim + pointer-blocking) while an
+  // interactive demo beat plays its video — watch first, touch later.
+  const lockBoard = useTourUiStore((s) => s.lockBoard);
 
   // Hit-set for hover-tooltips on attacked queens: col → "Attacked by Q…".
   // Computed here (not inside each QueenPiece) so the parent owns the
@@ -467,6 +470,16 @@ export function Chessboard() {
                 </div>
               )}
             </div>
+          )}
+          {/* Tour board lock — dim veil above the queen overlay that swallows
+              pointer events, so hovers/pins can't fire while a demo video
+              plays. Rendered only while set; the tour clears it on perform. */}
+          {lockBoard && (
+            <div
+              data-testid="board-lock-veil"
+              aria-hidden="true"
+              className="absolute inset-0 z-30 cursor-not-allowed rounded-xs bg-black/60"
+            />
           )}
         </div>
       </div>

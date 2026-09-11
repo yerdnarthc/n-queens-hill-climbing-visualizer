@@ -19,4 +19,13 @@ describe('tour-ui-store', () => {
     store.getState().setHideAttackerBadge(false);
     expect(store.getState().hideAttackerBadge).toBe(false);
   });
+
+  it('leaves the board unlocked by default and locks it on demand', () => {
+    const store = createTourUiStore();
+    expect(store.getState().lockBoard).toBe(false);
+    store.getState().setLockBoard(true);
+    expect(store.getState().lockBoard).toBe(true);
+    store.getState().setLockBoard(false);
+    expect(store.getState().lockBoard).toBe(false);
+  });
 });

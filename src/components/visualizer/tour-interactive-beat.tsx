@@ -22,7 +22,7 @@
 import * as React from 'react';
 import { useTour } from '@reactour/tour';
 import { GripVertical, X } from 'lucide-react';
-import { simulationStore } from '@/store';
+import { simulationStore, tourUiStore } from '@/store';
 import { cn } from '@/lib/utils';
 import type { FlatTourBeat } from './tour-adapter';
 
@@ -158,6 +158,17 @@ export function InteractiveBeat({
   React.useEffect(() => {
     simulationStore.getState().pause();
   }, []);
+
+  // Board lock: dim + pointer-block the board during watch/continue so the
+  // user watches first and touches only when the perform phase starts.
+  // Cleanup clears on unmount (Back/advance/close), so the veil can never
+  // strand over the board.
+  React.useEffect(() => {
+    tourUiStore.getState().setLockBoard(phase === 'watch' || phase === 'continue');
+    return () => {
+      tourUiStore.getState().setLockBoard(false);
+    };
+  }, [phase]);
 
   // Gate observer, live only during the `do` phase.
   React.useEffect(() => {

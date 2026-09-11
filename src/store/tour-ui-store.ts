@@ -27,6 +27,13 @@ export interface TourUiState {
    */
   hideAttackerBadge: boolean;
   setHideAttackerBadge: (hide: boolean) => void;
+  /**
+   * When true, a dim veil covers the board and swallows pointer events, so
+   * the user watches instead of touching. The interactive demo beats set
+   * this during watch/continue and clear it when the perform phase starts.
+   */
+  lockBoard: boolean;
+  setLockBoard: (lock: boolean) => void;
 }
 
 /** Factory — isolated instances for tests. */
@@ -36,5 +43,7 @@ export function createTourUiStore() {
     setCalmQueens: (calmQueens: boolean) => set({ calmQueens }),
     hideAttackerBadge: false,
     setHideAttackerBadge: (hideAttackerBadge: boolean) => set({ hideAttackerBadge }),
+    lockBoard: false,
+    setLockBoard: (lockBoard: boolean) => set({ lockBoard }),
   }));
 }
