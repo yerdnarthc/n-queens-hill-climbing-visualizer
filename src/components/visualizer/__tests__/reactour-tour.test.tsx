@@ -32,6 +32,7 @@ function FakeTargets() {
       <div data-testid="stats-rail" data-variant="context">
         stats
       </div>
+      <div data-testid="stats-header">header</div>
       <div data-tour="stats-tiles">tiles</div>
       <div data-tour="stats-hero">hero</div>
       <button type="button" aria-label="Export run as CSV">

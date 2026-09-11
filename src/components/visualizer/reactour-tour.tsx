@@ -232,12 +232,13 @@ function TourPopoverCard(props: PopoverContentProps) {
   const dragControls = useDragControls();
   const step = props.steps[props.currentStep];
   const content = step?.content;
+  const isWelcome = props.currentStep === 0;
   return (
     <motion.div
       role="dialog"
       aria-modal="true"
       data-testid="onboarding-tour"
-      data-tour-phase={props.currentStep === 0 ? 'welcome' : 'guide'}
+      data-tour-phase={isWelcome ? 'welcome' : 'guide'}
       // Free drag with a MINIMIZED release glide (`TOUR_TOOLTIP_DRAG_GLIDE`),
       // started from non-button presses only — same contract as the old tour.
       // `touch-none`: no scrollable content, so touch drags belong to us.
@@ -251,7 +252,24 @@ function TourPopoverCard(props: PopoverContentProps) {
       }}
       whileDrag={reduceMotion ? { cursor: 'grabbing' } : { cursor: 'grabbing', scale: 1.02 }}
       className="flex cursor-grab touch-none flex-col rounded-xs border border-border bg-card p-4 shadow-xl"
-      style={{ width: TOOLTIP_WIDTH }}
+      // The welcome beat is a true modal: center OUR card on the viewport
+      // instead of trusting the shell's target-relative placement (their
+      // center math lands right-of-center on huge targets, §1b.5). Guide
+      // beats stay shell-positioned (anchored to their spotlight).
+      style={
+        isWelcome
+          ? {
+              // SSR: `window` is undefined on the server — the tour only
+              // opens client-side, so the fallback never paints.
+              width: typeof window !== 'undefined' ? Math.min(360, window.innerWidth - 24) : 360,
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              margin: 0,
+            }
+          : { width: TOOLTIP_WIDTH }
+      }
       initial={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{
@@ -272,10 +290,24 @@ const WELCOME_BEAT: FlatTourBeat = {
   topTotal: 0,
   subIndex: 0,
   subTotal: 1,
-  selector: 'body',
+  selector: '[data-testid="stats-header"]',
   title: TOUR_WELCOME.title,
   body: TOUR_WELCOME.body,
 };
+
+/**
+ * Welcome target chain: the header is always mounted and in view at load
+ * (so Reactour's auto-scroll stays quiet); `body` is the bulletproof
+ * fallback — the entry beat must never be dropped as "missing".
+ */
+function resolveWelcomeSelector(): string {
+  const chain = ['[data-testid="stats-header"]', 'body'];
+  if (typeof document === 'undefined') return chain[0] ?? 'body';
+  for (const selector of chain) {
+    if (document.querySelector(selector) !== null) return selector;
+  }
+  return 'body';
+}
 
 /** Config-group beats may target knobs that only exist once Advanced opens. */
 function observablesFor(
@@ -295,22 +327,14 @@ function observablesFor(
 function toStepType(beat: FlatTourBeat, index: number): StepType {
   if (index === 0) {
     return {
-      selector: 'body',
+      // A real, always-mounted, in-view-at-load target: with `bypassElem`
+      // nothing highlights, and being in view means Reactour's auto-scroll
+      // stays quiet (a `body` target is never "in view", so it scrolled the
+      // page to the document middle, §1b.5). The card centers itself.
+      selector: '[data-testid="stats-header"]',
       bypassElem: true,
       position: 'center',
       content: <TourBeatBody beat={beat} />,
-      // Reactour's centered placement lands right-of-center on a
-      // full-viewport target (§1b.5) — pin the shell to true center.
-      styles: {
-        popover: (base) => ({
-          ...base,
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          margin: 0,
-        }),
-      },
     };
   }
   return {
@@ -401,7 +425,7 @@ function TourBridge() {
       const guide = flattenTourSteps(ONBOARDING_TOUR_STEPS, {
         dropSubstepIds: entryStrategy === 'simulated-annealing' ? undefined : new Set(['cooling']),
       });
-      const beats = [WELCOME_BEAT, ...guide];
+      const beats = [{ ...WELCOME_BEAT, selector: resolveWelcomeSelector() }, ...guide];
       beatsRef.current = beats;
       // Always provided by TourProvider (this bridge only renders inside it).
       setSteps?.(beats.map(toStepType));
