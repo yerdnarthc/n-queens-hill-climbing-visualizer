@@ -11,7 +11,7 @@ import { PlaybackControls } from '@/components/visualizer/playback-controls';
 import { ConfigPanel } from '@/components/visualizer/config-panel';
 import { Chessboard } from '@/components/visualizer/chessboard';
 import { AnalyticsPanel } from '@/components/visualizer/analytics-panel';
-import { OnboardingTour, reopenOnboardingTour } from '@/components/visualizer/onboarding-tour';
+import { ReactourTour, reopenOnboardingTour } from '@/components/visualizer/reactour-tour';
 import { BookOpen } from 'lucide-react';
 import { Math } from '@/components/ui/math';
 
@@ -256,8 +256,8 @@ function HomeContent() {
         </div>
       </footer>
 
-      {/* First-visit spotlight walkthrough (localStorage-gated, portal to body). */}
-      <OnboardingTour />
+      {/* First-visit spotlight walkthrough (localStorage-gated, Reactour shell). */}
+      <ReactourTour />
     </div>
   );
 }

@@ -97,6 +97,24 @@ describe('useKeyboardShortcuts', () => {
     expect(store.getState().currentStep).toBe(0);
   });
 
+  it('yields all keys while a tour popover is open (D-064 tour guard)', () => {
+    const { store } = mount();
+    store.getState().run();
+    // Presence-based (not focus-based): even with focus on <body> after a
+    // tooltip button unmounted, the open tour owns the keys.
+    const tour = document.createElement('div');
+    tour.setAttribute('data-testid', 'onboarding-tour');
+    document.body.appendChild(tour);
+    act(() => press('ArrowRight'));
+    act(() => press(' '));
+    expect(store.getState().currentStep).toBe(0);
+    expect(store.getState().isPlaying).toBe(false);
+    document.body.removeChild(tour);
+    // Guard lifts with the popover.
+    act(() => press('ArrowRight'));
+    expect(store.getState().currentStep).toBe(1);
+  });
+
   it('removes the listener on unmount', () => {
     const { store, unmount } = mount();
     store.getState().run();

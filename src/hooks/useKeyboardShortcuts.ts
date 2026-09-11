@@ -39,6 +39,15 @@ export function useKeyboardShortcuts(store: StoreApi<SimulationState> = simulati
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       if (isEditableTarget(event.target)) return;
+      // While any tour popover is up, its keys belong to the tour (D-064):
+      // the app must not ALSO step playback underneath it. Presence-based,
+      // not focus-based — after clicking Next the focused button unmounts,
+      // focus falls back to <body>, and a target-based check would miss.
+      // Same-node window listeners can't be stopped by the tour's own
+      // stopPropagation, so the guard lives here.
+      if (document.querySelector('[data-testid="onboarding-tour"]') !== null) {
+        return;
+      }
 
       switch (event.key) {
         case ' ':
